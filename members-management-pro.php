@@ -16,6 +16,7 @@ require_once plugin_dir_path(__FILE__) . 'includes/class-member-user-link.php';
 require_once plugin_dir_path(__FILE__) . 'includes/class-member-file-manager.php';
 require_once plugin_dir_path(__FILE__) . 'includes/class-member-dashboard.php';
 require_once plugin_dir_path(__FILE__) . 'includes/class-member-onboarding.php';
+require_once plugin_dir_path(__FILE__) . 'includes/class-member-bulk-users.php';
 
 // Регистрация Custom Post Type
 function register_members_post_type() {
