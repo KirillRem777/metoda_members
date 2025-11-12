@@ -21,9 +21,35 @@ require_once plugin_dir_path(__FILE__) . 'includes/class-member-bulk-users.php';
 require_once plugin_dir_path(__FILE__) . 'includes/class-member-manager.php';
 require_once plugin_dir_path(__FILE__) . 'includes/class-member-csv-importer.php';
 require_once plugin_dir_path(__FILE__) . 'includes/class-member-page-templates.php';
+require_once plugin_dir_path(__FILE__) . 'includes/class-member-template-loader.php';
 
-// Хук активации плагина (создание страниц при активации - опционально)
-// register_activation_hook(__FILE__, array('Member_Page_Templates', 'activate'));
+// Хуки активации/деактивации плагина
+register_activation_hook(__FILE__, 'metoda_members_activate');
+register_deactivation_hook(__FILE__, 'metoda_members_deactivate');
+
+/**
+ * Функция активации плагина
+ */
+function metoda_members_activate() {
+    // Регистрируем post type
+    register_members_post_type();
+
+    // Регистрируем таксономии
+    register_member_type_taxonomy();
+    register_member_role_taxonomy();
+    register_member_location_taxonomy();
+
+    // Сбрасываем постоянные ссылки
+    flush_rewrite_rules();
+}
+
+/**
+ * Функция деактивации плагина
+ */
+function metoda_members_deactivate() {
+    // Сбрасываем постоянные ссылки
+    flush_rewrite_rules();
+}
 
 // Регистрация Custom Post Type
 function register_members_post_type() {
