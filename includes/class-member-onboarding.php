@@ -93,7 +93,8 @@ class Member_Onboarding {
      * Enqueue onboarding assets
      */
     public function enqueue_onboarding_assets() {
-        if (is_page('member-onboarding') || (function_exists('has_shortcode') && has_shortcode(get_post()->post_content, 'member_onboarding'))) {
+        $current_post = get_post();
+        if (is_page('member-onboarding') || (function_exists('has_shortcode') && $current_post && has_shortcode($current_post->post_content, 'member_onboarding'))) {
             wp_enqueue_style('member-onboarding', plugin_dir_url(dirname(__FILE__)) . 'assets/css/member-onboarding.css', array(), '1.0.0');
             wp_enqueue_script('member-onboarding', plugin_dir_url(dirname(__FILE__)) . 'assets/js/member-onboarding.js', array('jquery'), '1.0.0', true);
 

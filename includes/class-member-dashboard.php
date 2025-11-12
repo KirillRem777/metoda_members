@@ -46,7 +46,8 @@ class Member_Dashboard {
      * Enqueue dashboard assets
      */
     public function enqueue_dashboard_assets() {
-        if (is_page('member-dashboard') || (function_exists('has_shortcode') && has_shortcode(get_post()->post_content, 'member_dashboard'))) {
+        $current_post = get_post();
+        if (is_page('member-dashboard') || (function_exists('has_shortcode') && $current_post && has_shortcode($current_post->post_content, 'member_dashboard'))) {
             wp_enqueue_style('member-dashboard', plugin_dir_url(dirname(__FILE__)) . 'assets/css/member-dashboard.css', array(), '1.0.0');
             wp_enqueue_script('member-dashboard', plugin_dir_url(dirname(__FILE__)) . 'assets/js/member-dashboard.js', array('jquery'), '1.0.0', true);
 

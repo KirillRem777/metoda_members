@@ -75,7 +75,8 @@ class Member_Manager {
      * Enqueue manager assets
      */
     public function enqueue_manager_assets() {
-        if (is_page('manager-panel') || (function_exists('has_shortcode') && has_shortcode(get_post()->post_content, 'member_manager'))) {
+        $current_post = get_post();
+        if (is_page('manager-panel') || (function_exists('has_shortcode') && $current_post && has_shortcode($current_post->post_content, 'member_manager'))) {
             wp_enqueue_style('member-manager', plugin_dir_url(dirname(__FILE__)) . 'assets/css/member-manager.css', array(), '1.0.0');
             wp_enqueue_script('member-manager', plugin_dir_url(dirname(__FILE__)) . 'assets/js/member-manager.js', array('jquery'), '1.0.0', true);
 
