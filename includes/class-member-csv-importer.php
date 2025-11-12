@@ -198,13 +198,41 @@ class Member_CSV_Importer {
         // Parse CSV
         $csv_data = array();
         if (($handle = fopen($csv_file, 'r')) !== false) {
+            // Read first line and remove BOM if present
             $headers = fgetcsv($handle);
 
+            if (!empty($headers)) {
+                // Remove BOM from first header
+                $headers[0] = preg_replace('/^\xEF\xBB\xBF/', '', $headers[0]);
+
+                // Clean all headers
+                $headers = array_map('trim', $headers);
+            }
+
             while (($row = fgetcsv($handle)) !== false) {
-                $csv_data[] = array_combine($headers, $row);
+                // Skip empty rows
+                if (empty(array_filter($row))) {
+                    continue;
+                }
+
+                // Ensure row has same number of columns as headers
+                if (count($row) === count($headers)) {
+                    $csv_data[] = array_combine($headers, $row);
+                } else {
+                    $errors[] = 'Строка имеет неправильное количество колонок: ' . implode(',', array_slice($row, 0, 3));
+                }
             }
 
             fclose($handle);
+        }
+
+        // Check if we have data
+        if (empty($csv_data)) {
+            $errors[] = 'CSV файл пуст или имеет неправильный формат';
+            return array(
+                'stats' => $stats,
+                'errors' => $errors
+            );
         }
 
         // Get photos directory
@@ -256,6 +284,12 @@ class Member_CSV_Importer {
             'warnings' => array()
         );
 
+        // Validate required field
+        if (empty($data['post_title'])) {
+            $result['warnings'][] = 'Пропущена строка: отсутствует post_title';
+            return $result;
+        }
+
         // Check if member exists
         $existing_member = get_page_by_title($data['post_title'], OBJECT, 'members');
 
@@ -269,7 +303,7 @@ class Member_CSV_Importer {
             'post_type' => 'members',
             'post_title' => sanitize_text_field($data['post_title']),
             'post_status' => 'publish',
-            'post_content' => wp_kses_post($data['post_content'] ?? '')
+            'post_content' => wp_kses_post(isset($data['post_content']) ? $data['post_content'] : '')
         );
 
         // Create or update post
