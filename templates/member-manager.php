@@ -134,6 +134,137 @@ $member_locations = get_terms(array('taxonomy' => 'member_location', 'hide_empty
                     </div>
                 </div>
 
+                <div class="form-row">
+                    <div class="form-group full-width">
+                        <label>Опыт работы</label>
+                        <textarea name="member_experience" id="member-experience" rows="3"></textarea>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group full-width">
+                        <label>Интересы</label>
+                        <textarea name="member_interests" id="member-interests" rows="2"></textarea>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>LinkedIn</label>
+                        <input type="url" name="member_linkedin" id="member-linkedin" placeholder="https://linkedin.com/in/...">
+                    </div>
+                    <div class="form-group">
+                        <label>Веб-сайт</label>
+                        <input type="url" name="member_website" id="member-website" placeholder="https://...">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group full-width">
+                        <label>Ожидания от участия</label>
+                        <textarea name="member_expectations" id="member-expectations" rows="3"></textarea>
+                    </div>
+                </div>
+
+                <!-- Taxonomies Section -->
+                <h3 class="form-section-title">Категории участника</h3>
+
+                <div class="form-row">
+                    <div class="form-group full-width">
+                        <label>Тип участника</label>
+                        <div class="checkbox-group" id="member-types-group">
+                            <?php
+                            if (!empty($member_types)) {
+                                foreach ($member_types as $term) {
+                                    echo '<label class="checkbox-label">';
+                                    echo '<input type="checkbox" name="member_types[]" value="' . $term->term_id . '">';
+                                    echo '<span>' . esc_html($term->name) . '</span>';
+                                    echo '</label>';
+                                }
+                            }
+                            ?>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group full-width">
+                        <label>Роль участника</label>
+                        <div class="checkbox-group" id="member-roles-group">
+                            <?php
+                            if (!empty($member_roles)) {
+                                foreach ($member_roles as $term) {
+                                    echo '<label class="checkbox-label">';
+                                    echo '<input type="checkbox" name="member_roles[]" value="' . $term->term_id . '">';
+                                    echo '<span>' . esc_html($term->name) . '</span>';
+                                    echo '</label>';
+                                }
+                            }
+                            ?>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group full-width">
+                        <label>Локация</label>
+                        <div class="checkbox-group" id="member-locations-group">
+                            <?php
+                            if (!empty($member_locations)) {
+                                foreach ($member_locations as $term) {
+                                    echo '<label class="checkbox-label">';
+                                    echo '<input type="checkbox" name="member_locations[]" value="' . $term->term_id . '">';
+                                    echo '<span>' . esc_html($term->name) . '</span>';
+                                    echo '</label>';
+                                }
+                            }
+                            ?>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Materials Section -->
+                <h3 class="form-section-title">Материалы участника</h3>
+
+                <?php
+                $material_categories = array(
+                    'testimonials' => 'Отзывы',
+                    'gratitudes' => 'Благодарности',
+                    'interviews' => 'Интервью',
+                    'videos' => 'Видео',
+                    'reviews' => 'Рецензии',
+                    'developments' => 'Разработки'
+                );
+
+                foreach ($material_categories as $key => $label):
+                ?>
+                <div class="form-row">
+                    <div class="form-group full-width">
+                        <label><?php echo esc_html($label); ?></label>
+                        <div id="materials-<?php echo $key; ?>-container" class="materials-container">
+                            <!-- Materials will be added here dynamically -->
+                        </div>
+                        <button type="button" class="add-material-btn" data-category="<?php echo $key; ?>">
+                            ➕ Добавить <?php echo mb_strtolower($label); ?>
+                        </button>
+                    </div>
+                </div>
+                <?php endforeach; ?>
+
+                <!-- Gallery Section -->
+                <h3 class="form-section-title">Галерея фотографий</h3>
+
+                <div class="form-row">
+                    <div class="form-group full-width">
+                        <label>Дополнительные фотографии</label>
+                        <div id="gallery-preview" class="gallery-preview">
+                            <!-- Gallery images will be displayed here -->
+                        </div>
+                        <input type="hidden" id="gallery-ids" name="gallery_ids">
+                        <button type="button" class="btn btn-secondary" id="upload-gallery-btn">📷 Добавить фотографии</button>
+                    </div>
+                </div>
+
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" id="cancel-btn">Отмена</button>
                     <button type="submit" class="btn btn-primary">

@@ -3,7 +3,9 @@
 
     let currentPage = 1;
     let mediaUploader;
+    let galleryUploader;
     let editingMemberId = null;
+    let galleryIds = [];
 
     $(document).ready(function() {
         loadMembers();
@@ -11,6 +13,8 @@
         initSearch();
         initModals();
         initPhotoUpload();
+        initMaterials();
+        initGallery();
     });
 
     function loadMembers(page = 1, search = '') {
@@ -93,6 +97,11 @@
             $('#member-form')[0].reset();
             $('#member-id').val('');
             $('#photo-preview').empty();
+            $('input[name="member_types[]"]').prop('checked', false);
+            $('input[name="member_roles[]"]').prop('checked', false);
+            $('input[name="member_locations[]"]').prop('checked', false);
+            clearMaterials();
+            clearGallery();
             $('#member-modal').addClass('active');
         });
     }
@@ -134,6 +143,11 @@
                     $('#member-phone').val(data.phone);
                     $('#member-bio').val(data.bio);
                     $('#member-specialization').val(data.specialization);
+                    $('#member-experience').val(data.experience);
+                    $('#member-interests').val(data.interests);
+                    $('#member-linkedin').val(data.linkedin);
+                    $('#member-website').val(data.website);
+                    $('#member-expectations').val(data.expectations);
                     $('#thumbnail-id').val(data.thumbnail_id);
 
                     if (data.thumbnail_url) {
@@ -141,6 +155,34 @@
                     } else {
                         $('#photo-preview').empty();
                     }
+
+                    // Set taxonomy checkboxes
+                    $('input[name="member_types[]"]').prop('checked', false);
+                    if (data.member_types) {
+                        data.member_types.forEach(function(termId) {
+                            $('input[name="member_types[]"][value="' + termId + '"]').prop('checked', true);
+                        });
+                    }
+
+                    $('input[name="member_roles[]"]').prop('checked', false);
+                    if (data.member_roles) {
+                        data.member_roles.forEach(function(termId) {
+                            $('input[name="member_roles[]"][value="' + termId + '"]').prop('checked', true);
+                        });
+                    }
+
+                    $('input[name="member_locations[]"]').prop('checked', false);
+                    if (data.member_locations) {
+                        data.member_locations.forEach(function(termId) {
+                            $('input[name="member_locations[]"][value="' + termId + '"]').prop('checked', true);
+                        });
+                    }
+
+                    // Load materials
+                    loadMaterials(data.materials);
+
+                    // Load gallery
+                    loadGallery(data.gallery);
 
                     $('#member-modal').addClass('active');
                 }
@@ -284,6 +326,125 @@
         setTimeout(function() {
             $msg.fadeOut(300, function() { $(this).remove(); });
         }, 5000);
+    }
+
+    function initMaterials() {
+        // Add material button handler
+        $(document).on('click', '.add-material-btn', function() {
+            const category = $(this).data('category');
+            addMaterialItem(category);
+        });
+
+        // Remove material button handler
+        $(document).on('click', '.remove-material-btn', function() {
+            $(this).closest('.material-item').remove();
+        });
+    }
+
+    function addMaterialItem(category, title = '', link = '') {
+        const $container = $('#materials-' + category + '-container');
+        const index = $container.find('.material-item').length;
+
+        const $item = $('<div class="material-item">' +
+            '<input type="text" name="materials[' + category + '][' + index + '][title]" placeholder="Название" value="' + title + '">' +
+            '<input type="url" name="materials[' + category + '][' + index + '][link]" placeholder="Ссылка (https://...)" value="' + link + '">' +
+            '<button type="button" class="remove-material-btn">Удалить</button>' +
+        '</div>');
+
+        $container.append($item);
+    }
+
+    function loadMaterials(materials) {
+        // Clear all material containers
+        $('.materials-container').empty();
+
+        // Load materials for each category
+        if (materials) {
+            $.each(materials, function(category, items) {
+                if (items && items.length > 0) {
+                    $.each(items, function(index, item) {
+                        addMaterialItem(category, item.title || '', item.link || '');
+                    });
+                }
+            });
+        }
+    }
+
+    function clearMaterials() {
+        $('.materials-container').empty();
+    }
+
+    function initGallery() {
+        $('#upload-gallery-btn').on('click', function(e) {
+            e.preventDefault();
+
+            if (galleryUploader) {
+                galleryUploader.open();
+                return;
+            }
+
+            galleryUploader = wp.media({
+                title: 'Выберите фотографии для галереи',
+                button: { text: 'Добавить в галерею' },
+                multiple: true,
+                library: { type: 'image' }
+            });
+
+            galleryUploader.on('select', function() {
+                const attachments = galleryUploader.state().get('selection').toJSON();
+                attachments.forEach(function(attachment) {
+                    if (galleryIds.indexOf(attachment.id) === -1) {
+                        galleryIds.push(attachment.id);
+                        addGalleryImage(attachment.id, attachment.url);
+                    }
+                });
+                updateGalleryInput();
+            });
+
+            galleryUploader.open();
+        });
+
+        // Remove gallery image handler
+        $(document).on('click', '.gallery-item-remove', function() {
+            const imageId = $(this).data('id');
+            galleryIds = galleryIds.filter(function(id) { return id !== imageId; });
+            $(this).closest('.gallery-item').remove();
+            updateGalleryInput();
+        });
+    }
+
+    function addGalleryImage(imageId, imageUrl) {
+        const $item = $('<div class="gallery-item">' +
+            '<img src="' + imageUrl + '" alt="Gallery">' +
+            '<button type="button" class="gallery-item-remove" data-id="' + imageId + '">×</button>' +
+        '</div>');
+
+        $('#gallery-preview').append($item);
+    }
+
+    function updateGalleryInput() {
+        $('#gallery-ids').val(galleryIds.join(','));
+    }
+
+    function loadGallery(gallery) {
+        $('#gallery-preview').empty();
+        galleryIds = [];
+
+        if (gallery && gallery.length > 0) {
+            gallery.forEach(function(image) {
+                if (image.id && image.url) {
+                    galleryIds.push(image.id);
+                    addGalleryImage(image.id, image.url);
+                }
+            });
+            updateGalleryInput();
+        }
+    }
+
+    function clearGallery() {
+        $('#gallery-preview').empty();
+        galleryIds = [];
+        $('#gallery-ids').val('');
     }
 
 })(jQuery);

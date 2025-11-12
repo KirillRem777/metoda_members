@@ -216,6 +216,21 @@ class Member_Manager {
             $data['materials'][$key] = Member_File_Manager::parse_material_content($materials);
         }
 
+        // Get gallery
+        $gallery_ids = get_post_meta($member_id, 'member_gallery', true);
+        $data['gallery'] = array();
+        if (!empty($gallery_ids) && is_array($gallery_ids)) {
+            foreach ($gallery_ids as $img_id) {
+                $img_url = wp_get_attachment_url($img_id);
+                if ($img_url) {
+                    $data['gallery'][] = array(
+                        'id' => $img_id,
+                        'url' => $img_url
+                    );
+                }
+            }
+        }
+
         wp_send_json_success($data);
     }
 
@@ -407,6 +422,31 @@ class Member_Manager {
 
         if (isset($data['member_locations'])) {
             wp_set_object_terms($member_id, array_map('intval', (array)$data['member_locations']), 'member_location');
+        }
+
+        // Save materials
+        if (isset($data['materials']) && is_array($data['materials'])) {
+            $categories = array('testimonials', 'gratitudes', 'interviews', 'videos', 'reviews', 'developments');
+            foreach ($categories as $category) {
+                $materials = array();
+                if (isset($data['materials'][$category]) && is_array($data['materials'][$category])) {
+                    foreach ($data['materials'][$category] as $material) {
+                        if (!empty($material['title']) && !empty($material['link'])) {
+                            $materials[] = array(
+                                'title' => sanitize_text_field($material['title']),
+                                'link' => esc_url_raw($material['link'])
+                            );
+                        }
+                    }
+                }
+                update_post_meta($member_id, 'member_' . $category, $materials);
+            }
+        }
+
+        // Save gallery
+        if (isset($data['gallery_ids'])) {
+            $gallery_ids = array_filter(array_map('intval', explode(',', $data['gallery_ids'])));
+            update_post_meta($member_id, 'member_gallery', $gallery_ids);
         }
     }
 
