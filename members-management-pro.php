@@ -19,6 +19,10 @@ require_once plugin_dir_path(__FILE__) . 'includes/class-member-onboarding.php';
 require_once plugin_dir_path(__FILE__) . 'includes/class-member-bulk-users.php';
 require_once plugin_dir_path(__FILE__) . 'includes/class-member-manager.php';
 require_once plugin_dir_path(__FILE__) . 'includes/class-member-csv-importer.php';
+require_once plugin_dir_path(__FILE__) . 'includes/class-member-page-templates.php';
+
+// Хук активации плагина (создание страниц при активации - опционально)
+// register_activation_hook(__FILE__, array('Member_Page_Templates', 'activate'));
 
 // Регистрация Custom Post Type
 function register_members_post_type() {
