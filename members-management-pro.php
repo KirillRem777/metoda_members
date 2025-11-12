@@ -11,6 +11,11 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
+// Подключение классов личного кабинета
+require_once plugin_dir_path(__FILE__) . 'includes/class-member-user-link.php';
+require_once plugin_dir_path(__FILE__) . 'includes/class-member-file-manager.php';
+require_once plugin_dir_path(__FILE__) . 'includes/class-member-dashboard.php';
+
 // Регистрация Custom Post Type
 function register_members_post_type() {
     $labels = array(
