@@ -24,6 +24,13 @@ class Member_Page_Templates {
      */
     public static function get_required_pages() {
         return array(
+            'members_archive' => array(
+                'title' => 'Архив участников',
+                'slug' => 'members-archive',
+                'shortcode' => '[members_archive]',
+                'description' => 'Страница со списком всех участников и экспертов. Включает фильтры по типу, роли, локации и поиск по имени.',
+                'icon' => '📋'
+            ),
             'member_dashboard' => array(
                 'title' => 'Личный кабинет участника',
                 'slug' => 'member-dashboard',
@@ -192,6 +199,14 @@ class Member_Page_Templates {
                 <h2>📚 Информация о страницах</h2>
 
                 <div style="padding: 20px;">
+                    <h3>📋 Архив участников</h3>
+                    <p>
+                        <strong>URL:</strong> <code>/members-archive</code><br>
+                        <strong>Доступ:</strong> Публичная страница<br>
+                        <strong>Функции:</strong> Список всех участников и экспертов с фильтрами (тип, роль, локация), поиском, сортировкой и постраничной навигацией<br>
+                        <strong>Параметры шорткода:</strong> <code>per_page</code>, <code>columns</code>, <code>show_filters</code>, <code>show_search</code>
+                    </p>
+
                     <h3>👤 Личный кабинет участника</h3>
                     <p>
                         <strong>URL:</strong> <code>/member-dashboard</code><br>
