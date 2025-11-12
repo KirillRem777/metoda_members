@@ -18,6 +18,7 @@ require_once plugin_dir_path(__FILE__) . 'includes/class-member-dashboard.php';
 require_once plugin_dir_path(__FILE__) . 'includes/class-member-onboarding.php';
 require_once plugin_dir_path(__FILE__) . 'includes/class-member-bulk-users.php';
 require_once plugin_dir_path(__FILE__) . 'includes/class-member-manager.php';
+require_once plugin_dir_path(__FILE__) . 'includes/class-member-csv-importer.php';
 
 // Регистрация Custom Post Type
 function register_members_post_type() {
