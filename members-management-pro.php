@@ -11,6 +11,46 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
+// Подключение классов личного кабинета
+require_once plugin_dir_path(__FILE__) . 'includes/class-member-user-link.php';
+require_once plugin_dir_path(__FILE__) . 'includes/class-member-file-manager.php';
+require_once plugin_dir_path(__FILE__) . 'includes/class-member-archive.php';
+require_once plugin_dir_path(__FILE__) . 'includes/class-member-dashboard.php';
+require_once plugin_dir_path(__FILE__) . 'includes/class-member-onboarding.php';
+require_once plugin_dir_path(__FILE__) . 'includes/class-member-bulk-users.php';
+require_once plugin_dir_path(__FILE__) . 'includes/class-member-manager.php';
+require_once plugin_dir_path(__FILE__) . 'includes/class-member-csv-importer.php';
+require_once plugin_dir_path(__FILE__) . 'includes/class-member-page-templates.php';
+require_once plugin_dir_path(__FILE__) . 'includes/class-member-template-loader.php';
+
+// Хуки активации/деактивации плагина
+register_activation_hook(__FILE__, 'metoda_members_activate');
+register_deactivation_hook(__FILE__, 'metoda_members_deactivate');
+
+/**
+ * Функция активации плагина
+ */
+function metoda_members_activate() {
+    // Регистрируем post type
+    register_members_post_type();
+
+    // Регистрируем таксономии
+    register_member_type_taxonomy();
+    register_member_role_taxonomy();
+    register_member_location_taxonomy();
+
+    // Сбрасываем постоянные ссылки
+    flush_rewrite_rules();
+}
+
+/**
+ * Функция деактивации плагина
+ */
+function metoda_members_deactivate() {
+    // Сбрасываем постоянные ссылки
+    flush_rewrite_rules();
+}
+
 // Регистрация Custom Post Type
 function register_members_post_type() {
     $labels = array(
@@ -156,59 +196,233 @@ add_action('add_meta_boxes', 'add_member_meta_boxes');
 function render_member_details_meta_box($post) {
     wp_nonce_field('member_details_meta_box', 'member_details_meta_box_nonce');
 
+    // Основные поля
     $position = get_post_meta($post->ID, 'member_position', true);
     $company = get_post_meta($post->ID, 'member_company', true);
+    $city = get_post_meta($post->ID, 'member_city', true);
+
+    // Новые поля по требованиям
+    $specialization_experience = get_post_meta($post->ID, 'member_specialization_experience', true);
+    $professional_interests = get_post_meta($post->ID, 'member_professional_interests', true);
+    $expectations = get_post_meta($post->ID, 'member_expectations', true);
+    $bio = get_post_meta($post->ID, 'member_bio', true);
+
+    // Дополнительные поля
     $email = get_post_meta($post->ID, 'member_email', true);
     $phone = get_post_meta($post->ID, 'member_phone', true);
-    $bio = get_post_meta($post->ID, 'member_bio', true);
-    $specialization = get_post_meta($post->ID, 'member_specialization', true);
-    $experience = get_post_meta($post->ID, 'member_experience', true);
-    $interests = get_post_meta($post->ID, 'member_interests', true);
     $linkedin = get_post_meta($post->ID, 'member_linkedin', true);
     $website = get_post_meta($post->ID, 'member_website', true);
+    $gallery_ids = get_post_meta($post->ID, 'member_gallery', true);
+
+    // Данные для табов
+    $testimonials = get_post_meta($post->ID, 'member_testimonials', true);
+    $gratitudes = get_post_meta($post->ID, 'member_gratitudes', true);
+    $interviews = get_post_meta($post->ID, 'member_interviews', true);
+    $videos = get_post_meta($post->ID, 'member_videos', true);
+    $reviews = get_post_meta($post->ID, 'member_reviews', true);
+    $developments = get_post_meta($post->ID, 'member_developments', true);
     ?>
+    <style>
+        .member-field-group { margin-bottom: 20px; padding: 15px; background: #f9f9f9; border-left: 3px solid #2271b1; }
+        .member-field-group h4 { margin-top: 0; color: #2271b1; }
+        .member-repeater-item { background: white; padding: 10px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 4px; }
+        .member-repeater-item textarea { width: 100%; }
+        .button-remove { color: #b32d2e; border-color: #b32d2e; }
+        .button-remove:hover { background: #b32d2e; color: white; }
+    </style>
+
+    <div class="member-field-group">
+        <h4>Основная информация</h4>
+        <table class="form-table">
+            <tr>
+                <th><label for="member_company">Компания</label></th>
+                <td><input type="text" id="member_company" name="member_company" value="<?php echo esc_attr($company); ?>" class="large-text" /></td>
+            </tr>
+            <tr>
+                <th><label for="member_position">Должность</label></th>
+                <td><input type="text" id="member_position" name="member_position" value="<?php echo esc_attr($position); ?>" class="large-text" /></td>
+            </tr>
+            <tr>
+                <th><label for="member_city">Город</label></th>
+                <td><input type="text" id="member_city" name="member_city" value="<?php echo esc_attr($city); ?>" class="regular-text" /></td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="member-field-group">
+        <h4>Специализация и стаж</h4>
+        <p class="description">Каждый пункт с новой строки. Поддерживается форматирование: <code>• Название — X лет</code></p>
+        <textarea id="member_specialization_experience" name="member_specialization_experience" rows="8" class="large-text code"><?php echo esc_textarea($specialization_experience); ?></textarea>
+        <p class="description">Пример:<br>• Бизнес-тренер — 19 лет<br>• Методолог — 5 лет</p>
+    </div>
+
+    <div class="member-field-group">
+        <h4>Сфера профессиональных интересов</h4>
+        <p class="description">Каждый интерес с новой строки. Поддерживается форматирование: <code>• Название области</code></p>
+        <textarea id="member_professional_interests" name="member_professional_interests" rows="8" class="large-text code"><?php echo esc_textarea($professional_interests); ?></textarea>
+        <p class="description">Пример:<br>• Методология обучения взрослых<br>• Командообразование</p>
+    </div>
+
+    <div class="member-field-group">
+        <h4>Ожидания от сотрудничества</h4>
+        <?php
+        wp_editor($expectations, 'member_expectations', array(
+            'textarea_name' => 'member_expectations',
+            'textarea_rows' => 8,
+            'media_buttons' => false,
+            'teeny' => true,
+            'quicktags' => true
+        ));
+        ?>
+    </div>
+
+    <div class="member-field-group">
+        <h4>О себе</h4>
+        <?php
+        wp_editor($bio, 'member_bio', array(
+            'textarea_name' => 'member_bio',
+            'textarea_rows' => 10,
+            'media_buttons' => false,
+            'teeny' => false,
+            'quicktags' => true
+        ));
+        ?>
+    </div>
+
+    <div class="member-field-group">
+        <h4>Контактные данные</h4>
+        <table class="form-table">
+            <tr>
+                <th><label for="member_email">Email</label></th>
+                <td><input type="email" id="member_email" name="member_email" value="<?php echo esc_attr($email); ?>" class="regular-text" /></td>
+            </tr>
+            <tr>
+                <th><label for="member_phone">Телефон</label></th>
+                <td><input type="tel" id="member_phone" name="member_phone" value="<?php echo esc_attr($phone); ?>" class="regular-text" /></td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="member-field-group">
+        <h4>Социальные сети и сайты</h4>
+        <table class="form-table">
+            <tr>
+                <th><label for="member_linkedin">LinkedIn</label></th>
+                <td><input type="url" id="member_linkedin" name="member_linkedin" value="<?php echo esc_attr($linkedin); ?>" class="regular-text" placeholder="https://linkedin.com/in/username" /></td>
+            </tr>
+            <tr>
+                <th><label for="member_website">Вебсайт</label></th>
+                <td><input type="url" id="member_website" name="member_website" value="<?php echo esc_attr($website); ?>" class="regular-text" /></td>
+            </tr>
+        </table>
+    </div>
+
+    <hr style="margin: 30px 0;">
+    <h3>Галерея фотографий</h3>
+    <p class="description">Если добавлено более одной фотографии, на странице участника будет отображаться слайдер</p>
+    <div id="member-gallery-container">
+        <input type="hidden" id="member_gallery" name="member_gallery" value="<?php echo esc_attr($gallery_ids); ?>">
+        <button type="button" class="button upload-gallery-button">Добавить фотографии</button>
+        <div id="gallery-preview" style="margin-top: 15px; display: flex; flex-wrap: wrap; gap: 10px;">
+            <?php
+            if ($gallery_ids) {
+                $ids = explode(',', $gallery_ids);
+                foreach ($ids as $id) {
+                    $img_url = wp_get_attachment_image_url($id, 'thumbnail');
+                    if ($img_url) {
+                        echo '<div class="gallery-item" data-id="' . $id . '" style="position: relative;">
+                            <img src="' . esc_url($img_url) . '" style="width: 100px; height: 100px; object-fit: cover; border-radius: 5px;">
+                            <button type="button" class="remove-gallery-item" style="position: absolute; top: 5px; right: 5px; background: red; color: white; border: none; border-radius: 50%; width: 20px; height: 20px; cursor: pointer; line-height: 1;">×</button>
+                        </div>';
+                    }
+                }
+            }
+            ?>
+        </div>
+    </div>
+
+    <hr style="margin: 30px 0;">
+    <h3>Дополнительные материалы</h3>
     <table class="form-table">
         <tr>
-            <th><label for="member_position">Должность</label></th>
-            <td><input type="text" id="member_position" name="member_position" value="<?php echo esc_attr($position); ?>" class="regular-text" /></td>
+            <th><label for="member_testimonials">Отзывы</label></th>
+            <td><textarea id="member_testimonials" name="member_testimonials" rows="4" class="large-text"><?php echo esc_textarea($testimonials); ?></textarea></td>
         </tr>
         <tr>
-            <th><label for="member_company">Организация</label></th>
-            <td><input type="text" id="member_company" name="member_company" value="<?php echo esc_attr($company); ?>" class="regular-text" /></td>
+            <th><label for="member_gratitudes">Благодарности</label></th>
+            <td><textarea id="member_gratitudes" name="member_gratitudes" rows="4" class="large-text"><?php echo esc_textarea($gratitudes); ?></textarea></td>
         </tr>
         <tr>
-            <th><label for="member_specialization">Специализация</label></th>
-            <td><textarea id="member_specialization" name="member_specialization" rows="3" class="large-text"><?php echo esc_textarea($specialization); ?></textarea></td>
+            <th><label for="member_interviews">Интервью (ссылки через запятую)</label></th>
+            <td><textarea id="member_interviews" name="member_interviews" rows="3" class="large-text"><?php echo esc_textarea($interviews); ?></textarea></td>
         </tr>
         <tr>
-            <th><label for="member_experience">Опыт работы</label></th>
-            <td><input type="text" id="member_experience" name="member_experience" value="<?php echo esc_attr($experience); ?>" class="regular-text" /></td>
+            <th><label for="member_videos">Видео (YouTube/Vimeo ссылки через запятую)</label></th>
+            <td><textarea id="member_videos" name="member_videos" rows="3" class="large-text"><?php echo esc_textarea($videos); ?></textarea></td>
         </tr>
         <tr>
-            <th><label for="member_interests">Профессиональные интересы</label></th>
-            <td><textarea id="member_interests" name="member_interests" rows="3" class="large-text"><?php echo esc_textarea($interests); ?></textarea></td>
+            <th><label for="member_reviews">Рецензии</label></th>
+            <td><textarea id="member_reviews" name="member_reviews" rows="4" class="large-text"><?php echo esc_textarea($reviews); ?></textarea></td>
         </tr>
         <tr>
-            <th><label for="member_email">Email</label></th>
-            <td><input type="email" id="member_email" name="member_email" value="<?php echo esc_attr($email); ?>" class="regular-text" /></td>
-        </tr>
-        <tr>
-            <th><label for="member_phone">Телефон</label></th>
-            <td><input type="tel" id="member_phone" name="member_phone" value="<?php echo esc_attr($phone); ?>" class="regular-text" /></td>
-        </tr>
-        <tr>
-            <th><label for="member_linkedin">LinkedIn</label></th>
-            <td><input type="url" id="member_linkedin" name="member_linkedin" value="<?php echo esc_attr($linkedin); ?>" class="regular-text" placeholder="https://linkedin.com/in/username" /></td>
-        </tr>
-        <tr>
-            <th><label for="member_website">Вебсайт</label></th>
-            <td><input type="url" id="member_website" name="member_website" value="<?php echo esc_attr($website); ?>" class="regular-text" /></td>
-        </tr>
-        <tr>
-            <th><label for="member_bio">Расширенная биография</label></th>
-            <td><textarea id="member_bio" name="member_bio" rows="5" class="large-text"><?php echo esc_textarea($bio); ?></textarea></td>
+            <th><label for="member_developments">Разработки (ссылки через запятую)</label></th>
+            <td><textarea id="member_developments" name="member_developments" rows="3" class="large-text"><?php echo esc_textarea($developments); ?></textarea></td>
         </tr>
     </table>
+
+    <script>
+    jQuery(document).ready(function($) {
+        // Загрузка галереи
+        var frame;
+        $('.upload-gallery-button').on('click', function(e) {
+            e.preventDefault();
+
+            if (frame) {
+                frame.open();
+                return;
+            }
+
+            frame = wp.media({
+                title: 'Выберите фотографии',
+                multiple: true,
+                library: { type: 'image' },
+                button: { text: 'Добавить в галерею' }
+            });
+
+            frame.on('select', function() {
+                var selection = frame.state().get('selection');
+                var currentIds = $('#member_gallery').val();
+                var idsArray = currentIds ? currentIds.split(',') : [];
+
+                selection.map(function(attachment) {
+                    attachment = attachment.toJSON();
+                    idsArray.push(attachment.id);
+
+                    var html = '<div class="gallery-item" data-id="' + attachment.id + '" style="position: relative;">' +
+                        '<img src="' + attachment.sizes.thumbnail.url + '" style="width: 100px; height: 100px; object-fit: cover; border-radius: 5px;">' +
+                        '<button type="button" class="remove-gallery-item" style="position: absolute; top: 5px; right: 5px; background: red; color: white; border: none; border-radius: 50%; width: 20px; height: 20px; cursor: pointer; line-height: 1;">×</button>' +
+                        '</div>';
+                    $('#gallery-preview').append(html);
+                });
+
+                $('#member_gallery').val(idsArray.join(','));
+            });
+
+            frame.open();
+        });
+
+        // Удаление фото из галереи
+        $(document).on('click', '.remove-gallery-item', function() {
+            var $item = $(this).parent();
+            var idToRemove = $item.data('id');
+            var currentIds = $('#member_gallery').val();
+            var idsArray = currentIds.split(',');
+            idsArray = idsArray.filter(function(id) { return id != idToRemove; });
+            $('#member_gallery').val(idsArray.join(','));
+            $item.remove();
+        });
+    });
+    </script>
     <?php
 }
 
@@ -227,22 +441,51 @@ function save_member_details($post_id) {
         return;
     }
 
-    $fields = array(
-        'member_position', 
-        'member_company', 
-        'member_email', 
-        'member_phone', 
-        'member_bio',
-        'member_specialization',
-        'member_experience',
-        'member_interests',
+    // Текстовые поля
+    $text_fields = array(
+        'member_position',
+        'member_company',
+        'member_city',
+        'member_email',
+        'member_phone',
         'member_linkedin',
-        'member_website'
+        'member_website',
+        'member_gallery'
     );
-    
-    foreach ($fields as $field) {
+
+    foreach ($text_fields as $field) {
         if (isset($_POST[$field])) {
             update_post_meta($post_id, $field, sanitize_text_field($_POST[$field]));
+        }
+    }
+
+    // Textarea поля (могут содержать переносы строк)
+    $textarea_fields = array(
+        'member_specialization_experience',
+        'member_professional_interests',
+        'member_testimonials',
+        'member_gratitudes',
+        'member_interviews',
+        'member_videos',
+        'member_reviews',
+        'member_developments'
+    );
+
+    foreach ($textarea_fields as $field) {
+        if (isset($_POST[$field])) {
+            update_post_meta($post_id, $field, sanitize_textarea_field($_POST[$field]));
+        }
+    }
+
+    // HTML/WYSIWYG поля (разрешаем безопасный HTML)
+    $html_fields = array(
+        'member_expectations',
+        'member_bio'
+    );
+
+    foreach ($html_fields as $field) {
+        if (isset($_POST[$field])) {
+            update_post_meta($post_id, $field, wp_kses_post($_POST[$field]));
         }
     }
 }
@@ -460,137 +703,196 @@ function members_directory_shortcode($atts) {
     </script>
     
     <style>
+    /* ===== ОСНОВНЫЕ СТИЛИ ДИРЕКТОРИИ ===== */
     .members-directory-wrapper {
         max-width: 1400px;
         margin: 0 auto;
-        padding: 20px;
+        padding: 40px 24px;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
     }
-    
+
+    /* ===== ФИЛЬТРЫ ===== */
     .members-filters {
-        background: #f8f9fa;
-        padding: 30px;
-        border-radius: 10px;
-        margin-bottom: 40px;
+        background: linear-gradient(135deg, #f8f9fb 0%, #e9ecef 100%);
+        padding: 40px;
+        border-radius: 20px;
+        margin-bottom: 48px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        border: 1px solid rgba(255,255,255,0.6);
     }
     
     .members-search {
-        margin-bottom: 30px;
+        margin-bottom: 36px;
     }
-    
+
     .search-field {
         width: 100%;
-        padding: 12px 20px;
+        padding: 16px 28px;
         font-size: 16px;
-        border: 2px solid #e0e0e0;
+        border: 2px solid #e2e8f0;
         border-radius: 50px;
         outline: none;
-        transition: border-color 0.3s;
+        transition: all 0.3s ease;
+        background: white;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
     }
-    
+
     .search-field:focus {
-        border-color: #007cba;
+        border-color: #667eea;
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+        transform: translateY(-1px);
     }
-    
+
+    .search-field::placeholder {
+        color: #94a3b8;
+    }
+
     .filter-group {
-        margin-bottom: 25px;
+        margin-bottom: 28px;
     }
-    
+
+    .filter-group:last-child {
+        margin-bottom: 0;
+    }
+
     .filter-group h4 {
-        margin-bottom: 15px;
-        color: #333;
-        font-size: 14px;
+        margin: 0 0 16px 0;
+        color: #1a1a2e;
+        font-size: 13px;
         text-transform: uppercase;
-        letter-spacing: 1px;
+        letter-spacing: 1.2px;
+        font-weight: 700;
     }
-    
+
     .filter-buttons {
         display: flex;
         flex-wrap: wrap;
-        gap: 10px;
+        gap: 12px;
     }
-    
+
     .filter-btn {
-        padding: 8px 20px;
-        background: #fff;
-        border: 2px solid #e0e0e0;
-        border-radius: 25px;
+        padding: 10px 24px;
+        background: white;
+        border: 2px solid #e2e8f0;
+        border-radius: 30px;
         cursor: pointer;
-        transition: all 0.3s;
+        transition: all 0.3s ease;
         font-size: 14px;
-        color: #666;
+        font-weight: 600;
+        color: #64748b;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.04);
     }
-    
+
     .filter-btn:hover {
-        border-color: #007cba;
-        color: #007cba;
+        border-color: #667eea;
+        color: #667eea;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
     }
-    
+
     .filter-btn.active {
-        background: #007cba;
-        border-color: #007cba;
-        color: #fff;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-color: transparent;
+        color: white;
+        box-shadow: 0 4px 16px rgba(102, 126, 234, 0.4);
     }
-    
+
     .filter-select {
         width: 100%;
-        max-width: 300px;
-        padding: 10px 15px;
-        border: 2px solid #e0e0e0;
-        border-radius: 8px;
-        font-size: 14px;
+        max-width: 320px;
+        padding: 12px 20px;
+        border: 2px solid #e2e8f0;
+        border-radius: 12px;
+        font-size: 15px;
+        font-weight: 500;
         outline: none;
+        background: white;
+        color: #1a1a2e;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+    }
+
+    .filter-select:hover,
+    .filter-select:focus {
+        border-color: #667eea;
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
     }
     
+    /* ===== СЕТКА УЧАСТНИКОВ ===== */
     .members-grid {
         display: grid;
-        gap: 30px;
-        margin-top: 40px;
+        gap: 32px;
+        margin-top: 48px;
     }
-    
+
     .members-grid.columns-2 {
         grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
     }
-    
+
     .members-grid.columns-3 {
-        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
     }
-    
+
     .members-grid.columns-4 {
-        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
     }
-    
+
+    /* ===== КАРТОЧКИ УЧАСТНИКОВ ===== */
     .member-card {
-        background: #fff;
-        border-radius: 12px;
+        background: white;
+        border-radius: 20px;
         overflow: hidden;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.08);
-        transition: all 0.3s;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+        transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
         display: block;
+        position: relative;
     }
-    
+
+    .member-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
     .member-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+        transform: translateY(-8px);
+        box-shadow: 0 12px 32px rgba(102, 126, 234, 0.25);
     }
-    
+
+    .member-card:hover::before {
+        opacity: 1;
+    }
+
     .member-card-link {
         text-decoration: none;
         color: inherit;
         display: block;
     }
-    
+
     .member-photo {
         width: 100%;
-        height: 250px;
+        height: 320px;
         overflow: hidden;
         position: relative;
-        background: #f0f0f0;
+        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
     }
-    
+
     .member-photo img {
         width: 100%;
         height: 100%;
         object-fit: cover;
+        transition: transform 0.5s ease;
+    }
+
+    .member-card:hover .member-photo img {
+        transform: scale(1.08);
     }
     
     .member-avatar-placeholder {
@@ -599,72 +901,138 @@ function members_directory_shortcode($atts) {
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 72px;
-        font-weight: bold;
-        color: #fff;
+        font-size: 96px;
+        font-weight: 700;
+        color: white;
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        text-shadow: 0 4px 8px rgba(0,0,0,0.2);
     }
-    
+
+    /* ===== ИНФОРМАЦИЯ О УЧАСТНИКЕ ===== */
     .member-info {
-        padding: 20px;
+        padding: 28px;
     }
-    
+
     .member-name {
-        margin: 0 0 8px 0;
-        font-size: 20px;
-        font-weight: 600;
-        color: #333;
+        margin: 0 0 10px 0;
+        font-size: 22px;
+        font-weight: 700;
+        color: #1a1a2e;
+        line-height: 1.3;
+        transition: color 0.3s ease;
     }
-    
+
+    .member-card:hover .member-name {
+        color: #667eea;
+    }
+
     .member-position {
-        margin: 0 0 5px 0;
+        margin: 0 0 6px 0;
+        font-size: 15px;
+        color: #64748b;
+        font-weight: 500;
+        line-height: 1.4;
+    }
+
+    .member-company {
+        margin: 0 0 18px 0;
         font-size: 14px;
-        color: #666;
+        color: #94a3b8;
         font-weight: 500;
     }
-    
-    .member-company {
-        margin: 0 0 15px 0;
-        font-size: 13px;
-        color: #999;
-    }
-    
+
+    /* ===== ТЕГИ ===== */
     .member-tags {
         display: flex;
         flex-wrap: wrap;
         gap: 8px;
+        margin-top: 16px;
     }
-    
+
     .tag {
-        padding: 4px 12px;
-        border-radius: 15px;
+        padding: 6px 14px;
+        border-radius: 20px;
         font-size: 11px;
         text-transform: uppercase;
-        letter-spacing: 0.5px;
-        font-weight: 600;
+        letter-spacing: 0.6px;
+        font-weight: 700;
+        transition: all 0.3s ease;
     }
-    
+
     .tag-type {
-        background: #e3f2fd;
-        color: #1976d2;
+        background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);
+        color: #4c51bf;
+        border: 1px solid #c7d2fe;
     }
-    
+
     .tag-role {
-        background: #f3e5f5;
-        color: #7b1fa2;
+        background: linear-gradient(135deg, #fce7f3 0%, #fbcfe8 100%);
+        color: #be185d;
+        border: 1px solid #fbcfe8;
     }
-    
-    @media (max-width: 768px) {
-        .members-grid {
-            grid-template-columns: 1fr;
+
+    .member-card:hover .tag {
+        transform: translateY(-2px);
+    }
+
+    /* ===== АДАПТИВНОСТЬ ===== */
+    @media (max-width: 1024px) {
+        .members-grid.columns-3,
+        .members-grid.columns-4 {
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
         }
-        
+    }
+
+    @media (max-width: 768px) {
+        .members-directory-wrapper {
+            padding: 24px 16px;
+        }
+
+        .members-filters {
+            padding: 24px;
+            border-radius: 16px;
+        }
+
+        .members-grid {
+            grid-template-columns: 1fr !important;
+            gap: 24px;
+            margin-top: 32px;
+        }
+
         .filter-buttons {
             flex-direction: column;
         }
-        
+
         .filter-btn {
             width: 100%;
+            justify-content: center;
+        }
+
+        .filter-select {
+            max-width: 100%;
+        }
+
+        .member-photo {
+            height: 280px;
+        }
+
+        .member-info {
+            padding: 20px;
+        }
+
+        .member-name {
+            font-size: 20px;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .member-photo {
+            height: 240px;
+        }
+
+        .search-field {
+            padding: 14px 20px;
+            font-size: 15px;
         }
     }
     </style>
