@@ -81,52 +81,35 @@
      * Initialize gallery manager
      */
     function initGalleryManager() {
-        let mediaUploader;
+        // Create hidden file input
+        const $fileInput = $('<input type="file" id="gallery-file-input" accept="image/*" style="display: none;">');
+        $('body').append($fileInput);
 
-        // Add images button
+        // Add images button - triggers file input
         $('#add-gallery-images').on('click', function(e) {
             e.preventDefault();
+            $fileInput.trigger('click');
+        });
 
-            if (mediaUploader) {
-                mediaUploader.open();
+        // When file is selected - open cropper
+        $fileInput.on('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            // Check if MetodaPhotoCropper is available
+            if (typeof window.MetodaPhotoCropper === 'undefined') {
+                alert('Кроппер фотографий не загружен. Пожалуйста, обновите страницу.');
                 return;
             }
 
-            // Create WordPress media uploader
-            mediaUploader = wp.media({
-                title: 'Выберите изображения',
-                button: {
-                    text: 'Добавить в галерею'
-                },
-                multiple: true,
-                library: {
-                    type: 'image'
-                }
+            // Open cropper
+            window.MetodaPhotoCropper.open(file, function(croppedFile, blob) {
+                // Upload cropped image
+                uploadGalleryPhoto(croppedFile, blob);
             });
 
-            // When images are selected
-            mediaUploader.on('select', function() {
-                const selection = mediaUploader.state().get('selection');
-                const $grid = $('#gallery-grid');
-
-                // Remove empty message if exists
-                $grid.find('.gallery-empty').remove();
-
-                selection.map(function(attachment) {
-                    attachment = attachment.toJSON();
-
-                    // Add image to grid
-                    const $item = $('<div class="gallery-item" data-id="' + attachment.id + '"></div>');
-                    $item.append('<img src="' + attachment.sizes.thumbnail.url + '" alt="">');
-                    $item.append('<button type="button" class="remove-gallery-item" title="Удалить">×</button>');
-
-                    $grid.append($item);
-                });
-
-                updateGalleryIds();
-            });
-
-            mediaUploader.open();
+            // Reset input
+            $(this).val('');
         });
 
         // Remove image from gallery
@@ -187,12 +170,60 @@
     }
 
     /**
+     * Upload photo to gallery
+     */
+    function uploadGalleryPhoto(file, blob) {
+        const formData = new FormData();
+        formData.append('action', 'member_upload_gallery_photo');
+        formData.append('nonce', memberDashboardData.nonce);
+        formData.append('photo', file, file.name);
+
+        // Show uploading indicator
+        const $grid = $('#gallery-grid');
+        $grid.find('.gallery-empty').remove();
+
+        const $loader = $('<div class="gallery-item uploading"><div class="upload-progress"><i class="fas fa-spinner fa-spin"></i></div></div>');
+        $grid.append($loader);
+
+        // Send AJAX request
+        $.ajax({
+            url: memberDashboardData.ajaxUrl,
+            type: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function(response) {
+                $loader.remove();
+
+                if (response.success) {
+                    // Add image to grid
+                    const data = response.data;
+                    const $item = $('<div class="gallery-item" data-id="' + data.attachment_id + '"></div>');
+                    $item.append('<img src="' + data.thumbnail_url + '" alt="">');
+                    $item.append('<button type="button" class="remove-gallery-item" title="Удалить">×</button>');
+                    $grid.append($item);
+
+                    updateGalleryIds();
+                    showToast('success', 'Фото успешно добавлено в галерею');
+                } else {
+                    showToast('error', response.data.message || 'Ошибка загрузки фото');
+                }
+            },
+            error: function() {
+                $loader.remove();
+                showToast('error', 'Ошибка соединения с сервером');
+            }
+        });
+    }
+
+    /**
      * Update gallery IDs hidden field
      */
     function updateGalleryIds() {
         const ids = [];
         $('.gallery-item').each(function() {
-            ids.push($(this).data('id'));
+            const id = $(this).data('id');
+            if (id) ids.push(id);
         });
         $('#gallery_ids').val(ids.join(','));
     }

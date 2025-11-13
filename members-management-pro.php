@@ -1437,19 +1437,50 @@ function members_enqueue_scripts() {
 
         // Личный кабинет
         if ($post->post_name === 'member-dashboard') {
-            wp_enqueue_media(); // Для загрузки файлов
+            // Cropper.js библиотека (CDN)
+            wp_enqueue_style(
+                'cropperjs-css',
+                'https://cdn.jsdelivr.net/npm/cropperjs@1.6.1/dist/cropper.min.css',
+                array(),
+                '1.6.1'
+            );
 
+            wp_enqueue_script(
+                'cropperjs',
+                'https://cdn.jsdelivr.net/npm/cropperjs@1.6.1/dist/cropper.min.js',
+                array(),
+                '1.6.1',
+                true
+            );
+
+            // Наш кроппер
+            wp_enqueue_style(
+                'photo-cropper-css',
+                plugin_dir_url(__FILE__) . 'assets/css/photo-cropper.css',
+                array('cropperjs-css'),
+                '1.0.0'
+            );
+
+            wp_enqueue_script(
+                'photo-cropper-js',
+                plugin_dir_url(__FILE__) . 'assets/js/photo-cropper.js',
+                array('jquery', 'cropperjs'),
+                '1.0.0',
+                true
+            );
+
+            // Dashboard стили и скрипты
             wp_enqueue_style(
                 'member-dashboard-css',
                 plugin_dir_url(__FILE__) . 'assets/css/member-dashboard.css',
-                array(),
+                array('photo-cropper-css'),
                 '1.0.0'
             );
 
             wp_enqueue_script(
                 'member-dashboard-js',
                 plugin_dir_url(__FILE__) . 'assets/js/member-dashboard.js',
-                array('jquery'),
+                array('jquery', 'photo-cropper-js'),
                 '1.0.0',
                 true
             );
@@ -2205,6 +2236,59 @@ function member_save_gallery_ajax() {
     ));
 }
 add_action('wp_ajax_member_save_gallery', 'member_save_gallery_ajax');
+
+/**
+ * AJAX обработчик для загрузки фото в галерею
+ */
+function member_upload_gallery_photo_ajax() {
+    check_ajax_referer('member_dashboard', 'nonce');
+
+    if (!is_user_logged_in()) {
+        wp_send_json_error(array('message' => 'Необходима авторизация'));
+    }
+
+    $member_id = Member_User_Link::get_current_user_member_id();
+    if (!$member_id) {
+        wp_send_json_error(array('message' => 'Участник не найден'));
+    }
+
+    // Проверяем, был ли загружен файл
+    if (empty($_FILES['photo'])) {
+        wp_send_json_error(array('message' => 'Файл не загружен'));
+    }
+
+    // Подключаем необходимые файлы WordPress
+    require_once(ABSPATH . 'wp-admin/includes/file.php');
+    require_once(ABSPATH . 'wp-admin/includes/media.php');
+    require_once(ABSPATH . 'wp-admin/includes/image.php');
+
+    // Загружаем файл в медиабиблиотеку
+    $attachment_id = media_handle_upload('photo', $member_id);
+
+    if (is_wp_error($attachment_id)) {
+        wp_send_json_error(array('message' => 'Ошибка загрузки файла: ' . $attachment_id->get_error_message()));
+    }
+
+    // Получаем URL миниатюры
+    $thumbnail_url = wp_get_attachment_image_url($attachment_id, 'medium');
+
+    // Получаем текущие ID галереи
+    $current_gallery = get_post_meta($member_id, 'member_gallery', true);
+    $gallery_ids = !empty($current_gallery) ? explode(',', $current_gallery) : array();
+
+    // Добавляем новое фото
+    $gallery_ids[] = $attachment_id;
+
+    // Сохраняем обновленную галерею
+    update_post_meta($member_id, 'member_gallery', implode(',', $gallery_ids));
+
+    wp_send_json_success(array(
+        'message' => 'Фото успешно загружено!',
+        'attachment_id' => $attachment_id,
+        'thumbnail_url' => $thumbnail_url
+    ));
+}
+add_action('wp_ajax_member_upload_gallery_photo', 'member_upload_gallery_photo_ajax');
 
 /**
  * AJAX обработчик для добавления материала (ссылка)
