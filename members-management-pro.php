@@ -1703,3 +1703,196 @@ function members_custom_columns_data($column, $post_id) {
     }
 }
 add_action('manage_members_posts_custom_column', 'members_custom_columns_data', 10, 2);
+
+/**
+ * AJAX обработчик регистрации нового участника
+ */
+function member_register_ajax() {
+    check_ajax_referer('member_registration', 'nonce');
+
+    $email = sanitize_email($_POST['email']);
+    $password = $_POST['password'];
+    $fullname = sanitize_text_field($_POST['fullname']);
+    $account_type = sanitize_text_field($_POST['account_type']);
+    $company = sanitize_text_field($_POST['company']);
+    $position = sanitize_text_field($_POST['position']);
+    $city = sanitize_text_field($_POST['city']);
+    $roles = sanitize_text_field($_POST['roles']);
+    $specializations = sanitize_textarea_field($_POST['specializations']);
+    $interests = sanitize_textarea_field($_POST['interests']);
+    $bio = wp_kses_post($_POST['bio']);
+    $expectations = wp_kses_post($_POST['expectations']);
+
+    // Проверка email
+    if (email_exists($email)) {
+        wp_send_json_error(array('message' => 'Этот email уже зарегистрирован'));
+    }
+
+    // Создаем пользователя WordPress
+    $user_id = wp_create_user($email, $password, $email);
+
+    if (is_wp_error($user_id)) {
+        wp_send_json_error(array('message' => $user_id->get_error_message()));
+    }
+
+    // Устанавливаем роль
+    $user = new WP_User($user_id);
+    $user->set_role('member');
+
+    // Создаем запись участника
+    $member_id = wp_insert_post(array(
+        'post_title' => $fullname,
+        'post_type' => 'members',
+        'post_status' => 'publish',
+        'post_author' => $user_id
+    ));
+
+    if (is_wp_error($member_id)) {
+        wp_delete_user($user_id);
+        wp_send_json_error(array('message' => 'Ошибка создания профиля'));
+    }
+
+    // Сохраняем метаданные
+    update_post_meta($member_id, 'member_company', $company);
+    update_post_meta($member_id, 'member_position', $position);
+    update_post_meta($member_id, 'member_city', $city);
+    update_post_meta($member_id, 'member_specialization_experience', $specializations);
+    update_post_meta($member_id, 'member_professional_interests', $interests);
+    update_post_meta($member_id, 'member_bio', $bio);
+    update_post_meta($member_id, 'member_expectations', $expectations);
+    update_post_meta($member_id, 'member_email', $email);
+
+    // Связываем пользователя с участником
+    update_user_meta($user_id, 'member_id', $member_id);
+
+    // Добавляем роли
+    if (!empty($roles)) {
+        $role_slugs = array_map('sanitize_title', explode(',', $roles));
+        wp_set_object_terms($member_id, $role_slugs, 'member_role');
+    }
+
+    // Автоматический вход
+    wp_set_current_user($user_id);
+    wp_set_auth_cookie($user_id);
+
+    wp_send_json_success(array(
+        'message' => 'Регистрация успешно завершена!',
+        'redirect' => home_url('/member-dashboard/')
+    ));
+}
+add_action('wp_ajax_nopriv_member_register', 'member_register_ajax');
+
+/**
+ * AJAX обработчик обновления профиля участника
+ */
+function member_update_profile_ajax() {
+    check_ajax_referer('member_dashboard_nonce', 'nonce');
+
+    if (!is_user_logged_in()) {
+        wp_send_json_error(array('message' => 'Необходимо авторизоваться'));
+    }
+
+    $user_id = get_current_user_id();
+    $member_id = get_user_meta($user_id, 'member_id', true);
+
+    if (!$member_id) {
+        wp_send_json_error(array('message' => 'Профиль не найден'));
+    }
+
+    // Обновляем заголовок
+    if (isset($_POST['member_name'])) {
+        wp_update_post(array(
+            'ID' => $member_id,
+            'post_title' => sanitize_text_field($_POST['member_name'])
+        ));
+    }
+
+    // Обновляем метаданные
+    $meta_fields = array(
+        'member_company',
+        'member_position',
+        'member_city',
+        'member_email',
+        'member_phone',
+        'member_linkedin',
+        'member_website'
+    );
+
+    foreach ($meta_fields as $field) {
+        if (isset($_POST[$field])) {
+            update_post_meta($member_id, $field, sanitize_text_field($_POST[$field]));
+        }
+    }
+
+    // Textarea поля
+    $textarea_fields = array(
+        'member_specialization_experience',
+        'member_professional_interests'
+    );
+
+    foreach ($textarea_fields as $field) {
+        if (isset($_POST[$field])) {
+            update_post_meta($member_id, $field, sanitize_textarea_field($_POST[$field]));
+        }
+    }
+
+    // HTML поля
+    $html_fields = array(
+        'member_bio',
+        'member_expectations'
+    );
+
+    foreach ($html_fields as $field) {
+        if (isset($_POST[$field])) {
+            update_post_meta($member_id, $field, wp_kses_post($_POST[$field]));
+        }
+    }
+
+    wp_send_json_success(array('message' => 'Профиль успешно обновлен!'));
+}
+add_action('wp_ajax_member_update_profile', 'member_update_profile_ajax');
+
+/**
+ * Редирект после логина - отправляем участников в личный кабинет
+ */
+function member_login_redirect($redirect_to, $request, $user) {
+    if (isset($user->roles) && is_array($user->roles)) {
+        // Если пользователь - участник, редиректим в личный кабинет
+        if (in_array('member', $user->roles) || in_array('expert', $user->roles)) {
+            return home_url('/member-dashboard/');
+        }
+    }
+    return $redirect_to;
+}
+add_filter('login_redirect', 'member_login_redirect', 10, 3);
+
+/**
+ * Редирект после логаута
+ */
+function member_logout_redirect() {
+    return home_url();
+}
+add_filter('logout_redirect', 'member_logout_redirect');
+
+/**
+ * Скрываем админ-бар для участников
+ */
+function hide_admin_bar_for_members() {
+    if (current_user_can('member') || current_user_can('expert')) {
+        show_admin_bar(false);
+    }
+}
+add_action('after_setup_theme', 'hide_admin_bar_for_members');
+
+/**
+ * Блокируем доступ к админке для участников
+ */
+function block_admin_access_for_members() {
+    if (is_admin() && !current_user_can('administrator') && !wp_doing_ajax()) {
+        if (current_user_can('member') || current_user_can('expert')) {
+            wp_redirect(home_url('/member-dashboard/'));
+            exit;
+        }
+    }
+}
+add_action('admin_init', 'block_admin_access_for_members');
