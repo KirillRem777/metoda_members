@@ -231,64 +231,89 @@ while (have_posts()) : the_post();
                                 </div>
 
                                 <div class="tabs-content">
-                                    <?php if ($testimonials) : ?>
-                                        <div class="tab-pane active" id="testimonials">
-                                            <?php echo nl2br(esc_html($testimonials)); ?>
-                                        </div>
-                                    <?php endif; ?>
+                                    <?php
+                                    // Массив всех категорий материалов
+                                    $material_categories = array(
+                                        'testimonials' => array('data' => $testimonials, 'label' => 'Отзывы'),
+                                        'gratitudes' => array('data' => $gratitudes, 'label' => 'Благодарности'),
+                                        'interviews' => array('data' => $interviews, 'label' => 'Интервью'),
+                                        'videos' => array('data' => $videos, 'label' => 'Видео'),
+                                        'reviews' => array('data' => $reviews, 'label' => 'Рецензии'),
+                                        'developments' => array('data' => $developments, 'label' => 'Разработки')
+                                    );
 
-                                    <?php if ($gratitudes) : ?>
-                                        <div class="tab-pane" id="gratitudes">
-                                            <?php echo nl2br(esc_html($gratitudes)); ?>
-                                        </div>
-                                    <?php endif; ?>
+                                    $first_tab = true;
+                                    foreach ($material_categories as $category_key => $category_info) :
+                                        if (!$category_info['data']) continue;
 
-                                    <?php if ($interviews) : ?>
-                                        <div class="tab-pane" id="interviews">
-                                            <?php
-                                            $interview_links = array_filter(array_map('trim', explode(',', $interviews)));
-                                            foreach ($interview_links as $link) {
-                                                echo '<a href="' . esc_url($link) . '" target="_blank" class="resource-link">' . esc_html($link) . '</a>';
-                                            }
-                                            ?>
-                                        </div>
-                                    <?php endif; ?>
+                                        // Парсим материалы
+                                        $materials = Member_File_Manager::parse_material_content($category_info['data']);
+                                        if (empty($materials)) continue;
+                                    ?>
+                                        <div class="tab-pane <?php echo $first_tab ? 'active' : ''; ?>" id="<?php echo esc_attr($category_key); ?>">
+                                            <div class="materials-list">
+                                                <?php foreach ($materials as $material) : ?>
+                                                    <div class="material-item">
+                                                        <div class="material-header">
+                                                            <h4 class="material-title">
+                                                                <?php if ($material['type'] === 'link') : ?>
+                                                                    <i class="fas fa-link"></i>
+                                                                <?php elseif ($material['type'] === 'file') : ?>
+                                                                    <i class="fas fa-file"></i>
+                                                                <?php else : ?>
+                                                                    <i class="fas fa-align-left"></i>
+                                                                <?php endif; ?>
+                                                                <?php echo esc_html($material['title']); ?>
+                                                            </h4>
+                                                            <?php if (!empty($material['formatted_date'])) : ?>
+                                                                <span class="material-date"><?php echo esc_html($material['formatted_date']); ?></span>
+                                                            <?php endif; ?>
+                                                        </div>
 
-                                    <?php if ($videos) : ?>
-                                        <div class="tab-pane" id="videos">
-                                            <?php
-                                            $video_links = array_filter(array_map('trim', explode(',', $videos)));
-                                            foreach ($video_links as $link) {
-                                                // Проверяем, это YouTube или Vimeo
-                                                if (strpos($link, 'youtube.com') !== false || strpos($link, 'youtu.be') !== false) {
-                                                    preg_match('/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/ ]{11})/i', $link, $match);
-                                                    if (isset($match[1])) {
-                                                        echo '<div class="video-embed"><iframe width="100%" height="400" src="https://www.youtube.com/embed/' . $match[1] . '" frameborder="0" allowfullscreen></iframe></div>';
-                                                    }
-                                                } else {
-                                                    echo '<a href="' . esc_url($link) . '" target="_blank" class="resource-link">' . esc_html($link) . '</a>';
-                                                }
-                                            }
-                                            ?>
-                                        </div>
-                                    <?php endif; ?>
+                                                        <?php if ($material['type'] === 'text') : ?>
+                                                            <!-- Текстовый материал -->
+                                                            <div class="material-content">
+                                                                <?php echo wp_kses_post($material['content']); ?>
+                                                            </div>
+                                                        <?php elseif ($material['type'] === 'link' || $material['type'] === 'file') : ?>
+                                                            <!-- Ссылка или файл -->
+                                                            <?php if (!empty($material['description'])) : ?>
+                                                                <div class="material-description">
+                                                                    <?php echo esc_html($material['description']); ?>
+                                                                </div>
+                                                            <?php endif; ?>
 
-                                    <?php if ($reviews) : ?>
-                                        <div class="tab-pane" id="reviews">
-                                            <?php echo nl2br(esc_html($reviews)); ?>
+                                                            <?php if (!empty($material['url'])) : ?>
+                                                                <?php if ($category_key === 'videos' && (strpos($material['url'], 'youtube.com') !== false || strpos($material['url'], 'youtu.be') !== false)) : ?>
+                                                                    <!-- YouTube embed -->
+                                                                    <?php
+                                                                    preg_match('/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/ ]{11})/i', $material['url'], $match);
+                                                                    if (isset($match[1])) :
+                                                                    ?>
+                                                                        <div class="video-embed">
+                                                                            <iframe width="100%" height="400" src="https://www.youtube.com/embed/<?php echo esc_attr($match[1]); ?>" frameborder="0" allowfullscreen></iframe>
+                                                                        </div>
+                                                                    <?php endif; ?>
+                                                                <?php else : ?>
+                                                                    <!-- Обычная ссылка -->
+                                                                    <a href="<?php echo esc_url($material['url']); ?>" target="_blank" class="material-link">
+                                                                        <?php if ($material['type'] === 'file') : ?>
+                                                                            <i class="fas fa-download"></i> Скачать файл
+                                                                        <?php else : ?>
+                                                                            <i class="fas fa-external-link-alt"></i> Открыть ссылку
+                                                                        <?php endif; ?>
+                                                                    </a>
+                                                                <?php endif; ?>
+                                                            <?php endif; ?>
+                                                        <?php endif; ?>
+                                                    </div>
+                                                <?php endforeach; ?>
+                                            </div>
                                         </div>
-                                    <?php endif; ?>
-
-                                    <?php if ($developments) : ?>
-                                        <div class="tab-pane" id="developments">
-                                            <?php
-                                            $dev_links = array_filter(array_map('trim', explode(',', $developments)));
-                                            foreach ($dev_links as $link) {
-                                                echo '<a href="' . esc_url($link) . '" target="_blank" class="resource-link">' . esc_html($link) . '</a>';
-                                            }
-                                            ?>
-                                        </div>
-                                    <?php endif; ?>
+                                    <?php
+                                        $first_tab = false;
+                                    endforeach;
+                                    ?>
                                 </div>
                             </div>
                         </div>
