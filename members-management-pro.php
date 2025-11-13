@@ -39,11 +39,45 @@ function metoda_members_activate() {
     register_member_role_taxonomy();
     register_member_location_taxonomy();
 
+    // Создаем роли
+    metoda_create_custom_roles();
+
     // Создаем шаблонные страницы
     metoda_create_template_pages();
 
     // Сбрасываем постоянные ссылки
     flush_rewrite_rules();
+}
+
+/**
+ * Создание кастомных ролей
+ */
+function metoda_create_custom_roles() {
+    // Роль участника/эксперта
+    add_role('member', 'Участник', array(
+        'read' => true,
+        'edit_posts' => false,
+        'delete_posts' => false
+    ));
+
+    add_role('expert', 'Эксперт', array(
+        'read' => true,
+        'edit_posts' => false,
+        'delete_posts' => false
+    ));
+
+    // Роль менеджера
+    add_role('manager', 'Менеджер', array(
+        'read' => true,
+        'edit_posts' => true,
+        'edit_others_posts' => true,
+        'edit_published_posts' => true,
+        'publish_posts' => true,
+        'delete_posts' => true,
+        'delete_others_posts' => true,
+        'delete_published_posts' => true,
+        'manage_members' => true
+    ));
 }
 
 /**
@@ -1853,11 +1887,15 @@ function member_update_profile_ajax() {
 add_action('wp_ajax_member_update_profile', 'member_update_profile_ajax');
 
 /**
- * Редирект после логина - отправляем участников в личный кабинет
+ * Редирект после логина - отправляем в соответствующие кабинеты
  */
 function member_login_redirect($redirect_to, $request, $user) {
     if (isset($user->roles) && is_array($user->roles)) {
-        // Если пользователь - участник, редиректим в личный кабинет
+        // Менеджеры и админы в панель управления
+        if (in_array('manager', $user->roles) || in_array('administrator', $user->roles)) {
+            return home_url('/manager-panel/');
+        }
+        // Участники и эксперты в личный кабинет
         if (in_array('member', $user->roles) || in_array('expert', $user->roles)) {
             return home_url('/member-dashboard/');
         }
@@ -1896,3 +1934,75 @@ function block_admin_access_for_members() {
     }
 }
 add_action('admin_init', 'block_admin_access_for_members');
+
+/**
+ * AJAX обработчик изменения статуса участника (для менеджеров)
+ */
+function manager_change_member_status_ajax() {
+    check_ajax_referer('manager_actions', 'nonce');
+
+    if (!current_user_can('manager') && !current_user_can('administrator')) {
+        wp_send_json_error(array('message' => 'Нет прав доступа'));
+    }
+
+    $member_id = intval($_POST['member_id']);
+    $status = sanitize_text_field($_POST['status']);
+
+    if (!in_array($status, array('publish', 'pending', 'draft'))) {
+        wp_send_json_error(array('message' => 'Некорректный статус'));
+    }
+
+    $result = wp_update_post(array(
+        'ID' => $member_id,
+        'post_status' => $status
+    ));
+
+    if (is_wp_error($result)) {
+        wp_send_json_error(array('message' => 'Ошибка при изменении статуса'));
+    }
+
+    $status_labels = array(
+        'publish' => 'одобрен',
+        'pending' => 'отправлен на модерацию',
+        'draft' => 'переведен в черновики'
+    );
+
+    wp_send_json_success(array(
+        'message' => 'Участник ' . $status_labels[$status]
+    ));
+}
+add_action('wp_ajax_manager_change_member_status', 'manager_change_member_status_ajax');
+
+/**
+ * AJAX обработчик удаления участника (для менеджеров)
+ */
+function manager_delete_member_ajax() {
+    check_ajax_referer('manager_actions', 'nonce');
+
+    if (!current_user_can('manager') && !current_user_can('administrator')) {
+        wp_send_json_error(array('message' => 'Нет прав доступа'));
+    }
+
+    $member_id = intval($_POST['member_id']);
+
+    // Получаем связанного пользователя
+    $post = get_post($member_id);
+    if ($post && $post->post_author) {
+        $user_id = $post->post_author;
+        // Удаляем пользователя WordPress
+        require_once(ABSPATH . 'wp-admin/includes/user.php');
+        wp_delete_user($user_id);
+    }
+
+    // Удаляем запись участника
+    $result = wp_delete_post($member_id, true);
+
+    if (!$result) {
+        wp_send_json_error(array('message' => 'Ошибка при удалении участника'));
+    }
+
+    wp_send_json_success(array(
+        'message' => 'Участник успешно удален'
+    ));
+}
+add_action('wp_ajax_manager_delete_member', 'manager_delete_member_ajax');
