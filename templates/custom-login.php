@@ -133,7 +133,7 @@ $accent_color = '#ff6600';
                         <input type="checkbox" name="rememberme" value="forever" class="w-4 h-4 rounded focus:ring-2 focus:ring-offset-0" style="color: <?php echo $primary_color; ?>;">
                         <span class="ml-2 text-sm text-gray-700">Запомнить меня</span>
                     </label>
-                    <a href="<?php echo wp_lostpassword_url(); ?>" class="text-sm font-medium hover:underline" style="color: <?php echo $primary_color; ?>;">
+                    <a href="<?php echo home_url('/forgot-password/'); ?>" class="text-sm font-medium hover:underline" style="color: <?php echo $primary_color; ?>;">
                         Забыли пароль?
                     </a>
                 </div>

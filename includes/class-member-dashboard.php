@@ -20,6 +20,7 @@ class Member_Dashboard {
         add_shortcode('member_dashboard', array($this, 'render_dashboard'));
         add_action('wp_ajax_member_update_profile', array($this, 'ajax_update_profile'));
         add_action('wp_ajax_member_update_gallery', array($this, 'ajax_update_gallery'));
+        add_action('wp_ajax_mark_onboarding_seen', array($this, 'ajax_mark_onboarding_seen'));
         add_action('wp_enqueue_scripts', array($this, 'enqueue_dashboard_assets'));
     }
 
@@ -58,6 +59,23 @@ class Member_Dashboard {
 
             // Enqueue WordPress media library
             wp_enqueue_media();
+
+            // Enqueue onboarding for first-time users
+            if (is_user_logged_in()) {
+                $user_id = get_current_user_id();
+                $onboarding_seen = get_user_meta($user_id, 'metoda_onboarding_seen', true);
+
+                if (!$onboarding_seen) {
+                    wp_enqueue_style('onboarding', plugin_dir_url(dirname(__FILE__)) . 'assets/css/onboarding.css', array(), '1.0.0');
+                    wp_enqueue_script('onboarding', plugin_dir_url(dirname(__FILE__)) . 'assets/js/onboarding.js', array('jquery'), '1.0.0', true);
+
+                    wp_localize_script('onboarding', 'onboardingData', array(
+                        'ajaxUrl' => admin_url('admin-ajax.php'),
+                        'nonce' => wp_create_nonce('onboarding_nonce'),
+                        'showOnboarding' => '1',
+                    ));
+                }
+            }
         }
     }
 
@@ -275,6 +293,22 @@ class Member_Dashboard {
         }
 
         return $stats;
+    }
+
+    /**
+     * Mark onboarding as seen via AJAX
+     */
+    public function ajax_mark_onboarding_seen() {
+        check_ajax_referer('onboarding_nonce', 'nonce');
+
+        if (!is_user_logged_in()) {
+            wp_send_json_error(array('message' => 'Необходимо авторизоваться'));
+        }
+
+        $user_id = get_current_user_id();
+        update_user_meta($user_id, 'metoda_onboarding_seen', '1');
+
+        wp_send_json_success(array('message' => 'Onboarding отмечен как просмотренный'));
     }
 }
 
