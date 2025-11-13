@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script> window.FontAwesomeConfig = { autoReplaceSvg: 'nest'};</script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        ::-webkit-scrollbar { display: none;}
+        * { font-family: 'Inter', sans-serif; }
+    </style>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#2563eb',
+                        secondary: '#64748b',
+                        accent: '#f8fafc'
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gray-50">
+
+    <header id="header" class="bg-white shadow-sm border-b">
+        <div class="max-w-7xl mx-auto px-6 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-4">
+                    <button class="text-gray-600 hover:text-primary transition-colors">
+                        <i class="fa-solid fa-arrow-left text-lg"></i>
+                    </button>
+                    <h1 class="text-xl font-semibold text-gray-900">Member Profile</h1>
+                </div>
+                <div class="flex items-center space-x-3">
+                    <button class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                        <i class="fa-solid fa-envelope mr-2"></i>
+                        Contact
+                    </button>
+                    <button class="text-gray-600 hover:text-primary transition-colors">
+                        <i class="fa-solid fa-share-nodes text-lg"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-6 py-8">
+        
+        <section id="profile-hero" class="bg-white rounded-xl shadow-sm border p-8 mb-8">
+            <div class="flex items-start space-x-8">
+                <div class="flex-shrink-0">
+                    <div class="w-48 h-48 rounded-2xl overflow-hidden bg-gray-100">
+                        <img src="https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-5.jpg" 
+                             alt="Profile Photo" 
+                             class="w-full h-full object-cover">
+                    </div>
+                </div>
+                
+                <div class="flex-1">
+                    <div class="mb-4">
+                        <span class="inline-block bg-primary text-white px-3 py-1 rounded-full text-sm font-medium mb-3">
+                            Expert
+                        </span>
+                        <h1 class="text-4xl font-bold text-gray-900 mb-2">Dr. Sarah Mitchell</h1>
+                        <h2 class="text-2xl font-semibold text-gray-700 mb-3">Senior Strategic Consultant</h2>
+                    </div>
+                    
+                    <div class="space-y-3">
+                        <div class="flex items-center text-gray-600">
+                            <i class="fa-solid fa-building text-primary mr-3"></i>
+                            <a href="#" class="text-primary hover:underline font-medium">McKinsey & Company</a>
+                        </div>
+                        <div class="flex items-center text-gray-600">
+                            <i class="fa-solid fa-location-dot text-primary mr-3"></i>
+                            <span>New York, NY</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            
+            <div class="lg:col-span-2 space-y-8">
+                
+                <section id="professional-info" class="bg-white rounded-xl shadow-sm border p-8">
+                    <h3 class="text-2xl font-bold text-gray-900 mb-6">Professional Information</h3>
+                    
+                    <div class="space-y-8">
+                        
+                        <div id="role-section">
+                            <h4 class="text-lg font-semibold text-gray-800 mb-4">Role in Association</h4>
+                            <div class="flex flex-wrap gap-2">
+                                <span class="bg-blue-100 text-blue-800 px-4 py-2 rounded-full text-sm font-medium cursor-pointer hover:bg-blue-200 transition-colors">
+                                    Board Member
+                                </span>
+                                <span class="bg-green-100 text-green-800 px-4 py-2 rounded-full text-sm font-medium cursor-pointer hover:bg-green-200 transition-colors">
+                                    Mentor
+                                </span>
+                                <span class="bg-purple-100 text-purple-800 px-4 py-2 rounded-full text-sm font-medium cursor-pointer hover:bg-purple-200 transition-colors">
+                                    Speaker
+                                </span>
+                                <span class="bg-orange-100 text-orange-800 px-4 py-2 rounded-full text-sm font-medium cursor-pointer hover:bg-orange-200 transition-colors">
+                                    Committee Lead
+                                </span>
+                            </div>
+                        </div>
+
+                        <div id="specialization-section">
+                            <h4 class="text-lg font-semibold text-gray-800 mb-4">Specialization and Experience</h4>
+                            <ul class="space-y-3">
+                                <li class="flex items-start">
+                                    <div class="w-2 h-2 bg-primary rounded-full mt-2 mr-3 flex-shrink-0"></div>
+                                    <span class="text-gray-700"><strong>Strategic Management</strong> (15 years)</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <div class="w-2 h-2 bg-primary rounded-full mt-2 mr-3 flex-shrink-0"></div>
+                                    <span class="text-gray-700"><strong>Digital Transformation</strong> (12 years)</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <div class="w-2 h-2 bg-primary rounded-full mt-2 mr-3 flex-shrink-0"></div>
+                                    <span class="text-gray-700"><strong>Organizational Development</strong> (10 years)</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <div class="w-2 h-2 bg-primary rounded-full mt-2 mr-3 flex-shrink-0"></div>
+                                    <span class="text-gray-700"><strong>Change Management</strong> (8 years)</span>
+                                </li>
+                            </ul>
+                        </div>
+
+                        <div id="interests-section">
+                            <h4 class="text-lg font-semibold text-gray-800 mb-4">Areas of Professional Interest</h4>
+                            <ul class="space-y-3">
+                                <li class="flex items-start">
+                                    <div class="w-2 h-2 bg-primary rounded-full mt-2 mr-3 flex-shrink-0"></div>
+                                    <span class="text-gray-700">Artificial Intelligence in Business Strategy</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <div class="w-2 h-2 bg-primary rounded-full mt-2 mr-3 flex-shrink-0"></div>
+                                    <span class="text-gray-700">Sustainable Business Practices</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <div class="w-2 h-2 bg-primary rounded-full mt-2 mr-3 flex-shrink-0"></div>
+                                    <span class="text-gray-700">Leadership Development in Remote Teams</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <div class="w-2 h-2 bg-primary rounded-full mt-2 mr-3 flex-shrink-0"></div>
+                                    <span class="text-gray-700">Innovation Management</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <div class="w-2 h-2 bg-primary rounded-full mt-2 mr-3 flex-shrink-0"></div>
+                                    <span class="text-gray-700">Cross-Cultural Business Communication</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="additional-info" class="space-y-8">
+                    
+                    <div id="about-section" class="bg-white rounded-xl shadow-sm border p-8">
+                        <h3 class="text-2xl font-bold text-gray-900 mb-6">About Me</h3>
+                        <div class="prose prose-gray max-w-none">
+                            <p class="text-gray-700 leading-relaxed mb-4">
+                                I am a seasoned strategic consultant with over 15 years of experience helping Fortune 500 companies navigate complex business transformations. My passion lies in bridging the gap between innovative technology solutions and practical business applications.
+                            </p>
+                            <p class="text-gray-700 leading-relaxed mb-4">
+                                Throughout my career, I have led numerous digital transformation initiatives, focusing on organizational change management and strategic planning. I believe in the power of collaborative leadership and have mentored over 50 professionals in their career development journey.
+                            </p>
+                            <p class="text-gray-700 leading-relaxed">
+                                When I'm not consulting, I enjoy contributing to industry research, speaking at conferences, and exploring new technologies that can drive business innovation. I hold an MBA from Harvard Business School and a Ph.D. in Organizational Psychology from Stanford University.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div id="collaboration-section" class="bg-white rounded-xl shadow-sm border p-8">
+                        <h3 class="text-2xl font-bold text-gray-900 mb-6">Expectations from Collaboration</h3>
+                        <div class="prose prose-gray max-w-none">
+                            <p class="text-gray-700 leading-relaxed mb-4">
+                                I am looking for meaningful partnerships that drive mutual growth and create lasting impact in our industry. My ideal collaborations involve:
+                            </p>
+                            <ul class="list-disc pl-6 space-y-2 text-gray-700 mb-4">
+                                <li>Knowledge sharing opportunities where we can learn from each other's expertise</li>
+                                <li>Joint research projects that advance our understanding of business strategy and innovation</li>
+                                <li>Mentoring relationships, both as a mentor and mentee, to foster continuous learning</li>
+                                <li>Speaking engagements and thought leadership initiatives</li>
+                            </ul>
+                            <p class="text-gray-700 leading-relaxed">
+                                I value transparency, open communication, and a commitment to excellence in all professional relationships. Let's connect to explore how we can create value together and contribute to the advancement of our professional community.
+                            </p>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <aside class="lg:col-span-1">
+                <div class="sticky top-8 space-y-6">
+                    
+                    <div id="contact-card" class="bg-white rounded-xl shadow-sm border p-6">
+                        <h4 class="text-lg font-semibold text-gray-900 mb-4">Contact Information</h4>
+                        <div class="space-y-3">
+                            <a href="mailto:sarah.mitchell@mckinsey.com" class="flex items-center text-gray-600 hover:text-primary transition-colors">
+                                <i class="fa-solid fa-envelope text-primary mr-3"></i>
+                                <span class="text-sm">sarah.mitchell@mckinsey.com</span>
+                            </a>
+                            <a href="https://linkedin.com/in/sarahmitchell" class="flex items-center text-gray-600 hover:text-primary transition-colors">
+                                <i class="fa-brands fa-linkedin text-primary mr-3"></i>
+                                <span class="text-sm">LinkedIn Profile</span>
+                            </a>
+                            <a href="https://twitter.com/sarahmitchell" class="flex items-center text-gray-600 hover:text-primary transition-colors">
+                                <i class="fa-brands fa-twitter text-primary mr-3"></i>
+                                <span class="text-sm">@sarahmitchell</span>
+                            </a>
+                        </div>
+                    </div>
+
+                    <div id="stats-card" class="bg-white rounded-xl shadow-sm border p-6">
+                        <h4 class="text-lg font-semibold text-gray-900 mb-4">Activity</h4>
+                        <div class="space-y-4">
+                            <div class="flex justify-between items-center">
+                                <span class="text-gray-600 text-sm">Member Since</span>
+                                <span class="font-medium text-gray-900">2019</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-gray-600 text-sm">Events Attended</span>
+                                <span class="font-medium text-gray-900">47</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-gray-600 text-sm">Presentations Given</span>
+                                <span class="font-medium text-gray-900">12</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-gray-600 text-sm">Mentees</span>
+                                <span class="font-medium text-gray-900">23</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="actions-card" class="bg-white rounded-xl shadow-sm border p-6">
+                        <div class="space-y-3">
+                            <button class="w-full bg-primary text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors font-medium">
+                                <i class="fa-solid fa-envelope mr-2"></i>
+                                Send Message
+                            </button>
+                            <button class="w-full border border-gray-300 text-gray-700 py-3 px-4 rounded-lg hover:bg-gray-50 transition-colors font-medium">
+                                <i class="fa-solid fa-calendar mr-2"></i>
+                                Schedule Meeting
+                            </button>
+                            <button class="w-full border border-gray-300 text-gray-700 py-3 px-4 rounded-lg hover:bg-gray-50 transition-colors font-medium">
+                                <i class="fa-solid fa-bookmark mr-2"></i>
+                                Save Profile
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+        </div>
+    </main>
+
+</body>
+</html>
