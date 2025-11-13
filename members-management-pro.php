@@ -93,15 +93,27 @@ function metoda_create_template_pages() {
         ),
         array(
             'title' => 'Регистрация участника',
-            'slug' => 'registraciya-uchastnika',
-            'content' => 'На этой странице будет форма регистрации нового участника.',
+            'slug' => 'member-registration',
+            'content' => '[member_registration]',
             'option' => 'metoda_registration_page_id'
         ),
         array(
             'title' => 'Личный кабинет',
-            'slug' => 'lichnyj-kabinet',
-            'content' => 'Личный кабинет участника (требуется авторизация).',
+            'slug' => 'member-dashboard',
+            'content' => '[member_dashboard]',
             'option' => 'metoda_dashboard_page_id'
+        ),
+        array(
+            'title' => 'Панель менеджера',
+            'slug' => 'manager-panel',
+            'content' => '[manager_panel]',
+            'option' => 'metoda_manager_page_id'
+        ),
+        array(
+            'title' => 'Вход',
+            'slug' => 'login',
+            'content' => '[custom_login]',
+            'option' => 'metoda_login_page_id'
         )
     );
 
@@ -1128,6 +1140,75 @@ function members_directory_shortcode($atts) {
 }
 add_shortcode('members_directory', 'members_directory_shortcode');
 
+/**
+ * Шорткод для страницы регистрации
+ */
+function member_registration_shortcode() {
+    ob_start();
+    include(plugin_dir_path(__FILE__) . 'templates/member-registration.php');
+    return ob_get_clean();
+}
+add_shortcode('member_registration', 'member_registration_shortcode');
+
+/**
+ * Шорткод для личного кабинета
+ */
+function member_dashboard_shortcode() {
+    if (!is_user_logged_in()) {
+        return '<p>Пожалуйста, <a href="' . wp_login_url(get_permalink()) . '">войдите</a>, чтобы получить доступ к личному кабинету.</p>';
+    }
+
+    $user = wp_get_current_user();
+    if (!in_array('member', $user->roles) && !in_array('expert', $user->roles)) {
+        return '<p>У вас нет доступа к этой странице.</p>';
+    }
+
+    ob_start();
+    include(plugin_dir_path(__FILE__) . 'templates/member-dashboard.php');
+    return ob_get_clean();
+}
+add_shortcode('member_dashboard', 'member_dashboard_shortcode');
+
+/**
+ * Шорткод для панели менеджера
+ */
+function manager_panel_shortcode() {
+    if (!is_user_logged_in()) {
+        return '<p>Пожалуйста, <a href="' . wp_login_url(get_permalink()) . '">войдите</a>, чтобы получить доступ к панели управления.</p>';
+    }
+
+    $user = wp_get_current_user();
+    if (!in_array('manager', $user->roles) && !in_array('administrator', $user->roles)) {
+        return '<p>У вас нет доступа к этой странице.</p>';
+    }
+
+    ob_start();
+    include(plugin_dir_path(__FILE__) . 'templates/manager-panel.php');
+    return ob_get_clean();
+}
+add_shortcode('manager_panel', 'manager_panel_shortcode');
+
+/**
+ * Шорткод для страницы логина
+ */
+function custom_login_shortcode() {
+    if (is_user_logged_in()) {
+        $user = wp_get_current_user();
+        if (in_array('manager', $user->roles) || in_array('administrator', $user->roles)) {
+            wp_redirect(home_url('/manager-panel/'));
+            exit;
+        } else {
+            wp_redirect(home_url('/member-dashboard/'));
+            exit;
+        }
+    }
+
+    ob_start();
+    include(plugin_dir_path(__FILE__) . 'templates/custom-login.php');
+    return ob_get_clean();
+}
+add_shortcode('custom_login', 'custom_login_shortcode');
+
 // Создание таблицы для импорта при активации плагина
 function members_plugin_activate() {
     // Создаем термины по умолчанию
@@ -2006,3 +2087,189 @@ function manager_delete_member_ajax() {
     ));
 }
 add_action('wp_ajax_manager_delete_member', 'manager_delete_member_ajax');
+
+/**
+ * AJAX обработчик для сохранения галереи
+ */
+function member_save_gallery_ajax() {
+    check_ajax_referer('member_dashboard', 'nonce');
+
+    if (!is_user_logged_in()) {
+        wp_send_json_error(array('message' => 'Необходима авторизация'));
+    }
+
+    $member_id = Member_User_Link::get_current_user_member_id();
+    if (!$member_id) {
+        wp_send_json_error(array('message' => 'Участник не найден'));
+    }
+
+    $gallery_ids = sanitize_text_field($_POST['gallery_ids']);
+
+    // Сохраняем IDs изображений галереи
+    update_post_meta($member_id, 'member_gallery', $gallery_ids);
+
+    wp_send_json_success(array(
+        'message' => 'Галерея успешно сохранена!'
+    ));
+}
+add_action('wp_ajax_member_save_gallery', 'member_save_gallery_ajax');
+
+/**
+ * AJAX обработчик для добавления материала (ссылка)
+ */
+function member_add_material_link_ajax() {
+    check_ajax_referer('member_dashboard', 'nonce');
+
+    if (!is_user_logged_in()) {
+        wp_send_json_error(array('message' => 'Необходима авторизация'));
+    }
+
+    $member_id = Member_User_Link::get_current_user_member_id();
+    if (!$member_id) {
+        wp_send_json_error(array('message' => 'Участник не найден'));
+    }
+
+    $category = sanitize_text_field($_POST['category']);
+    $title = sanitize_text_field($_POST['title']);
+    $url = esc_url_raw($_POST['url']);
+    $description = sanitize_textarea_field($_POST['description']);
+
+    // Получаем текущие материалы
+    $current_materials = get_post_meta($member_id, 'member_' . $category, true);
+
+    // Создаем новую запись материала
+    $new_material = sprintf(
+        "[LINK|%s|%s|%s|%s]",
+        $title,
+        $url,
+        $description,
+        current_time('Y-m-d H:i:s')
+    );
+
+    // Добавляем новый материал
+    if (empty($current_materials)) {
+        $updated_materials = $new_material;
+    } else {
+        $updated_materials = $current_materials . "\n" . $new_material;
+    }
+
+    update_post_meta($member_id, 'member_' . $category, $updated_materials);
+
+    wp_send_json_success(array(
+        'message' => 'Ссылка успешно добавлена!',
+        'reload' => true
+    ));
+}
+add_action('wp_ajax_member_add_material_link', 'member_add_material_link_ajax');
+
+/**
+ * AJAX обработчик для добавления материала (файл)
+ */
+function member_add_material_file_ajax() {
+    check_ajax_referer('member_dashboard', 'nonce');
+
+    if (!is_user_logged_in()) {
+        wp_send_json_error(array('message' => 'Необходима авторизация'));
+    }
+
+    $member_id = Member_User_Link::get_current_user_member_id();
+    if (!$member_id) {
+        wp_send_json_error(array('message' => 'Участник не найден'));
+    }
+
+    // Проверяем, был ли загружен файл
+    if (empty($_FILES['file'])) {
+        wp_send_json_error(array('message' => 'Файл не загружен'));
+    }
+
+    $category = sanitize_text_field($_POST['category']);
+    $title = sanitize_text_field($_POST['title']);
+    $description = sanitize_textarea_field($_POST['description']);
+
+    // Загружаем файл в медиабиблиотеку
+    require_once(ABSPATH . 'wp-admin/includes/file.php');
+    require_once(ABSPATH . 'wp-admin/includes/media.php');
+    require_once(ABSPATH . 'wp-admin/includes/image.php');
+
+    $attachment_id = media_handle_upload('file', $member_id);
+
+    if (is_wp_error($attachment_id)) {
+        wp_send_json_error(array('message' => 'Ошибка загрузки файла: ' . $attachment_id->get_error_message()));
+    }
+
+    $file_url = wp_get_attachment_url($attachment_id);
+
+    // Получаем текущие материалы
+    $current_materials = get_post_meta($member_id, 'member_' . $category, true);
+
+    // Создаем новую запись материала
+    $new_material = sprintf(
+        "[FILE|%s|%s|%s|%s]",
+        $title,
+        $file_url,
+        $description,
+        current_time('Y-m-d H:i:s')
+    );
+
+    // Добавляем новый материал
+    if (empty($current_materials)) {
+        $updated_materials = $new_material;
+    } else {
+        $updated_materials = $current_materials . "\n" . $new_material;
+    }
+
+    update_post_meta($member_id, 'member_' . $category, $updated_materials);
+
+    wp_send_json_success(array(
+        'message' => 'Файл успешно загружен!',
+        'reload' => true
+    ));
+}
+add_action('wp_ajax_member_add_material_file', 'member_add_material_file_ajax');
+
+/**
+ * AJAX обработчик для удаления материала
+ */
+function member_delete_material_ajax() {
+    check_ajax_referer('member_dashboard', 'nonce');
+
+    if (!is_user_logged_in()) {
+        wp_send_json_error(array('message' => 'Необходима авторизация'));
+    }
+
+    $member_id = Member_User_Link::get_current_user_member_id();
+    if (!$member_id) {
+        wp_send_json_error(array('message' => 'Участник не найден'));
+    }
+
+    $category = sanitize_text_field($_POST['category']);
+    $index = intval($_POST['index']);
+
+    // Получаем текущие материалы
+    $current_materials = get_post_meta($member_id, 'member_' . $category, true);
+
+    if (empty($current_materials)) {
+        wp_send_json_error(array('message' => 'Материалы не найдены'));
+    }
+
+    // Разбиваем на строки
+    $materials_array = explode("\n", $current_materials);
+
+    // Удаляем элемент по индексу
+    if (isset($materials_array[$index])) {
+        unset($materials_array[$index]);
+
+        // Пересобираем строку
+        $updated_materials = implode("\n", array_values($materials_array));
+
+        update_post_meta($member_id, 'member_' . $category, $updated_materials);
+
+        wp_send_json_success(array(
+            'message' => 'Материал успешно удален!',
+            'reload' => true
+        ));
+    } else {
+        wp_send_json_error(array('message' => 'Материал не найден'));
+    }
+}
+add_action('wp_ajax_member_delete_material', 'member_delete_material_ajax');
