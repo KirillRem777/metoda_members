@@ -1372,11 +1372,11 @@ function members_import_page_callback() {
  * Подключение скриптов и стилей для фронтенда
  */
 function members_enqueue_scripts() {
-    if (is_post_type_archive('members') || is_singular('members')) {
-        // Подключаем jQuery если еще не подключен
-        wp_enqueue_script('jquery');
+    // jQuery для всех страниц
+    wp_enqueue_script('jquery');
 
-        // Подключаем скрипт AJAX фильтрации
+    // Архив участников
+    if (is_post_type_archive('members') || is_singular('members')) {
         wp_enqueue_script(
             'members-archive-ajax',
             plugin_dir_url(__FILE__) . 'assets/js/members-archive-ajax.js',
@@ -1385,11 +1385,103 @@ function members_enqueue_scripts() {
             true
         );
 
-        // Передаем данные для AJAX
         wp_localize_script('members-archive-ajax', 'membersAjax', array(
             'ajaxurl' => admin_url('admin-ajax.php'),
             'nonce' => wp_create_nonce('members_ajax_nonce')
         ));
+    }
+
+    // Глобальные проверки по slug страницы
+    global $post;
+    if (is_a($post, 'WP_Post')) {
+        // Страница регистрации
+        if ($post->post_name === 'member-registration') {
+            wp_enqueue_style(
+                'member-registration-css',
+                plugin_dir_url(__FILE__) . 'assets/css/member-registration.css',
+                array(),
+                '1.0.0'
+            );
+
+            wp_enqueue_script(
+                'member-registration-js',
+                plugin_dir_url(__FILE__) . 'assets/js/member-registration.js',
+                array('jquery'),
+                '1.0.0',
+                true
+            );
+
+            wp_localize_script('member-registration-js', 'memberRegistrationData', array(
+                'ajaxUrl' => admin_url('admin-ajax.php'),
+                'nonce' => wp_create_nonce('member_registration')
+            ));
+        }
+
+        // Страница логина
+        if ($post->post_name === 'login') {
+            wp_enqueue_style(
+                'custom-login-css',
+                plugin_dir_url(__FILE__) . 'assets/css/custom-login.css',
+                array(),
+                '1.0.0'
+            );
+
+            wp_enqueue_script(
+                'custom-login-js',
+                plugin_dir_url(__FILE__) . 'assets/js/custom-login.js',
+                array('jquery'),
+                '1.0.0',
+                true
+            );
+        }
+
+        // Личный кабинет
+        if ($post->post_name === 'member-dashboard') {
+            wp_enqueue_media(); // Для загрузки файлов
+
+            wp_enqueue_style(
+                'member-dashboard-css',
+                plugin_dir_url(__FILE__) . 'assets/css/member-dashboard.css',
+                array(),
+                '1.0.0'
+            );
+
+            wp_enqueue_script(
+                'member-dashboard-js',
+                plugin_dir_url(__FILE__) . 'assets/js/member-dashboard.js',
+                array('jquery'),
+                '1.0.0',
+                true
+            );
+
+            wp_localize_script('member-dashboard-js', 'memberDashboardData', array(
+                'ajaxUrl' => admin_url('admin-ajax.php'),
+                'nonce' => wp_create_nonce('member_dashboard')
+            ));
+        }
+
+        // Панель менеджера
+        if ($post->post_name === 'manager-panel') {
+            wp_enqueue_style(
+                'manager-panel-css',
+                plugin_dir_url(__FILE__) . 'assets/css/manager-panel.css',
+                array(),
+                '1.0.0'
+            );
+
+            wp_enqueue_script(
+                'manager-panel-js',
+                plugin_dir_url(__FILE__) . 'assets/js/manager-panel.js',
+                array(),
+                '1.0.0',
+                true
+            );
+
+            wp_localize_script('manager-panel-js', 'managerPanelData', array(
+                'ajaxUrl' => admin_url('admin-ajax.php'),
+                'nonce' => wp_create_nonce('manager_actions')
+            ));
+        }
     }
 }
 add_action('wp_enqueue_scripts', 'members_enqueue_scripts');
