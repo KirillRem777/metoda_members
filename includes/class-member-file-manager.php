@@ -18,6 +18,7 @@ class Member_File_Manager {
     public function __construct() {
         add_action('wp_ajax_member_upload_file', array($this, 'ajax_upload_file'));
         add_action('wp_ajax_member_add_link', array($this, 'ajax_add_link'));
+        add_action('wp_ajax_member_add_text', array($this, 'ajax_add_text'));
         add_action('wp_ajax_member_delete_material', array($this, 'ajax_delete_material'));
         add_action('wp_ajax_member_get_materials', array($this, 'ajax_get_materials'));
     }
@@ -144,6 +145,49 @@ class Member_File_Manager {
                 'url' => $url,
                 'type' => 'link',
                 'description' => $description
+            )
+        ));
+    }
+
+    /**
+     * Add text material via AJAX
+     */
+    public function ajax_add_text() {
+        check_ajax_referer('member_dashboard_nonce', 'nonce');
+
+        if (!is_user_logged_in()) {
+            wp_send_json_error(array('message' => 'Необходимо авторизоваться'));
+        }
+
+        $member_id = Member_User_Link::get_current_user_member_id();
+
+        if (!$member_id || !Member_User_Link::can_user_edit_member($member_id)) {
+            wp_send_json_error(array('message' => 'Нет прав на редактирование'));
+        }
+
+        $category = isset($_POST['category']) ? sanitize_text_field($_POST['category']) : '';
+        $title = isset($_POST['title']) ? sanitize_text_field($_POST['title']) : '';
+        $content = isset($_POST['content']) ? wp_kses_post($_POST['content']) : '';
+
+        if (empty($category) || empty($title) || empty($content)) {
+            wp_send_json_error(array('message' => 'Все поля обязательны'));
+        }
+
+        // Add material to member
+        $material_id = $this->add_material($member_id, $category, array(
+            'type' => 'text',
+            'title' => $title,
+            'content' => $content,
+            'date' => current_time('mysql')
+        ));
+
+        wp_send_json_success(array(
+            'message' => 'Текст успешно добавлен',
+            'material' => array(
+                'id' => $material_id,
+                'title' => $title,
+                'content' => $content,
+                'type' => 'text'
             )
         ));
     }
@@ -297,6 +341,7 @@ class Member_File_Manager {
                 'title' => isset($material['title']) ? $material['title'] : '',
                 'description' => isset($material['description']) ? $material['description'] : '',
                 'url' => isset($material['url']) ? $material['url'] : '',
+                'content' => isset($material['content']) ? $material['content'] : '',
                 'type' => isset($material['type']) ? $material['type'] : 'link',
                 'date' => isset($material['date']) ? $material['date'] : '',
             );
