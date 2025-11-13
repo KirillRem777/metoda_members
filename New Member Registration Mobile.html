@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registration</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script> window.FontAwesomeConfig = { autoReplaceSvg: 'nest'};</script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>::-webkit-scrollbar { display: none;}
+    * { font-family: 'Inter', sans-serif; }
+    .password-strength-weak { background: #ef4444; }
+    .password-strength-medium { background: #f59e0b; }
+    .password-strength-strong { background: #10b981; }
+    </style>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#2563eb',
+                        secondary: '#64748b'
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gray-50">
+    <div id="registration-container" class="pb-20">
+        <header id="header" class="bg-white shadow-sm sticky top-0 z-50">
+            <div class="px-4 py-4 flex items-center">
+                <button id="back-btn" class="mr-3 hidden">
+                    <i class="fa-solid fa-arrow-left text-gray-700 text-xl"></i>
+                </button>
+                <h1 class="text-lg font-semibold text-gray-900">New Member Registration</h1>
+            </div>
+        </header>
+
+        <div id="progress-section" class="bg-white px-4 py-6 shadow-sm">
+            <div class="flex items-center justify-between mb-3">
+                <span id="step-label" class="text-sm font-medium text-gray-900">Step 2 of 4: Professional Information</span>
+                <span id="step-count" class="text-xs text-gray-500">50%</span>
+            </div>
+            <div class="w-full bg-gray-200 rounded-full h-2">
+                <div id="progress-bar" class="bg-primary h-2 rounded-full transition-all duration-300" style="width: 50%"></div>
+            </div>
+            <div class="flex justify-between mt-4">
+                <div class="flex flex-col items-center flex-1">
+                    <div id="step-circle-1" class="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center text-white text-sm font-semibold">
+                        <i class="fa-solid fa-check text-xs"></i>
+                    </div>
+                    <span class="text-xs mt-1 text-green-600 font-medium">Auth</span>
+                </div>
+                <div class="flex flex-col items-center flex-1">
+                    <div id="step-circle-2" class="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white text-sm font-semibold">2</div>
+                    <span class="text-xs mt-1 text-primary font-medium">Info</span>
+                </div>
+                <div class="flex flex-col items-center flex-1">
+                    <div id="step-circle-3" class="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center text-gray-500 text-sm font-semibold">3</div>
+                    <span class="text-xs mt-1 text-gray-400">Skills</span>
+                </div>
+                <div class="flex flex-col items-center flex-1">
+                    <div id="step-circle-4" class="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center text-gray-500 text-sm font-semibold">4</div>
+                    <span class="text-xs mt-1 text-gray-400">About</span>
+                </div>
+            </div>
+        </div>
+
+        <div id="step-2-content" class="px-4 py-6">
+            <h2 class="text-xl font-bold text-gray-900 mb-2">Professional Details</h2>
+            <p class="text-sm text-gray-600 mb-6">Tell us about your professional background</p>
+
+            <div class="space-y-5">
+                <div id="company-field">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Company Name <span class="text-red-500">*</span></label>
+                    <div class="relative">
+                        <input type="text" id="company" class="w-full px-4 py-3.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent outline-none text-gray-900 placeholder-gray-400" placeholder="e.g., Tech Solutions Inc.">
+                        <i class="fa-solid fa-building absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-1.5">Enter your current company or organization</p>
+                </div>
+
+                <div id="job-title-field">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Job Title <span class="text-red-500">*</span></label>
+                    <div class="relative">
+                        <input type="text" id="job-title" class="w-full px-4 py-3.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent outline-none text-gray-900 placeholder-gray-400" placeholder="e.g., Senior Product Manager">
+                        <i class="fa-solid fa-briefcase absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-1.5">Your current position or role</p>
+                </div>
+
+                <div id="city-field">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">City <span class="text-red-500">*</span></label>
+                    <div class="relative">
+                        <input type="text" id="city-input" class="w-full px-4 py-3.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent outline-none text-gray-900 placeholder-gray-400 pr-10" placeholder="Search for your city...">
+                        <i class="fa-solid fa-search absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
+                    </div>
+                    <div id="city-dropdown" class="hidden mt-2 bg-white border border-gray-200 rounded-xl shadow-lg max-h-48 overflow-y-auto">
+                        <div class="city-option px-4 py-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 flex items-center">
+                            <i class="fa-solid fa-location-dot text-primary mr-3 text-sm"></i>
+                            <div>
+                                <p class="text-sm font-medium text-gray-900">New York</p>
+                                <p class="text-xs text-gray-500">United States</p>
+                            </div>
+                        </div>
+                        <div class="city-option px-4 py-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 flex items-center">
+                            <i class="fa-solid fa-location-dot text-primary mr-3 text-sm"></i>
+                            <div>
+                                <p class="text-sm font-medium text-gray-900">London</p>
+                                <p class="text-xs text-gray-500">United Kingdom</p>
+                            </div>
+                        </div>
+                        <div class="city-option px-4 py-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 flex items-center">
+                            <i class="fa-solid fa-location-dot text-primary mr-3 text-sm"></i>
+                            <div>
+                                <p class="text-sm font-medium text-gray-900">San Francisco</p>
+                                <p class="text-xs text-gray-500">United States</p>
+                            </div>
+                        </div>
+                        <div class="city-option px-4 py-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 flex items-center">
+                            <i class="fa-solid fa-location-dot text-primary mr-3 text-sm"></i>
+                            <div>
+                                <p class="text-sm font-medium text-gray-900">Berlin</p>
+                                <p class="text-xs text-gray-500">Germany</p>
+                            </div>
+                        </div>
+                        <div class="city-option px-4 py-3 hover:bg-gray-50 cursor-pointer flex items-center">
+                            <i class="fa-solid fa-location-dot text-primary mr-3 text-sm"></i>
+                            <div>
+                                <p class="text-sm font-medium text-gray-900">Tokyo</p>
+                                <p class="text-xs text-gray-500">Japan</p>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-1.5">Type to search and select your city</p>
+                </div>
+
+                <div id="role-field">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Role in Association <span class="text-red-500">*</span></label>
+                    <div class="border border-gray-300 rounded-xl p-3 min-h-[120px] focus-within:ring-2 focus-within:ring-primary focus-within:border-transparent">
+                        <div id="selected-roles" class="flex flex-wrap gap-2 mb-2">
+                            <span class="inline-flex items-center px-3 py-1.5 bg-primary/10 text-primary rounded-lg text-sm font-medium">
+                                Board Member
+                                <button class="ml-2 hover:text-red-600">
+                                    <i class="fa-solid fa-times text-xs"></i>
+                                </button>
+                            </span>
+                            <span class="inline-flex items-center px-3 py-1.5 bg-primary/10 text-primary rounded-lg text-sm font-medium">
+                                Committee Lead
+                                <button class="ml-2 hover:text-red-600">
+                                    <i class="fa-solid fa-times text-xs"></i>
+                                </button>
+                            </span>
+                        </div>
+                        <input type="text" id="role-input" class="w-full outline-none text-sm text-gray-900 placeholder-gray-400" placeholder="Type and press Enter to add roles...">
+                    </div>
+                    <div id="role-suggestions" class="mt-2 flex flex-wrap gap-2">
+                        <button class="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg text-xs hover:bg-primary hover:text-white transition">
+                            <i class="fa-solid fa-plus mr-1"></i>Advisor
+                        </button>
+                        <button class="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg text-xs hover:bg-primary hover:text-white transition">
+                            <i class="fa-solid fa-plus mr-1"></i>Mentor
+                        </button>
+                        <button class="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg text-xs hover:bg-primary hover:text-white transition">
+                            <i class="fa-solid fa-plus mr-1"></i>Speaker
+                        </button>
+                        <button class="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg text-xs hover:bg-primary hover:text-white transition">
+                            <i class="fa-solid fa-plus mr-1"></i>Volunteer
+                        </button>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-2">Select multiple roles or add custom ones</p>
+                </div>
+
+                <div id="info-card" class="bg-blue-50 border border-blue-200 rounded-xl p-4 mt-6">
+                    <div class="flex items-start">
+                        <div class="w-10 h-10 bg-primary/20 rounded-lg flex items-center justify-center flex-shrink-0">
+                            <i class="fa-solid fa-lightbulb text-primary"></i>
+                        </div>
+                        <div class="ml-3">
+                            <p class="text-sm font-semibold text-gray-900 mb-1">Quick Tip</p>
+                            <p class="text-xs text-gray-600 leading-relaxed">Providing accurate professional information helps other members connect with you and understand your expertise within the association.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="action-buttons" class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-4 flex gap-3 shadow-lg">
+            <button id="prev-btn" class="flex-1 py-3.5 border-2 border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 transition flex items-center justify-center">
+                <i class="fa-solid fa-arrow-left mr-2"></i>Back
+            </button>
+            <button id="next-btn" class="flex-1 py-3.5 bg-primary text-white font-semibold rounded-xl hover:bg-blue-700 transition flex items-center justify-center shadow-md">
+                Continue<i class="fa-solid fa-arrow-right ml-2"></i>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        window.addEventListener('load', function() {
+            document.getElementById('back-btn').classList.remove('hidden');
+
+            const cityInput = document.getElementById('city-input');
+            const cityDropdown = document.getElementById('city-dropdown');
+            
+            cityInput.addEventListener('focus', function() {
+                cityDropdown.classList.remove('hidden');
+            });
+
+            cityInput.addEventListener('input', function() {
+                if (this.value.length > 0) {
+                    cityDropdown.classList.remove('hidden');
+                }
+            });
+
+            document.addEventListener('click', function(e) {
+                if (!cityInput.contains(e.target) && !cityDropdown.contains(e.target)) {
+                    cityDropdown.classList.add('hidden');
+                }
+            });
+
+            const cityOptions = document.querySelectorAll('.city-option');
+            cityOptions.forEach(option => {
+                option.addEventListener('click', function() {
+                    const cityName = this.querySelector('p.text-sm').textContent;
+                    cityInput.value = cityName;
+                    cityDropdown.classList.add('hidden');
+                });
+            });
+
+            const roleInput = document.getElementById('role-input');
+            const selectedRoles = document.getElementById('selected-roles');
+            
+            roleInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter' && this.value.trim() !== '') {
+                    e.preventDefault();
+                    addRole(this.value.trim());
+                    this.value = '';
+                }
+            });
+
+            function addRole(roleName) {
+                const roleTag = document.createElement('span');
+                roleTag.className = 'inline-flex items-center px-3 py-1.5 bg-primary/10 text-primary rounded-lg text-sm font-medium';
+                roleTag.innerHTML = `
+                    ${roleName}
+                    <button class="ml-2 hover:text-red-600 remove-role">
+                        <i class="fa-solid fa-times text-xs"></i>
+                    </button>
+                `;
+                selectedRoles.appendChild(roleTag);
+                
+                roleTag.querySelector('.remove-role').addEventListener('click', function() {
+                    roleTag.remove();
+                });
+            }
+
+            document.querySelectorAll('#selected-roles button').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    this.closest('span').remove();
+                });
+            });
+
+            const roleSuggestions = document.querySelectorAll('#role-suggestions button');
+            roleSuggestions.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const roleName = this.textContent.trim().replace('+ ', '');
+                    addRole(roleName);
+                });
+            });
+
+            document.getElementById('prev-btn').addEventListener('click', function() {
+                window.history.back();
+            });
+
+            document.getElementById('next-btn').addEventListener('click', function() {
+                const company = document.getElementById('company').value;
+                const jobTitle = document.getElementById('job-title').value;
+                const city = document.getElementById('city-input').value;
+                const roles = document.querySelectorAll('#selected-roles span');
+                
+                if (!company || !jobTitle || !city || roles.length === 0) {
+                    alert('Please fill in all required fields');
+                    return;
+                }
+                
+                console.log('Proceeding to next step...');
+            });
+        });
+    </script>
+</body>
+</html>

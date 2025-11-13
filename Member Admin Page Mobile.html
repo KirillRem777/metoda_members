@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Member Control Panel</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script> window.FontAwesomeConfig = { autoReplaceSvg: 'nest'};</script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <style>::-webkit-scrollbar { display: none;}</style>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3b82f6',
+                        secondary: '#f3f4f6'
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gray-50">
+    <div id="mobile-app" class="max-w-sm mx-auto bg-white min-h-screen">
+        <header id="header" class="bg-white border-b border-gray-200 px-4 py-3 sticky top-0 z-50">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <img src="https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-5.jpg" class="w-8 h-8 rounded-full object-cover">
+                    <div>
+                        <h1 class="text-lg font-semibold text-gray-900">Control Panel</h1>
+                    </div>
+                </div>
+                <button class="p-2">
+                    <i class="fa-solid fa-bars text-gray-600"></i>
+                </button>
+            </div>
+        </header>
+
+        <nav id="navigation" class="bg-white border-b border-gray-200 px-4 py-2">
+            <div class="flex space-x-1">
+                <button id="profile-tab" class="flex-1 py-2 px-3 text-sm font-medium text-white bg-primary rounded-lg">
+                    <i class="fa-solid fa-user mr-2"></i>My Profile
+                </button>
+                <button id="materials-tab" class="flex-1 py-2 px-3 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg">
+                    <i class="fa-solid fa-file-text mr-2"></i>My Materials
+                </button>
+            </div>
+        </nav>
+
+        <div id="profile-section" class="p-4 space-y-6">
+            <div id="basic-info-card" class="bg-white rounded-lg border border-gray-200 p-4">
+                <h2 class="text-lg font-semibold text-gray-900 mb-4">Basic Information</h2>
+                
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+                        <input type="text" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary" value="Sarah Johnson">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Type</label>
+                        <select class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary">
+                            <option>Member</option>
+                            <option>Expert</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Company</label>
+                        <input type="text" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary" value="Tech Solutions Inc.">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Job Title</label>
+                        <input type="text" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary" value="Senior Developer">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">City</label>
+                        <input type="text" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary" value="New York">
+                    </div>
+                </div>
+            </div>
+
+            <div id="role-card" class="bg-white rounded-lg border border-gray-200 p-4">
+                <h2 class="text-lg font-semibold text-gray-900 mb-4">Role in Association</h2>
+                <div class="flex flex-wrap gap-2 mb-3">
+                    <span class="px-3 py-1 bg-primary text-white text-sm rounded-full">Technical Lead</span>
+                    <span class="px-3 py-1 bg-primary text-white text-sm rounded-full">Mentor</span>
+                    <span class="px-3 py-1 bg-gray-200 text-gray-700 text-sm rounded-full">Board Member</span>
+                </div>
+                <button class="text-primary text-sm font-medium">
+                    <i class="fa-solid fa-plus mr-1"></i>Add Role
+                </button>
+            </div>
+
+            <div id="specialization-card" class="bg-white rounded-lg border border-gray-200 p-4">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-lg font-semibold text-gray-900">Specialization & Experience</h2>
+                    <button class="text-primary">
+                        <i class="fa-solid fa-plus"></i>
+                    </button>
+                </div>
+                <div class="space-y-3">
+                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <span class="text-sm text-gray-900">Frontend Development</span>
+                        <div class="flex space-x-2">
+                            <button class="text-gray-400">
+                                <i class="fa-solid fa-edit text-xs"></i>
+                            </button>
+                            <button class="text-red-400">
+                                <i class="fa-solid fa-trash text-xs"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <span class="text-sm text-gray-900">React Development</span>
+                        <div class="flex space-x-2">
+                            <button class="text-gray-400">
+                                <i class="fa-solid fa-edit text-xs"></i>
+                            </button>
+                            <button class="text-red-400">
+                                <i class="fa-solid fa-trash text-xs"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="interests-card" class="bg-white rounded-lg border border-gray-200 p-4">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-lg font-semibold text-gray-900">Professional Interests</h2>
+                    <button class="text-primary">
+                        <i class="fa-solid fa-plus"></i>
+                    </button>
+                </div>
+                <div class="space-y-3">
+                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <span class="text-sm text-gray-900">AI & Machine Learning</span>
+                        <div class="flex space-x-2">
+                            <button class="text-gray-400">
+                                <i class="fa-solid fa-edit text-xs"></i>
+                            </button>
+                            <button class="text-red-400">
+                                <i class="fa-solid fa-trash text-xs"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="about-card" class="bg-white rounded-lg border border-gray-200 p-4">
+                <h2 class="text-lg font-semibold text-gray-900 mb-4">About Me</h2>
+                <textarea class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary h-24 text-sm" placeholder="Tell us about yourself...">Passionate developer with 8+ years experience in web technologies...</textarea>
+                <div class="mt-2 flex space-x-2 text-xs text-gray-500">
+                    <button><i class="fa-solid fa-bold"></i></button>
+                    <button><i class="fa-solid fa-italic"></i></button>
+                    <button><i class="fa-solid fa-underline"></i></button>
+                    <button><i class="fa-solid fa-list"></i></button>
+                </div>
+            </div>
+
+            <div id="expectations-card" class="bg-white rounded-lg border border-gray-200 p-4">
+                <h2 class="text-lg font-semibold text-gray-900 mb-4">Expectations from Collaboration</h2>
+                <textarea class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary h-24 text-sm" placeholder="What do you expect from this collaboration...">Looking forward to knowledge sharing and professional growth...</textarea>
+                <div class="mt-2 flex space-x-2 text-xs text-gray-500">
+                    <button><i class="fa-solid fa-bold"></i></button>
+                    <button><i class="fa-solid fa-italic"></i></button>
+                    <button><i class="fa-solid fa-underline"></i></button>
+                    <button><i class="fa-solid fa-list"></i></button>
+                </div>
+            </div>
+
+            <button id="save-profile-btn" class="w-full py-3 bg-primary text-white font-semibold rounded-lg">
+                <i class="fa-solid fa-save mr-2"></i>Save Changes
+            </button>
+        </div>
+
+        <div id="materials-section" class="hidden p-4">
+            <button id="add-material-btn" class="w-full py-3 bg-primary text-white font-semibold rounded-lg mb-6">
+                <i class="fa-solid fa-plus mr-2"></i>Add New Material
+            </button>
+
+            <div id="materials-list" class="space-y-4">
+                <div class="bg-white rounded-lg border border-gray-200 p-4">
+                    <div class="flex items-start justify-between mb-2">
+                        <h3 class="text-sm font-semibold text-gray-900">React Best Practices</h3>
+                        <span class="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">Published</span>
+                    </div>
+                    <p class="text-xs text-gray-500 mb-2">Review • Added: Mar 15, 2024</p>
+                    <div class="flex space-x-2">
+                        <button class="flex-1 py-2 text-xs text-primary border border-primary rounded-lg">Edit</button>
+                        <button class="flex-1 py-2 text-xs text-red-600 border border-red-200 rounded-lg">Delete</button>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-lg border border-gray-200 p-4">
+                    <div class="flex items-start justify-between mb-2">
+                        <h3 class="text-sm font-semibold text-gray-900">JavaScript Tutorial Video</h3>
+                        <span class="px-2 py-1 bg-yellow-100 text-yellow-800 text-xs rounded-full">Pending Review</span>
+                    </div>
+                    <p class="text-xs text-gray-500 mb-2">Video • Added: Mar 12, 2024</p>
+                    <div class="flex space-x-2">
+                        <button class="flex-1 py-2 text-xs text-primary border border-primary rounded-lg">Edit</button>
+                        <button class="flex-1 py-2 text-xs text-red-600 border border-red-200 rounded-lg">Delete</button>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-lg border border-gray-200 p-4">
+                    <div class="flex items-start justify-between mb-2">
+                        <h3 class="text-sm font-semibold text-gray-900">Industry Interview</h3>
+                        <span class="px-2 py-1 bg-red-100 text-red-800 text-xs rounded-full">Rejected</span>
+                    </div>
+                    <p class="text-xs text-gray-500 mb-2">Interview • Added: Mar 10, 2024</p>
+                    <div class="flex space-x-2">
+                        <button class="flex-1 py-2 text-xs text-primary border border-primary rounded-lg">Edit</button>
+                        <button class="flex-1 py-2 text-xs text-red-600 border border-red-200 rounded-lg">Delete</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="add-material-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50">
+            <div class="absolute bottom-0 left-0 right-0 bg-white rounded-t-xl p-4 max-h-[90vh] overflow-y-auto">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-lg font-semibold text-gray-900">Add New Material</h2>
+                    <button id="close-modal-btn" class="text-gray-400">
+                        <i class="fa-solid fa-times"></i>
+                    </button>
+                </div>
+
+                <form class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Material Type</label>
+                        <select id="material-type" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary">
+                            <option value="">Select Type</option>
+                            <option value="review">Review</option>
+                            <option value="testimonial">Testimonial/Acknowledgement</option>
+                            <option value="interview">Interview</option>
+                            <option value="video">Video</option>
+                            <option value="critique">Critique/Review</option>
+                            <option value="development">Development/Project</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Title</label>
+                        <input type="text" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary" placeholder="Enter material title">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Date</label>
+                        <input type="date" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary">
+                    </div>
+
+                    <div id="video-url-field" class="hidden">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Video URL</label>
+                        <input type="url" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary" placeholder="https://youtube.com/watch?v=...">
+                    </div>
+
+                    <div id="content-field" class="hidden">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Content</label>
+                        <textarea class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary h-32" placeholder="Enter your content here..."></textarea>
+                    </div>
+
+                    <div id="link-field" class="hidden">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">External Link</label>
+                        <input type="url" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary" placeholder="https://example.com/article">
+                    </div>
+
+                    <button type="submit" class="w-full py-3 bg-primary text-white font-semibold rounded-lg">
+                        <i class="fa-solid fa-paper-plane mr-2"></i>Submit for Review
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('profile-tab').addEventListener('click', function() {
+            document.getElementById('profile-section').classList.remove('hidden');
+            document.getElementById('materials-section').classList.add('hidden');
+            this.classList.add('text-white', 'bg-primary');
+            this.classList.remove('text-gray-600', 'bg-gray-100');
+            document.getElementById('materials-tab').classList.remove('text-white', 'bg-primary');
+            document.getElementById('materials-tab').classList.add('text-gray-600', 'bg-gray-100');
+        });
+
+        document.getElementById('materials-tab').addEventListener('click', function() {
+            document.getElementById('materials-section').classList.remove('hidden');
+            document.getElementById('profile-section').classList.add('hidden');
+            this.classList.add('text-white', 'bg-primary');
+            this.classList.remove('text-gray-600', 'bg-gray-100');
+            document.getElementById('profile-tab').classList.remove('text-white', 'bg-primary');
+            document.getElementById('profile-tab').classList.add('text-gray-600', 'bg-gray-100');
+        });
+
+        document.getElementById('add-material-btn').addEventListener('click', function() {
+            document.getElementById('add-material-modal').classList.remove('hidden');
+        });
+
+        document.getElementById('close-modal-btn').addEventListener('click', function() {
+            document.getElementById('add-material-modal').classList.add('hidden');
+        });
+
+        document.getElementById('material-type').addEventListener('change', function() {
+            const type = this.value;
+            const videoField = document.getElementById('video-url-field');
+            const contentField = document.getElementById('content-field');
+            const linkField = document.getElementById('link-field');
+            
+            videoField.classList.add('hidden');
+            contentField.classList.add('hidden');
+            linkField.classList.add('hidden');
+            
+            if (type === 'video') {
+                videoField.classList.remove('hidden');
+            } else if (type === 'interview' || type === 'review' || type === 'critique' || type === 'development') {
+                contentField.classList.remove('hidden');
+                linkField.classList.remove('hidden');
+            }
+        });
+    </script>
+</body>
+</html>
