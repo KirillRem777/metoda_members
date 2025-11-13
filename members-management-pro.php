@@ -39,8 +39,61 @@ function metoda_members_activate() {
     register_member_role_taxonomy();
     register_member_location_taxonomy();
 
+    // Создаем шаблонные страницы
+    metoda_create_template_pages();
+
     // Сбрасываем постоянные ссылки
     flush_rewrite_rules();
+}
+
+/**
+ * Создание шаблонных страниц
+ */
+function metoda_create_template_pages() {
+    $pages = array(
+        array(
+            'title' => 'Участники',
+            'slug' => 'uchastniki',
+            'content' => '[members_directory]',
+            'option' => 'metoda_members_page_id'
+        ),
+        array(
+            'title' => 'Регистрация участника',
+            'slug' => 'registraciya-uchastnika',
+            'content' => 'На этой странице будет форма регистрации нового участника.',
+            'option' => 'metoda_registration_page_id'
+        ),
+        array(
+            'title' => 'Личный кабинет',
+            'slug' => 'lichnyj-kabinet',
+            'content' => 'Личный кабинет участника (требуется авторизация).',
+            'option' => 'metoda_dashboard_page_id'
+        )
+    );
+
+    foreach ($pages as $page_data) {
+        // Проверяем, не создана ли уже эта страница
+        $page_id = get_option($page_data['option']);
+
+        if (!$page_id || !get_post($page_id)) {
+            // Создаем страницу
+            $page_id = wp_insert_post(array(
+                'post_title' => $page_data['title'],
+                'post_name' => $page_data['slug'],
+                'post_content' => $page_data['content'],
+                'post_status' => 'publish',
+                'post_type' => 'page',
+                'post_author' => 1,
+                'comment_status' => 'closed',
+                'ping_status' => 'closed'
+            ));
+
+            // Сохраняем ID страницы в опциях
+            if ($page_id && !is_wp_error($page_id)) {
+                update_option($page_data['option'], $page_id);
+            }
+        }
+    }
 }
 
 /**
@@ -1195,3 +1248,458 @@ function members_import_page_callback() {
     </div>
     <?php
 }
+
+// ==========================================
+// AJAX обработчики для фильтрации участников
+// ==========================================
+
+/**
+ * Подключение скриптов и стилей для фронтенда
+ */
+function members_enqueue_scripts() {
+    if (is_post_type_archive('members') || is_singular('members')) {
+        // Подключаем jQuery если еще не подключен
+        wp_enqueue_script('jquery');
+
+        // Подключаем скрипт AJAX фильтрации
+        wp_enqueue_script(
+            'members-archive-ajax',
+            plugin_dir_url(__FILE__) . 'assets/js/members-archive-ajax.js',
+            array('jquery'),
+            '1.0.0',
+            true
+        );
+
+        // Передаем данные для AJAX
+        wp_localize_script('members-archive-ajax', 'membersAjax', array(
+            'ajaxurl' => admin_url('admin-ajax.php'),
+            'nonce' => wp_create_nonce('members_ajax_nonce')
+        ));
+    }
+}
+add_action('wp_enqueue_scripts', 'members_enqueue_scripts');
+
+/**
+ * AJAX обработчик фильтрации участников
+ */
+function ajax_filter_members() {
+    // Проверка nonce
+    check_ajax_referer('members_ajax_nonce', 'nonce');
+
+    // Получаем параметры фильтрации
+    $search = isset($_POST['search']) ? sanitize_text_field($_POST['search']) : '';
+    $city = isset($_POST['city']) ? sanitize_text_field($_POST['city']) : '';
+    $roles = isset($_POST['roles']) ? array_map('sanitize_text_field', $_POST['roles']) : array();
+    $sort = isset($_POST['sort']) ? sanitize_text_field($_POST['sort']) : 'title-asc';
+    $paged = isset($_POST['paged']) ? absint($_POST['paged']) : 1;
+
+    // Определяем сортировку
+    $orderby = 'title';
+    $order = 'ASC';
+
+    switch ($sort) {
+        case 'title-desc':
+            $orderby = 'title';
+            $order = 'DESC';
+            break;
+        case 'date-desc':
+            $orderby = 'date';
+            $order = 'DESC';
+            break;
+        case 'date-asc':
+            $orderby = 'date';
+            $order = 'ASC';
+            break;
+    }
+
+    // Формируем запрос
+    $args = array(
+        'post_type' => 'members',
+        'posts_per_page' => 12,
+        'paged' => $paged,
+        'orderby' => $orderby,
+        'order' => $order
+    );
+
+    // Добавляем поиск
+    if (!empty($search)) {
+        $args['s'] = $search;
+    }
+
+    // Добавляем фильтр по городу
+    if (!empty($city)) {
+        $args['meta_query'][] = array(
+            'key' => 'member_city',
+            'value' => $city,
+            'compare' => 'LIKE'
+        );
+    }
+
+    // Добавляем фильтр по ролям
+    if (!empty($roles)) {
+        $args['tax_query'][] = array(
+            'taxonomy' => 'member_role',
+            'field' => 'slug',
+            'terms' => $roles,
+            'operator' => 'IN'
+        );
+    }
+
+    $query = new WP_Query($args);
+
+    // Генерируем HTML карточек
+    ob_start();
+
+    if ($query->have_posts()) {
+        while ($query->have_posts()) : $query->the_post();
+            $member_id = get_the_ID();
+            $position = get_post_meta($member_id, 'member_position', true);
+            $company = get_post_meta($member_id, 'member_company', true);
+            $city_meta = get_post_meta($member_id, 'member_city', true);
+            $roles_terms = wp_get_post_terms($member_id, 'member_role');
+            ?>
+            <article class="bg-white rounded-xl shadow-sm border p-6 hover:shadow-md transition-shadow">
+                <a href="<?php the_permalink(); ?>" class="flex items-start gap-4">
+                    <div class="w-20 h-20 rounded-full overflow-hidden bg-gray-100 flex-shrink-0">
+                        <?php if (has_post_thumbnail()): ?>
+                            <?php the_post_thumbnail('thumbnail', array('class' => 'w-full h-full object-cover')); ?>
+                        <?php else: ?>
+                            <div class="w-full h-full flex items-center justify-center text-2xl font-bold text-gray-300">
+                                <?php echo mb_substr(get_the_title(), 0, 1); ?>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+
+                    <div class="flex-1 min-w-0">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-1 truncate"><?php the_title(); ?></h3>
+
+                        <?php if ($position): ?>
+                        <p class="text-sm text-gray-600 mb-1"><?php echo esc_html($position); ?></p>
+                        <?php endif; ?>
+
+                        <?php if ($company): ?>
+                        <p class="text-sm font-medium text-gray-700 mb-3"><?php echo esc_html($company); ?></p>
+                        <?php endif; ?>
+
+                        <?php if ($city_meta): ?>
+                        <div class="flex items-center text-sm text-gray-500 mb-3">
+                            <i class="fas fa-map-marker-alt mr-2"></i>
+                            <span><?php echo esc_html($city_meta); ?></span>
+                        </div>
+                        <?php endif; ?>
+
+                        <?php if ($roles_terms && !is_wp_error($roles_terms)): ?>
+                        <div class="flex flex-wrap gap-2">
+                            <?php foreach (array_slice($roles_terms, 0, 3) as $role): ?>
+                            <span class="px-3 py-1 bg-gray-100 text-gray-700 text-xs font-medium rounded-full">
+                                <?php echo esc_html($role->name); ?>
+                            </span>
+                            <?php endforeach; ?>
+                        </div>
+                        <?php endif; ?>
+                    </div>
+                </a>
+            </article>
+            <?php
+        endwhile;
+    } else {
+        ?>
+        <div class="col-span-2 bg-white rounded-xl shadow-sm border p-12 text-center">
+            <i class="fas fa-search text-6xl text-gray-300 mb-4"></i>
+            <h3 class="text-xl font-semibold text-gray-900 mb-2">Участники не найдены</h3>
+            <p class="text-gray-600">Попробуйте изменить параметры поиска</p>
+        </div>
+        <?php
+    }
+
+    $html = ob_get_clean();
+
+    // Генерируем пагинацию
+    $pagination = '';
+    if ($query->max_num_pages > 1) {
+        ob_start();
+        ?>
+        <div class="flex justify-center items-center space-x-2 mt-8">
+            <?php if ($paged > 1): ?>
+            <a href="#" data-page="<?php echo ($paged - 1); ?>" class="pagination-link px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                <i class="fas fa-chevron-left"></i>
+            </a>
+            <?php endif; ?>
+
+            <?php for ($i = 1; $i <= $query->max_num_pages; $i++): ?>
+                <?php if ($i == $paged): ?>
+                <span class="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium"><?php echo $i; ?></span>
+                <?php else: ?>
+                <a href="#" data-page="<?php echo $i; ?>" class="pagination-link px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                    <?php echo $i; ?>
+                </a>
+                <?php endif; ?>
+            <?php endfor; ?>
+
+            <?php if ($paged < $query->max_num_pages): ?>
+            <a href="#" data-page="<?php echo ($paged + 1); ?>" class="pagination-link px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                <i class="fas fa-chevron-right"></i>
+            </a>
+            <?php endif; ?>
+        </div>
+        <?php
+        $pagination = ob_get_clean();
+    }
+
+    wp_reset_postdata();
+
+    // Возвращаем результат
+    wp_send_json_success(array(
+        'html' => $html,
+        'found' => $query->found_posts,
+        'pagination' => $pagination,
+        'max_pages' => $query->max_num_pages
+    ));
+}
+add_action('wp_ajax_filter_members', 'ajax_filter_members');
+add_action('wp_ajax_nopriv_filter_members', 'ajax_filter_members');
+
+// ==========================================
+// Виджет статистики в админке
+// ==========================================
+
+/**
+ * Добавляет виджет статистики участников в админку
+ */
+function members_add_dashboard_widget() {
+    wp_add_dashboard_widget(
+        'members_statistics_widget',
+        '📊 Статистика участников',
+        'members_render_dashboard_widget'
+    );
+}
+add_action('wp_dashboard_setup', 'members_add_dashboard_widget');
+
+/**
+ * Рендерит виджет статистики
+ */
+function members_render_dashboard_widget() {
+    // Подсчитываем участников
+    $total_members = wp_count_posts('members');
+    $published = $total_members->publish;
+    $draft = $total_members->draft;
+
+    // Получаем статистику по ролям
+    $roles = get_terms(array(
+        'taxonomy' => 'member_role',
+        'hide_empty' => false
+    ));
+
+    // Получаем города
+    global $wpdb;
+    $cities_count = $wpdb->get_var("
+        SELECT COUNT(DISTINCT meta_value)
+        FROM {$wpdb->postmeta}
+        WHERE meta_key = 'member_city'
+        AND meta_value != ''
+    ");
+
+    // Получаем недавно добавленных участников
+    $recent_members = get_posts(array(
+        'post_type' => 'members',
+        'posts_per_page' => 5,
+        'orderby' => 'date',
+        'order' => 'DESC'
+    ));
+
+    ?>
+    <style>
+        .members-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .members-stat-card {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #0066cc;
+        }
+
+        .members-stat-number {
+            font-size: 32px;
+            font-weight: bold;
+            color: #0066cc;
+            line-height: 1;
+            margin-bottom: 5px;
+        }
+
+        .members-stat-label {
+            font-size: 13px;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .members-recent-list {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        .members-recent-list li {
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .members-recent-list li:last-child {
+            border-bottom: none;
+        }
+
+        .members-recent-name {
+            font-weight: 500;
+            color: #0066cc;
+            text-decoration: none;
+        }
+
+        .members-recent-name:hover {
+            text-decoration: underline;
+        }
+
+        .members-recent-date {
+            font-size: 12px;
+            color: #999;
+        }
+
+        .members-view-all {
+            display: inline-block;
+            margin-top: 15px;
+            padding: 8px 16px;
+            background: #0066cc;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-size: 13px;
+            transition: opacity 0.2s;
+        }
+
+        .members-view-all:hover {
+            opacity: 0.9;
+        }
+    </style>
+
+    <div class="members-stats-grid">
+        <div class="members-stat-card">
+            <div class="members-stat-number"><?php echo $published; ?></div>
+            <div class="members-stat-label">Опубликовано</div>
+        </div>
+
+        <div class="members-stat-card">
+            <div class="members-stat-number"><?php echo $draft; ?></div>
+            <div class="members-stat-label">Черновики</div>
+        </div>
+
+        <div class="members-stat-card">
+            <div class="members-stat-number"><?php echo $cities_count; ?></div>
+            <div class="members-stat-label">Городов</div>
+        </div>
+
+        <div class="members-stat-card">
+            <div class="members-stat-number"><?php echo count($roles); ?></div>
+            <div class="members-stat-label">Ролей</div>
+        </div>
+    </div>
+
+    <?php if (!empty($recent_members)): ?>
+    <h4 style="margin-top: 20px; margin-bottom: 10px;">Недавно добавленные</h4>
+    <ul class="members-recent-list">
+        <?php foreach ($recent_members as $member): ?>
+        <li>
+            <a href="<?php echo get_edit_post_link($member->ID); ?>" class="members-recent-name">
+                <?php echo esc_html($member->post_title); ?>
+            </a>
+            <span class="members-recent-date">
+                <?php echo human_time_diff(strtotime($member->post_date), current_time('timestamp')); ?> назад
+            </span>
+        </li>
+        <?php endforeach; ?>
+    </ul>
+    <?php endif; ?>
+
+    <a href="<?php echo admin_url('edit.php?post_type=members'); ?>" class="members-view-all">
+        Посмотреть всех участников →
+    </a>
+
+    <?php
+    // Ссылки на импорт и страницы
+    ?>
+    <div style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #eee;">
+        <p style="margin: 0 0 10px 0; font-weight: 500;">Быстрые действия:</p>
+        <a href="<?php echo admin_url('edit.php?post_type=members&page=member-csv-import'); ?>" class="button">
+            📥 Импорт из CSV
+        </a>
+        <a href="<?php echo admin_url('post-new.php?post_type=members'); ?>" class="button button-primary">
+            ➕ Добавить участника
+        </a>
+    </div>
+    <?php
+}
+
+/**
+ * Добавляет кастомные столбцы в список участников
+ */
+function members_custom_columns($columns) {
+    $new_columns = array();
+    $new_columns['cb'] = $columns['cb'];
+    $new_columns['title'] = 'ФИО';
+    $new_columns['member_photo'] = 'Фото';
+    $new_columns['member_company'] = 'Компания';
+    $new_columns['member_city'] = 'Город';
+    $new_columns['member_role'] = 'Роль';
+    $new_columns['date'] = 'Дата';
+    return $new_columns;
+}
+add_filter('manage_members_posts_columns', 'members_custom_columns');
+
+/**
+ * Заполняет кастомные столбцы данными
+ */
+function members_custom_columns_data($column, $post_id) {
+    switch ($column) {
+        case 'member_photo':
+            if (has_post_thumbnail($post_id)) {
+                echo get_the_post_thumbnail($post_id, array(50, 50), array('style' => 'border-radius: 50%; object-fit: cover;'));
+            } else {
+                echo '<div style="width: 50px; height: 50px; border-radius: 50%; background: #e0e0e0; display: flex; align-items: center; justify-content: center; font-weight: bold; color: #999;">'
+                    . mb_substr(get_the_title($post_id), 0, 1) .
+                    '</div>';
+            }
+            break;
+
+        case 'member_company':
+            $company = get_post_meta($post_id, 'member_company', true);
+            echo $company ? esc_html($company) : '—';
+            break;
+
+        case 'member_city':
+            $city = get_post_meta($post_id, 'member_city', true);
+            echo $city ? esc_html($city) : '—';
+            break;
+
+        case 'member_role':
+            $roles = wp_get_post_terms($post_id, 'member_role');
+            if (!empty($roles) && !is_wp_error($roles)) {
+                $role_names = array_map(function($role) {
+                    return $role->name;
+                }, $roles);
+                echo implode(', ', array_slice($role_names, 0, 2));
+                if (count($role_names) > 2) {
+                    echo ' <span style="color: #999;">+' . (count($role_names) - 2) . '</span>';
+                }
+            } else {
+                echo '—';
+            }
+            break;
+    }
+}
+add_action('manage_members_posts_custom_column', 'members_custom_columns_data', 10, 2);
