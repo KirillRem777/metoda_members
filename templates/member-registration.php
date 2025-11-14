@@ -167,6 +167,21 @@ $roles = get_terms(array(
                                     </div>
                                 </div>
 
+                                <div class="lg:col-span-2">
+                                    <label class="block text-sm font-semibold text-gray-700 mb-3">
+                                        Код доступа <span class="text-gray-500 font-normal">(опционально)</span>
+                                    </label>
+                                    <div class="relative">
+                                        <input type="text" id="access_code" name="access_code" class="w-full px-4 py-4 border border-gray-300 rounded-xl focus:ring-2 focus:border-transparent transition-all text-lg uppercase" placeholder="METODA-2024-XXXXXX" style="focus:ring-color: <?php echo $primary_color; ?>">
+                                        <i class="fas fa-key absolute right-4 top-5 text-gray-400"></i>
+                                    </div>
+                                    <p class="text-sm text-gray-500 mt-2">
+                                        <i class="fas fa-info-circle mr-1"></i>
+                                        Если вы уже являетесь участником ассоциации, введите ваш код доступа для активации профиля. Новым участникам оставьте поле пустым.
+                                    </p>
+                                    <div id="access-code-feedback" class="mt-2 text-sm hidden"></div>
+                                </div>
+
                                 <div>
                                     <label class="block text-sm font-semibold text-gray-700 mb-3">Пароль</label>
                                     <div class="relative">

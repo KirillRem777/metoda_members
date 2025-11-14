@@ -19,6 +19,7 @@
         initRoleTags();
         initRepeaterFields();
         initCharCounters();
+        initAccessCodeValidation();
         initFormSubmission();
     });
 
@@ -422,6 +423,74 @@
                     btnLoader.hide();
                 }
             });
+        });
+    }
+
+    /**
+     * Инициализация валидации кода доступа
+     */
+    function initAccessCodeValidation() {
+        const $accessCodeField = $('#access_code');
+        const $feedback = $('#access-code-feedback');
+        let validationTimeout;
+
+        if (!$accessCodeField.length) return;
+
+        $accessCodeField.on('input', function() {
+            const code = $(this).val().trim().toUpperCase();
+
+            // Update field value to uppercase
+            $(this).val(code);
+
+            // Clear previous timeout
+            clearTimeout(validationTimeout);
+
+            // Hide feedback if empty
+            if (!code) {
+                $feedback.hide().removeClass('text-green-600 text-red-600');
+                $accessCodeField.removeClass('border-green-500 border-red-500');
+                return;
+            }
+
+            // Show loading state
+            $feedback.html('<i class="fas fa-spinner fa-spin"></i> Проверка кода...').show().removeClass('text-green-600 text-red-600').addClass('text-gray-500');
+
+            // Validate after 800ms delay
+            validationTimeout = setTimeout(function() {
+                $.ajax({
+                    url: memberRegistrationData.ajaxUrl,
+                    type: 'POST',
+                    data: {
+                        action: 'validate_access_code',
+                        code: code,
+                        nonce: memberRegistrationData.nonce
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            // Code is valid
+                            $feedback.html('<i class="fas fa-check-circle"></i> ' + response.data.message)
+                                .removeClass('text-gray-500 text-red-600')
+                                .addClass('text-green-600')
+                                .show();
+                            $accessCodeField.removeClass('border-red-500').addClass('border-green-500');
+                        } else {
+                            // Code is invalid
+                            $feedback.html('<i class="fas fa-times-circle"></i> ' + response.data.message)
+                                .removeClass('text-gray-500 text-green-600')
+                                .addClass('text-red-600')
+                                .show();
+                            $accessCodeField.removeClass('border-green-500').addClass('border-red-500');
+                        }
+                    },
+                    error: function() {
+                        $feedback.html('<i class="fas fa-exclamation-triangle"></i> Ошибка проверки кода')
+                            .removeClass('text-gray-500 text-green-600')
+                            .addClass('text-red-600')
+                            .show();
+                        $accessCodeField.removeClass('border-green-500').addClass('border-red-500');
+                    }
+                });
+            }, 800);
         });
     }
 
