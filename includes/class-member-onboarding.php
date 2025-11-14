@@ -24,9 +24,8 @@ class Member_Onboarding {
         add_action('wp_ajax_member_complete_onboarding', array($this, 'ajax_complete_onboarding'));
         add_action('wp_enqueue_scripts', array($this, 'enqueue_onboarding_assets'));
 
-        // ВРЕМЕННО ОТКЛЮЧЕН: онбординг-редирект блокирует админов
-        // Раскомментируй когда разберемся с ролями
-        // add_action('template_redirect', array($this, 'force_onboarding_redirect'));
+        // Onboarding redirect (with proper admin/manager checks)
+        add_action('template_redirect', array($this, 'force_onboarding_redirect'));
     }
 
     /**
@@ -50,6 +49,12 @@ class Member_Onboarding {
      * Check if this is user's first login
      */
     public function check_first_login($user_login, $user) {
+        // ВАЖНО: Администраторы и менеджеры НЕ проходят онбординг
+        if (in_array('administrator', (array) $user->roles) ||
+            in_array('manager', (array) $user->roles)) {
+            return;
+        }
+
         // Check if user has member role
         if (!in_array('member', (array) $user->roles)) {
             return;
