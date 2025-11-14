@@ -24,6 +24,7 @@ require_once plugin_dir_path(__FILE__) . 'includes/class-member-csv-importer.php
 require_once plugin_dir_path(__FILE__) . 'includes/class-member-page-templates.php';
 require_once plugin_dir_path(__FILE__) . 'includes/class-member-template-loader.php';
 require_once plugin_dir_path(__FILE__) . 'includes/class-member-email-templates.php';
+require_once plugin_dir_path(__FILE__) . 'includes/class-member-forum.php';
 
 // Хуки активации/деактивации плагина
 register_activation_hook(__FILE__, 'metoda_members_activate');
