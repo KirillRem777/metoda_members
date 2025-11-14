@@ -584,6 +584,7 @@ function submitRegistration() {
     formData.append('interests', interests.join('\n'));
     formData.append('bio', document.getElementById('about-me').value);
     formData.append('expectations', document.getElementById('expectations').value);
+    formData.append('access_code', document.getElementById('access_code').value);
 
     fetch('<?php echo admin_url("admin-ajax.php"); ?>', {
         method: 'POST',
@@ -736,6 +737,56 @@ document.getElementById('expectations').addEventListener('input', function(e) {
 
 window.addEventListener('load', function() {
     updateProgress();
+});
+
+// Access code validation
+let accessCodeTimeout;
+document.getElementById('access_code').addEventListener('input', function(e) {
+    const code = e.target.value.trim().toUpperCase();
+    const feedback = document.getElementById('access-code-feedback');
+
+    // Update input to uppercase
+    this.value = code;
+
+    // Clear previous timeout
+    clearTimeout(accessCodeTimeout);
+
+    // Hide feedback if empty
+    if (!code) {
+        feedback.classList.add('hidden');
+        return;
+    }
+
+    // Show loading
+    feedback.classList.remove('hidden');
+    feedback.className = 'mt-2 text-sm text-gray-500';
+    feedback.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Проверка кода...';
+
+    // Debounce validation
+    accessCodeTimeout = setTimeout(function() {
+        const formData = new FormData();
+        formData.append('action', 'validate_access_code');
+        formData.append('code', code);
+
+        fetch('<?php echo admin_url("admin-ajax.php"); ?>', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                feedback.className = 'mt-2 text-sm text-green-600';
+                feedback.innerHTML = '<i class="fas fa-check-circle mr-2"></i>' + data.data.message;
+            } else {
+                feedback.className = 'mt-2 text-sm text-red-600';
+                feedback.innerHTML = '<i class="fas fa-times-circle mr-2"></i>' + data.data.message;
+            }
+        })
+        .catch(error => {
+            feedback.className = 'mt-2 text-sm text-red-600';
+            feedback.innerHTML = '<i class="fas fa-exclamation-circle mr-2"></i>Ошибка проверки кода';
+        });
+    }, 500);
 });
 </script>
 

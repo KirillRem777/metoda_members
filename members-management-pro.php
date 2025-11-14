@@ -1948,6 +1948,7 @@ function member_register_ajax() {
     $interests = sanitize_textarea_field($_POST['interests']);
     $bio = wp_kses_post($_POST['bio']);
     $expectations = wp_kses_post($_POST['expectations']);
+    $access_code = isset($_POST['access_code']) ? sanitize_text_field($_POST['access_code']) : '';
 
     // Проверка email
     if (email_exists($email)) {
@@ -1963,32 +1964,75 @@ function member_register_ajax() {
 
     // Устанавливаем роль
     $user = new WP_User($user_id);
-    $user->set_role('member');
+    $user->set_role($account_type); // member or expert
 
-    // Создаем запись участника
-    $member_id = wp_insert_post(array(
-        'post_title' => $fullname,
-        'post_type' => 'members',
-        'post_status' => 'publish',
-        'post_author' => $user_id
-    ));
+    // Проверяем наличие кода доступа
+    $member_id = null;
+    $is_claimed_profile = false;
 
-    if (is_wp_error($member_id)) {
-        wp_delete_user($user_id);
-        wp_send_json_error(array('message' => 'Ошибка создания профиля'));
+    if (!empty($access_code)) {
+        // Ищем профиль по коду доступа
+        $existing_member = Member_Access_Codes::find_member_by_code($access_code);
+
+        if ($existing_member) {
+            // Проверяем, не занят ли профиль
+            $linked_user = get_post_meta($existing_member->ID, 'member_user_id', true);
+
+            if ($linked_user) {
+                wp_delete_user($user_id);
+                wp_send_json_error(array('message' => 'Этот код доступа уже активирован'));
+            }
+
+            // Используем существующий профиль
+            $member_id = $existing_member->ID;
+            $is_claimed_profile = true;
+
+            // Обновляем существующий профиль новой информацией (опционально, если пользователь заполнил дополнительные данные)
+            if (!empty($company)) {
+                update_post_meta($member_id, 'member_company', $company);
+            }
+            if (!empty($position)) {
+                update_post_meta($member_id, 'member_position', $position);
+            }
+            if (!empty($city)) {
+                update_post_meta($member_id, 'member_city', $city);
+            }
+        } else {
+            // Код неверный
+            wp_delete_user($user_id);
+            wp_send_json_error(array('message' => 'Неверный код доступа'));
+        }
     }
 
-    // Сохраняем метаданные
-    update_post_meta($member_id, 'member_company', $company);
-    update_post_meta($member_id, 'member_position', $position);
-    update_post_meta($member_id, 'member_city', $city);
+    // Если код не указан или не найден - создаем новый профиль
+    if (!$member_id) {
+        $member_id = wp_insert_post(array(
+            'post_title' => $fullname,
+            'post_type' => 'members',
+            'post_status' => 'publish',
+            'post_author' => $user_id
+        ));
+
+        if (is_wp_error($member_id)) {
+            wp_delete_user($user_id);
+            wp_send_json_error(array('message' => 'Ошибка создания профиля'));
+        }
+
+        // Сохраняем метаданные для нового профиля
+        update_post_meta($member_id, 'member_company', $company);
+        update_post_meta($member_id, 'member_position', $position);
+        update_post_meta($member_id, 'member_city', $city);
+        update_post_meta($member_id, 'member_email', $email);
+    }
+
+    // Сохраняем общие метаданные (для обоих случаев)
     update_post_meta($member_id, 'member_specialization_experience', $specializations);
     update_post_meta($member_id, 'member_professional_interests', $interests);
     update_post_meta($member_id, 'member_bio', $bio);
     update_post_meta($member_id, 'member_expectations', $expectations);
-    update_post_meta($member_id, 'member_email', $email);
 
     // Связываем пользователя с участником
+    update_post_meta($member_id, 'member_user_id', $user_id);
     update_user_meta($user_id, 'member_id', $member_id);
 
     // Добавляем роли
@@ -2001,8 +2045,12 @@ function member_register_ajax() {
     wp_set_current_user($user_id);
     wp_set_auth_cookie($user_id);
 
+    $message = $is_claimed_profile
+        ? 'Регистрация завершена! Ваш профиль успешно активирован.'
+        : 'Регистрация успешно завершена!';
+
     wp_send_json_success(array(
-        'message' => 'Регистрация успешно завершена!',
+        'message' => $message,
         'redirect' => home_url('/member-dashboard/')
     ));
 }
