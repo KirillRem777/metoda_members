@@ -1,10 +1,10 @@
 <?php
 /**
- * Plugin Name: Members Management Pro
+ * Plugin Name: Metoda Community MGMT
  * Description: Полнофункциональная система управления участниками и экспертами сообщества. Включает: регистрацию с валидацией, систему кодов доступа для импортированных участников, личные кабинеты с онбордингом, управление материалами с WYSIWYG-редактором, форум в стиле Reddit с категориями и лайками, настраиваемые email-шаблоны, CSV-импорт, кроппер фото, систему ролей и прав доступа, поиск и фильтрацию участников.
  * Version: 3.0.0
  * Author: Kirill Rem
- * Text Domain: members-management-pro
+ * Text Domain: metoda-community-mgmt
  * Domain Path: /languages
  */
 
@@ -2178,6 +2178,11 @@ add_action('after_setup_theme', 'hide_admin_bar_for_members');
  * Блокируем доступ к админке для участников
  */
 function block_admin_access_for_members() {
+    // Administrators always have access
+    if (current_user_can('administrator')) {
+        return;
+    }
+
     // Don't redirect during plugin activation
     if (isset($_GET['action']) && $_GET['action'] === 'activate') {
         return;
@@ -2189,11 +2194,15 @@ function block_admin_access_for_members() {
         return;
     }
 
-    if (is_admin() && !current_user_can('administrator') && !wp_doing_ajax()) {
-        if (current_user_can('member') || current_user_can('expert')) {
-            wp_redirect(home_url('/member-dashboard/'));
-            exit;
-        }
+    // Don't redirect during AJAX requests
+    if (wp_doing_ajax()) {
+        return;
+    }
+
+    // Redirect members and experts to dashboard
+    if (is_admin() && (current_user_can('member') || current_user_can('expert'))) {
+        wp_redirect(home_url('/member-dashboard/'));
+        exit;
     }
 }
 add_action('admin_init', 'block_admin_access_for_members');
