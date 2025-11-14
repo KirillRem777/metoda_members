@@ -1300,7 +1300,17 @@ add_shortcode('manager_panel', 'manager_panel_shortcode');
 function custom_login_shortcode() {
     if (is_user_logged_in()) {
         $user = wp_get_current_user();
-        if (in_array('manager', $user->roles) || in_array('administrator', $user->roles)) {
+
+        // ВАЖНО: Администраторы НЕ должны редиректиться
+        if (current_user_can('administrator') || current_user_can('manage_options')) {
+            // Показываем сообщение вместо редиректа
+            return '<div style="padding: 40px; text-align: center;">
+                <h2>Вы уже авторизованы как администратор</h2>
+                <p><a href="' . admin_url() . '">Перейти в админку →</a></p>
+            </div>';
+        }
+
+        if (in_array('manager', $user->roles)) {
             wp_redirect(home_url('/manager-panel/'));
             exit;
         } else {

@@ -23,7 +23,10 @@ class Member_Onboarding {
         add_action('wp_ajax_member_change_password', array($this, 'ajax_change_password'));
         add_action('wp_ajax_member_complete_onboarding', array($this, 'ajax_complete_onboarding'));
         add_action('wp_enqueue_scripts', array($this, 'enqueue_onboarding_assets'));
-        add_action('template_redirect', array($this, 'force_onboarding_redirect'));
+
+        // ВРЕМЕННО ОТКЛЮЧЕН: онбординг-редирект блокирует админов
+        // Раскомментируй когда разберемся с ролями
+        // add_action('template_redirect', array($this, 'force_onboarding_redirect'));
     }
 
     /**
