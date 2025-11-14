@@ -36,50 +36,68 @@ register_deactivation_hook(__FILE__, 'metoda_members_deactivate');
  * Функция активации плагина
  */
 function metoda_members_activate() {
-    // Устанавливаем флаг активации (на 2 минуты)
-    // Это предотвратит редирект сразу после активации
-    set_transient('metoda_members_activating', true, 120);
+    // КРИТИЧНО: Блокируем ВСЕ редиректы на 5 минут
+    set_transient('metoda_members_activating', true, 300);
 
-    // Регистрируем post types
-    register_members_post_type();
+    // Debug: записываем что активация началась
+    update_option('metoda_activation_started', current_time('mysql'));
 
-    // Register forum post type (call the method directly during activation)
-    if (class_exists('Member_Forum')) {
-        $forum = new Member_Forum();
-        $forum->register_post_type();
-        $forum->register_taxonomies();
+    try {
+        // Регистрируем post types
+        register_members_post_type();
+
+        // Register forum post type (call the method directly during activation)
+        if (class_exists('Member_Forum')) {
+            $forum = new Member_Forum();
+            $forum->register_post_type();
+            $forum->register_taxonomies();
+        }
+
+        // Регистрируем таксономии
+        register_member_type_taxonomy();
+        register_member_role_taxonomy();
+        register_member_location_taxonomy();
+
+        // Создаем роли
+        metoda_create_custom_roles();
+
+        // Создаем дефолтные термины таксономий
+        $terms_created = 0;
+        if (!term_exists('Эксперт', 'member_type')) {
+            wp_insert_term('Эксперт', 'member_type');
+            $terms_created++;
+        }
+        if (!term_exists('Участник', 'member_type')) {
+            wp_insert_term('Участник', 'member_type');
+            $terms_created++;
+        }
+
+        $roles = ['Эксперт', 'Куратор секции', 'Лидер проектной группы', 'Амбассадор',
+                  'Почетный член', 'Партнер', 'Активист', 'Слушатель', 'Волонтер'];
+        foreach ($roles as $role) {
+            if (!term_exists($role, 'member_role')) {
+                wp_insert_term($role, 'member_role');
+                $terms_created++;
+            }
+        }
+
+        // Создаем шаблонные страницы (отложено - запланировано на следующую загрузку)
+        update_option('metoda_needs_page_creation', '1');
+
+        // Устанавливаем флаг, что страницы форума созданы
+        update_option('metoda_forum_pages_created', '1');
+
+        // Сбрасываем постоянные ссылки
+        flush_rewrite_rules();
+
+        // Debug: записываем успешную активацию
+        update_option('metoda_activation_completed', current_time('mysql'));
+        update_option('metoda_activation_terms_created', $terms_created);
+
+    } catch (Exception $e) {
+        // Debug: записываем ошибку
+        update_option('metoda_activation_error', $e->getMessage());
     }
-
-    // Регистрируем таксономии
-    register_member_type_taxonomy();
-    register_member_role_taxonomy();
-    register_member_location_taxonomy();
-
-    // Создаем роли
-    metoda_create_custom_roles();
-
-    // Создаем шаблонные страницы
-    metoda_create_template_pages();
-
-    // Устанавливаем флаг, что страницы форума созданы
-    update_option('metoda_forum_pages_created', '1');
-
-    // Создаем дефолтные термины таксономий
-    wp_insert_term('Эксперт', 'member_type');
-    wp_insert_term('Участник', 'member_type');
-
-    wp_insert_term('Эксперт', 'member_role');
-    wp_insert_term('Куратор секции', 'member_role');
-    wp_insert_term('Лидер проектной группы', 'member_role');
-    wp_insert_term('Амбассадор', 'member_role');
-    wp_insert_term('Почетный член', 'member_role');
-    wp_insert_term('Партнер', 'member_role');
-    wp_insert_term('Активист', 'member_role');
-    wp_insert_term('Слушатель', 'member_role');
-    wp_insert_term('Волонтер', 'member_role');
-
-    // Сбрасываем постоянные ссылки
-    flush_rewrite_rules();
 }
 
 /**
@@ -197,11 +215,45 @@ function metoda_create_template_pages() {
 }
 
 /**
+ * Создание страниц после активации (отложенно)
+ * Вызывается один раз при первой загрузке админки после активации
+ */
+function metoda_create_pages_deferred() {
+    // Проверяем флаг
+    if (get_option('metoda_needs_page_creation') !== '1') {
+        return;
+    }
+
+    // Только для администраторов
+    if (!current_user_can('manage_options')) {
+        return;
+    }
+
+    // Создаем страницы
+    metoda_create_template_pages();
+
+    // Удаляем флаг
+    delete_option('metoda_needs_page_creation');
+
+    // Debug
+    update_option('metoda_pages_created_at', current_time('mysql'));
+}
+add_action('admin_init', 'metoda_create_pages_deferred', 1);
+
+/**
  * Функция деактивации плагина
  */
 function metoda_members_deactivate() {
     // Сбрасываем постоянные ссылки
     flush_rewrite_rules();
+
+    // Очищаем debug опции
+    delete_option('metoda_activation_started');
+    delete_option('metoda_activation_completed');
+    delete_option('metoda_activation_error');
+    delete_option('metoda_activation_terms_created');
+    delete_option('metoda_needs_page_creation');
+    delete_option('metoda_pages_created_at');
 }
 
 // Регистрация Custom Post Type
@@ -2215,6 +2267,11 @@ function block_admin_access_for_members() {
         return;
     }
 
+    // Don't redirect if we're creating pages after activation
+    if (get_option('metoda_needs_page_creation') === '1') {
+        return;
+    }
+
     // Only run in admin area, not during AJAX
     if (!is_admin() || wp_doing_ajax()) {
         return;
@@ -2227,7 +2284,7 @@ function block_admin_access_for_members() {
 
     // Don't redirect on plugin management pages
     global $pagenow;
-    $allowed_pages = array('plugins.php', 'plugin-install.php', 'plugin-editor.php', 'update-core.php');
+    $allowed_pages = array('plugins.php', 'plugin-install.php', 'plugin-editor.php', 'update-core.php', 'index.php');
     if (in_array($pagenow, $allowed_pages)) {
         return;
     }
