@@ -69,6 +69,11 @@ class Member_Onboarding {
             return;
         }
 
+        // Skip if in admin area
+        if (is_admin()) {
+            return;
+        }
+
         // Skip if already on onboarding page or login page
         if (is_page('member-onboarding') ||
             $GLOBALS['pagenow'] === 'wp-login.php' ||

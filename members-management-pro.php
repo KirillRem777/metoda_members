@@ -2178,6 +2178,17 @@ add_action('after_setup_theme', 'hide_admin_bar_for_members');
  * Блокируем доступ к админке для участников
  */
 function block_admin_access_for_members() {
+    // Don't redirect during plugin activation
+    if (isset($_GET['action']) && $_GET['action'] === 'activate') {
+        return;
+    }
+
+    // Don't redirect on plugins.php page to allow plugin management
+    global $pagenow;
+    if ($pagenow === 'plugins.php') {
+        return;
+    }
+
     if (is_admin() && !current_user_can('administrator') && !wp_doing_ajax()) {
         if (current_user_can('member') || current_user_can('expert')) {
             wp_redirect(home_url('/member-dashboard/'));
