@@ -2178,31 +2178,46 @@ add_action('after_setup_theme', 'hide_admin_bar_for_members');
  * Блокируем доступ к админке для участников
  */
 function block_admin_access_for_members() {
-    // Administrators always have access
-    if (current_user_can('administrator')) {
+    // Only run in admin area, not during AJAX
+    if (!is_admin() || wp_doing_ajax()) {
         return;
     }
 
-    // Don't redirect during plugin activation
-    if (isset($_GET['action']) && $_GET['action'] === 'activate') {
+    // Administrators and users with manage_options capability always have access
+    if (current_user_can('manage_options') || current_user_can('administrator')) {
         return;
     }
 
-    // Don't redirect on plugins.php page to allow plugin management
+    // Don't redirect on plugin management pages
     global $pagenow;
-    if ($pagenow === 'plugins.php') {
+    $allowed_pages = array('plugins.php', 'plugin-install.php', 'plugin-editor.php', 'update-core.php');
+    if (in_array($pagenow, $allowed_pages)) {
         return;
     }
 
-    // Don't redirect during AJAX requests
-    if (wp_doing_ajax()) {
+    // Don't redirect if activating/deactivating plugins
+    if (isset($_GET['action']) && in_array($_GET['action'], array('activate', 'deactivate', 'activate-selected', 'deactivate-selected'))) {
         return;
     }
 
-    // Redirect members and experts to dashboard
-    if (is_admin() && (current_user_can('member') || current_user_can('expert'))) {
-        wp_redirect(home_url('/member-dashboard/'));
-        exit;
+    // Don't redirect if on admin page just after plugin activation (check referer)
+    if (isset($_SERVER['HTTP_REFERER']) && strpos($_SERVER['HTTP_REFERER'], 'plugins.php') !== false) {
+        return;
+    }
+
+    // Get current user
+    $user = wp_get_current_user();
+
+    // Check if user has member or expert role (not checking capabilities to avoid conflicts)
+    if (!empty($user->roles)) {
+        $member_roles = array('member', 'expert');
+        $user_roles = (array) $user->roles;
+
+        // Only redirect if user has member/expert role and no admin privileges
+        if (array_intersect($member_roles, $user_roles)) {
+            wp_redirect(home_url('/member-dashboard/'));
+            exit;
+        }
     }
 }
 add_action('admin_init', 'block_admin_access_for_members');
