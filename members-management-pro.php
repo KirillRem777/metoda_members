@@ -2359,7 +2359,8 @@ function block_admin_access_for_members() {
         }
     }
 }
-add_action('admin_init', 'block_admin_access_for_members');
+// Приоритет 20 - чтобы срабатывать ПОСЛЕ других плагинов (например, Royal Elementor Addons)
+add_action('admin_init', 'block_admin_access_for_members', 20);
 
 /**
  * AJAX обработчик изменения статуса участника (для менеджеров)
