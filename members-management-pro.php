@@ -64,6 +64,20 @@ function metoda_members_activate() {
     // Устанавливаем флаг, что страницы форума созданы
     update_option('metoda_forum_pages_created', '1');
 
+    // Создаем дефолтные термины таксономий
+    wp_insert_term('Эксперт', 'member_type');
+    wp_insert_term('Участник', 'member_type');
+
+    wp_insert_term('Эксперт', 'member_role');
+    wp_insert_term('Куратор секции', 'member_role');
+    wp_insert_term('Лидер проектной группы', 'member_role');
+    wp_insert_term('Амбассадор', 'member_role');
+    wp_insert_term('Почетный член', 'member_role');
+    wp_insert_term('Партнер', 'member_role');
+    wp_insert_term('Активист', 'member_role');
+    wp_insert_term('Слушатель', 'member_role');
+    wp_insert_term('Волонтер', 'member_role');
+
     // Сбрасываем постоянные ссылки
     flush_rewrite_rules();
 }
@@ -76,13 +90,15 @@ function metoda_create_custom_roles() {
     add_role('member', 'Участник', array(
         'read' => true,
         'edit_posts' => false,
-        'delete_posts' => false
+        'delete_posts' => false,
+        'upload_files' => true
     ));
 
     add_role('expert', 'Эксперт', array(
         'read' => true,
         'edit_posts' => false,
-        'delete_posts' => false
+        'delete_posts' => false,
+        'upload_files' => true
     ));
 
     // Роль менеджера
@@ -95,8 +111,15 @@ function metoda_create_custom_roles() {
         'delete_posts' => true,
         'delete_others_posts' => true,
         'delete_published_posts' => true,
+        'upload_files' => true,
         'manage_members' => true
     ));
+
+    // Add manage_members capability to administrators
+    $admin = get_role('administrator');
+    if ($admin) {
+        $admin->add_cap('manage_members');
+    }
 }
 
 /**
@@ -1241,24 +1264,7 @@ function custom_login_shortcode() {
 add_shortcode('custom_login', 'custom_login_shortcode');
 
 // Создание таблицы для импорта при активации плагина
-function members_plugin_activate() {
-    // Создаем термины по умолчанию
-    wp_insert_term('Эксперт', 'member_type');
-    wp_insert_term('Участник', 'member_type');
-    
-    wp_insert_term('Эксперт', 'member_role');
-    wp_insert_term('Куратор секции', 'member_role');
-    wp_insert_term('Лидер проектной группы', 'member_role');
-    wp_insert_term('Амбассадор', 'member_role');
-    wp_insert_term('Почетный член', 'member_role');
-    wp_insert_term('Партнер', 'member_role');
-    wp_insert_term('Активист', 'member_role');
-    wp_insert_term('Слушатель', 'member_role');
-    wp_insert_term('Волонтер', 'member_role');
-    
-    flush_rewrite_rules();
-}
-register_activation_hook(__FILE__, 'members_plugin_activate');
+// Old activation hook removed - merged into metoda_members_activate() above
 
 // Функция для импорта данных из CSV
 function import_members_from_csv($file_path) {

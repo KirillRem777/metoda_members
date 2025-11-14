@@ -16,7 +16,8 @@ class Member_User_Link {
      * Initialize the class
      */
     public function __construct() {
-        add_action('init', array($this, 'create_member_role'));
+        // Role is created during plugin activation in metoda_create_custom_roles()
+        // add_action('init', array($this, 'create_member_role'));
         add_action('admin_init', array($this, 'add_member_link_metabox'));
         add_action('show_user_profile', array($this, 'show_linked_member_field'));
         add_action('edit_user_profile', array($this, 'show_linked_member_field'));

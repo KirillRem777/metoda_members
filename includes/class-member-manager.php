@@ -15,8 +15,9 @@ class Member_Manager {
      * Initialize the class
      */
     public function __construct() {
-        add_action('init', array($this, 'create_manager_role'));
-        add_action('init', array($this, 'register_manager_page'));
+        // Role and page are created during plugin activation
+        // add_action('init', array($this, 'create_manager_role'));
+        // add_action('init', array($this, 'register_manager_page'));
         add_shortcode('member_manager', array($this, 'render_manager_panel'));
         add_action('wp_enqueue_scripts', array($this, 'enqueue_manager_assets'));
 
