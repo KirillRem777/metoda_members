@@ -2315,9 +2315,16 @@ function block_admin_access_for_members() {
     // Check if user has member or expert role (not checking capabilities to avoid conflicts)
     if (!empty($user->roles)) {
         $member_roles = array('member', 'expert');
+        $admin_roles = array('administrator', 'manager');
         $user_roles = (array) $user->roles;
 
-        // Only redirect if user has member/expert role and no admin privileges
+        // ВАЖНО: НЕ редиректим если у пользователя есть админская роль
+        // Даже если у него также есть member/expert (смешанные роли)
+        if (array_intersect($admin_roles, $user_roles)) {
+            return; // Админские роли имеют приоритет
+        }
+
+        // Редиректим только если есть member/expert И НЕТ админских ролей
         if (array_intersect($member_roles, $user_roles)) {
             wp_redirect(home_url('/member-dashboard/'));
             exit;
