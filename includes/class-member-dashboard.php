@@ -16,7 +16,8 @@ class Member_Dashboard {
      * Initialize the class
      */
     public function __construct() {
-        add_action('init', array($this, 'register_dashboard_page'));
+        // Don't auto-create pages on init - only during plugin activation
+        // add_action('init', array($this, 'register_dashboard_page'));
         add_shortcode('member_dashboard', array($this, 'render_dashboard'));
         add_action('wp_ajax_member_update_profile', array($this, 'ajax_update_profile'));
         add_action('wp_ajax_member_update_gallery', array($this, 'ajax_update_gallery'));

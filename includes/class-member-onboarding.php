@@ -16,7 +16,8 @@ class Member_Onboarding {
      * Initialize the class
      */
     public function __construct() {
-        add_action('init', array($this, 'register_onboarding_page'));
+        // Don't auto-create pages on init - only during plugin activation
+        // add_action('init', array($this, 'register_onboarding_page'));
         add_shortcode('member_onboarding', array($this, 'render_onboarding'));
         add_action('wp_login', array($this, 'check_first_login'), 10, 2);
         add_action('wp_ajax_member_change_password', array($this, 'ajax_change_password'));

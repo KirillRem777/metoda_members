@@ -18,7 +18,8 @@ class Member_Forum {
     public function __construct() {
         add_action('init', array($this, 'register_post_type'));
         add_action('init', array($this, 'register_taxonomies'));
-        add_action('init', array($this, 'create_forum_pages'));
+        // Don't auto-create pages on init - only during plugin activation
+        // add_action('init', array($this, 'create_forum_pages'));
 
         // Shortcodes
         add_shortcode('member_forum', array($this, 'render_forum'));

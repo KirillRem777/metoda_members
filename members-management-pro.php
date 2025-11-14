@@ -40,8 +40,15 @@ function metoda_members_activate() {
     // Это предотвратит редирект сразу после активации
     set_transient('metoda_members_activating', true, 120);
 
-    // Регистрируем post type
+    // Регистрируем post types
     register_members_post_type();
+
+    // Register forum post type (call the method directly during activation)
+    if (class_exists('Member_Forum')) {
+        $forum = new Member_Forum();
+        $forum->register_post_type();
+        $forum->register_taxonomies();
+    }
 
     // Регистрируем таксономии
     register_member_type_taxonomy();
@@ -53,6 +60,9 @@ function metoda_members_activate() {
 
     // Создаем шаблонные страницы
     metoda_create_template_pages();
+
+    // Устанавливаем флаг, что страницы форума созданы
+    update_option('metoda_forum_pages_created', '1');
 
     // Сбрасываем постоянные ссылки
     flush_rewrite_rules();
@@ -111,6 +121,18 @@ function metoda_create_template_pages() {
             'slug' => 'member-dashboard',
             'content' => '[member_dashboard]',
             'option' => 'metoda_dashboard_page_id'
+        ),
+        array(
+            'title' => 'Добро пожаловать',
+            'slug' => 'member-onboarding',
+            'content' => '[member_onboarding]',
+            'option' => 'metoda_onboarding_page_id'
+        ),
+        array(
+            'title' => 'Форум',
+            'slug' => 'forum',
+            'content' => '[member_forum]',
+            'option' => 'metoda_forum_page_id'
         ),
         array(
             'title' => 'Панель менеджера',
