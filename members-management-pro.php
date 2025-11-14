@@ -1287,19 +1287,6 @@ function import_members_from_csv($file_path) {
     return true;
 }
 
-// Добавление страницы импорта в админку
-function add_members_import_page() {
-    add_submenu_page(
-        'edit.php?post_type=members',
-        'Импорт участников',
-        'Импорт из CSV',
-        'manage_options',
-        'members-import',
-        'members_import_page_callback'
-    );
-}
-add_action('admin_menu', 'add_members_import_page');
-
 function members_import_page_callback() {
     ?>
     <div class="wrap">

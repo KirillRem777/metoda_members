@@ -29,7 +29,7 @@ class Member_Access_Codes {
      */
     public function add_admin_menu() {
         add_submenu_page(
-            'edit.php?post_type=member',
+            'edit.php?post_type=members',
             'Коды доступа',
             'Коды доступа',
             'manage_options',
