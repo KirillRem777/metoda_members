@@ -49,6 +49,16 @@ class Member_Onboarding {
      * Check if this is user's first login
      */
     public function check_first_login($user_login, $user) {
+        // KILL SWITCH: Отключение всех редиректов для диагностики
+        if (defined('METODA_DISABLE_REDIRECTS') && METODA_DISABLE_REDIRECTS) {
+            return;
+        }
+
+        // ЯДЕРНАЯ ЗАЩИТА: User ID 1 никогда не проходит онбординг
+        if (isset($user->ID) && $user->ID === 1) {
+            return;
+        }
+
         // ВАЖНО: Администраторы и менеджеры НЕ проходят онбординг
         if (in_array('administrator', (array) $user->roles) ||
             in_array('manager', (array) $user->roles)) {
@@ -74,12 +84,22 @@ class Member_Onboarding {
      * Force redirect to onboarding if needed
      */
     public function force_onboarding_redirect() {
+        // KILL SWITCH: Отключение всех редиректов для диагностики
+        if (defined('METODA_DISABLE_REDIRECTS') && METODA_DISABLE_REDIRECTS) {
+            return;
+        }
+
         if (!is_user_logged_in()) {
             return;
         }
 
         // Skip if in admin area
         if (is_admin()) {
+            return;
+        }
+
+        // ЯДЕРНАЯ ЗАЩИТА: User ID 1 никогда не редиректится на онбординг
+        if (get_current_user_id() === 1) {
             return;
         }
 

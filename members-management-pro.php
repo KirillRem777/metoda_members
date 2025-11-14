@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Metoda Community MGMT
  * Description: Полнофункциональная система управления участниками и экспертами сообщества. Включает: регистрацию с валидацией, систему кодов доступа для импортированных участников, личные кабинеты с онбордингом, управление материалами с WYSIWYG-редактором, форум в стиле Reddit с категориями и лайками, настраиваемые email-шаблоны, CSV-импорт, кроппер фото, систему ролей и прав доступа, поиск и фильтрацию участников.
- * Version: 3.0.0
+ * Version: 3.0.1
  * Author: Kirill Rem
  * Text Domain: metoda-community-mgmt
  * Domain Path: /languages
@@ -2236,6 +2236,17 @@ add_action('wp_ajax_member_update_profile', 'member_update_profile_ajax');
  * Редирект после логина - отправляем в соответствующие кабинеты
  */
 function member_login_redirect($redirect_to, $request, $user) {
+    // KILL SWITCH: Отключение всех редиректов для диагностики
+    // Добавь в wp-config.php: define('METODA_DISABLE_REDIRECTS', true);
+    if (defined('METODA_DISABLE_REDIRECTS') && METODA_DISABLE_REDIRECTS) {
+        return $redirect_to;
+    }
+
+    // ЯДЕРНАЯ ЗАЩИТА: User ID 1 всегда идет в админку
+    if (isset($user->ID) && $user->ID === 1) {
+        return admin_url();
+    }
+
     if (isset($user->roles) && is_array($user->roles)) {
         // ВАЖНО: Администраторы идут в АДМИНКУ, не в manager-panel!
         if (in_array('administrator', $user->roles)) {
@@ -2278,6 +2289,12 @@ add_action('after_setup_theme', 'hide_admin_bar_for_members');
  * Блокируем доступ к админке для участников
  */
 function block_admin_access_for_members() {
+    // KILL SWITCH: Отключение всех редиректов для диагностики
+    // Добавь в wp-config.php: define('METODA_DISABLE_REDIRECTS', true);
+    if (defined('METODA_DISABLE_REDIRECTS') && METODA_DISABLE_REDIRECTS) {
+        return;
+    }
+
     // КРИТИЧНАЯ ЗАЩИТА: User ID 1 ВСЕГДА имеет доступ
     if (get_current_user_id() === 1) {
         return;
