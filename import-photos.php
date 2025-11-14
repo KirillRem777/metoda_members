@@ -12,35 +12,9 @@
 // Поднимаемся на 3 уровня вверх чтобы найти wp-load.php
 require_once(dirname(dirname(dirname(dirname(__FILE__)))) . '/wp-load.php');
 
-// Проверяем авторизацию
-if (!is_user_logged_in()) {
-    echo '<h1>🔐 Требуется авторизация</h1>';
-    echo '<style>body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding: 40px; background: #f5f5f5; }</style>';
-    echo '<div style="background: white; padding: 30px; border-radius: 8px; max-width: 600px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">';
-    echo '<h2 style="color: #ef4444;">❌ Ты не авторизован</h2>';
-    echo '<p>Для запуска этого скрипта нужно:</p>';
-    echo '<ol style="line-height: 2;">';
-    echo '<li>Открой новую вкладку</li>';
-    echo '<li>Зайди в админку WordPress: <code>' . admin_url() . '</code></li>';
-    echo '<li>Авторизуйся как администратор</li>';
-    echo '<li>Вернись на эту страницу и обнови (F5)</li>';
-    echo '</ol>';
-    echo '<p style="margin-top: 20px;"><a href="' . wp_login_url($_SERVER['REQUEST_URI']) . '" style="background: #0066cc; color: white; padding: 10px 20px; text-decoration: none; border-radius: 6px; display: inline-block;">🔑 Войти</a></p>';
-    echo '</div>';
-    exit;
-}
-
-if (!current_user_can('manage_options')) {
-    echo '<h1>🔐 Недостаточно прав</h1>';
-    echo '<style>body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding: 40px; background: #f5f5f5; }</style>';
-    echo '<div style="background: white; padding: 30px; border-radius: 8px; max-width: 600px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">';
-    echo '<h2 style="color: #ef4444;">❌ У тебя нет прав администратора</h2>';
-    echo '<p>Ты авторизован как: <strong>' . wp_get_current_user()->user_login . '</strong></p>';
-    echo '<p>Этот скрипт могут запускать только администраторы сайта.</p>';
-    echo '<p>Попроси владельца сайта дать тебе права администратора или запустить скрипт самостоятельно.</p>';
-    echo '</div>';
-    exit;
-}
+// ⚠️ БЕЗОПАСНОСТЬ: Этот скрипт работает БЕЗ проверки авторизации!
+// Это одноразовый скрипт - ОБЯЗАТЕЛЬНО УДАЛИ его после использования!
+// Любой может получить доступ к этому скрипту, если он не удалён!
 
 echo '<h1>📸 Импорт фотографий участников</h1>';
 echo '<style>
