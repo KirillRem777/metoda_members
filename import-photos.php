@@ -91,20 +91,30 @@ function upload_photo_as_attachment($file_path, $post_id) {
     return false;
 }
 
+// Группируем файлы по участникам
+$members_photos = array();
+foreach ($files as $file) {
+    $member_name = extract_member_name($file);
+    if (!isset($members_photos[$member_name])) {
+        $members_photos[$member_name] = array();
+    }
+    $members_photos[$member_name][] = $file;
+}
+
 $stats = array(
-    'total' => count($files),
+    'total_files' => count($files),
+    'total_members' => count($members_photos),
     'imported' => 0,
+    'photos_added' => 0,
     'skipped' => 0,
     'not_found' => 0,
     'errors' => 0
 );
 
-foreach ($files as $file) {
-    $member_name = extract_member_name($file);
-    $filename = basename($file);
-
-    echo "📄 Файл: <span class='info'>{$filename}</span>\n";
-    echo "👤 Ищу участника: {$member_name}\n";
+foreach ($members_photos as $member_name => $photos) {
+    echo "═══════════════════════════════════════════════════════\n";
+    echo "👤 Участник: <span class='info'>{$member_name}</span>\n";
+    echo "📸 Найдено фотографий: " . count($photos) . "\n\n";
 
     // Ищем участника по имени
     $members = get_posts(array(
@@ -115,33 +125,59 @@ foreach ($files as $file) {
     ));
 
     if (empty($members)) {
-        echo "<span class='warning'>⚠️  Участник не найден: {$member_name}</span>\n\n";
+        echo "<span class='warning'>⚠️  Участник не найден в базе</span>\n\n";
         $stats['not_found']++;
+        foreach ($photos as $photo) {
+            echo "   ⊘ Пропущено: " . basename($photo) . "\n";
+        }
+        echo "\n";
         continue;
     }
 
     $member = $members[0];
     $member_id = $member->ID;
 
-    echo "✓ Найден: {$member->post_title} (ID: {$member_id})\n";
+    echo "✓ Найден в базе (ID: {$member_id})\n\n";
 
-    // Проверяем есть ли уже фото
-    if (has_post_thumbnail($member_id)) {
-        echo "<span class='warning'>⊘ Фото уже установлено, пропускаю...</span>\n\n";
-        $stats['skipped']++;
-        continue;
+    // Получаем текущую галерею
+    $current_gallery = get_post_meta($member_id, 'member_gallery', true);
+    $gallery_ids = !empty($current_gallery) ? explode(',', $current_gallery) : array();
+
+    $member_imported = 0;
+    $first_photo = true;
+
+    foreach ($photos as $photo) {
+        $filename = basename($photo);
+        echo "   📄 Загружаю: {$filename}\n";
+
+        // Загружаем фото
+        $attachment_id = upload_photo_as_attachment($photo, $member_id);
+
+        if ($attachment_id) {
+            // Первую фотографию ставим как Featured Image (если еще нет)
+            if ($first_photo && !has_post_thumbnail($member_id)) {
+                set_post_thumbnail($member_id, $attachment_id);
+                echo "      ✓ Установлено как главное фото\n";
+                $first_photo = false;
+            }
+
+            // Добавляем в галерею
+            $gallery_ids[] = $attachment_id;
+            echo "      ✓ Добавлено в галерею\n";
+            $member_imported++;
+        } else {
+            echo "      <span class='error'>✗ Ошибка загрузки</span>\n";
+            $stats['errors']++;
+        }
     }
 
-    // Загружаем фото
-    $attachment_id = upload_photo_as_attachment($file, $member_id);
-
-    if ($attachment_id) {
-        set_post_thumbnail($member_id, $attachment_id);
-        echo "<span class='success'>✅ Фото успешно загружено!</span>\n\n";
+    if ($member_imported > 0) {
+        // Сохраняем галерею
+        update_post_meta($member_id, 'member_gallery', implode(',', $gallery_ids));
+        echo "\n<span class='success'>✅ Импортировано: {$member_imported} фото</span>\n";
+        echo "   📊 Всего в галерее: " . count($gallery_ids) . " фото\n\n";
         $stats['imported']++;
-    } else {
-        echo "<span class='error'>❌ Ошибка загрузки фото</span>\n\n";
-        $stats['errors']++;
+        $stats['photos_added'] += $member_imported;
     }
 }
 
@@ -149,23 +185,26 @@ echo "════════════════════════�
 echo "📊 СТАТИСТИКА\n";
 echo "═══════════════════════════════════════════════════════\n\n";
 
-echo "Всего файлов:           {$stats['total']}\n";
-echo "<span class='success'>✅ Импортировано:       {$stats['imported']}</span>\n";
-echo "<span class='warning'>⊘ Пропущено (уже есть): {$stats['skipped']}</span>\n";
-echo "<span class='warning'>⚠️  Участник не найден:  {$stats['not_found']}</span>\n";
-echo "<span class='error'>❌ Ошибок:              {$stats['errors']}</span>\n\n";
+echo "Всего файлов:              {$stats['total_files']}\n";
+echo "Всего участников:          {$stats['total_members']}\n";
+echo "<span class='success'>✅ Участников обработано:  {$stats['imported']}</span>\n";
+echo "<span class='success'>📸 Фото загружено:         {$stats['photos_added']}</span>\n";
+echo "<span class='warning'>⚠️  Участников не найдено:  {$stats['not_found']}</span>\n";
+echo "<span class='error'>❌ Ошибок загрузки:        {$stats['errors']}</span>\n\n";
 
 if ($stats['imported'] > 0) {
     echo "<span class='success'>═══════════════════════════════════════════════════════\n";
     echo "✅ ИМПОРТ ЗАВЕРШЁН!\n";
     echo "═══════════════════════════════════════════════════════</span>\n\n";
 
-    echo "Фотографии успешно загружены и привязаны к участникам!\n\n";
+    echo "Фотографии успешно загружены:\n";
+    echo "• Первая фотография каждого участника = главное фото\n";
+    echo "• ВСЕ фотографии добавлены в галерею/слайдер\n\n";
 
     echo "<span class='info'>📋 ЧТО ДАЛЬШЕ:</span>\n";
-    echo "1. Открой страницу архива участников\n";
+    echo "1. Открой страницу любого участника\n";
     echo "2. Нажми Ctrl+F5 (очистить кэш браузера)\n";
-    echo "3. Увидишь фотографии участников! ✨\n\n";
+    echo "3. Увидишь слайдер с фотографиями (если у участника > 1 фото)! ✨\n\n";
 }
 
 if ($stats['not_found'] > 0) {
