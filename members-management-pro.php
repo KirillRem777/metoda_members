@@ -36,6 +36,10 @@ register_deactivation_hook(__FILE__, 'metoda_members_deactivate');
  * Функция активации плагина
  */
 function metoda_members_activate() {
+    // Устанавливаем флаг активации (на 2 минуты)
+    // Это предотвратит редирект сразу после активации
+    set_transient('metoda_members_activating', true, 120);
+
     // Регистрируем post type
     register_members_post_type();
 
@@ -2178,6 +2182,11 @@ add_action('after_setup_theme', 'hide_admin_bar_for_members');
  * Блокируем доступ к админке для участников
  */
 function block_admin_access_for_members() {
+    // Don't redirect if plugin is being activated (transient set during activation)
+    if (get_transient('metoda_members_activating')) {
+        return;
+    }
+
     // Only run in admin area, not during AJAX
     if (!is_admin() || wp_doing_ajax()) {
         return;
