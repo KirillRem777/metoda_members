@@ -75,6 +75,20 @@ class Member_Onboarding {
             return;
         }
 
+        // ВАЖНО: Администраторы и менеджеры НЕ должны проходить онбординг
+        $user = wp_get_current_user();
+        if (current_user_can('manage_options') ||
+            current_user_can('administrator') ||
+            in_array('administrator', (array) $user->roles) ||
+            in_array('manager', (array) $user->roles)) {
+            return;
+        }
+
+        // Онбординг только для member и expert
+        if (!in_array('member', (array) $user->roles) && !in_array('expert', (array) $user->roles)) {
+            return;
+        }
+
         // Skip if already on onboarding page or login page
         if (is_page('member-onboarding') ||
             $GLOBALS['pagenow'] === 'wp-login.php' ||
