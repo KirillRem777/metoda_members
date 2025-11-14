@@ -2272,6 +2272,11 @@ add_action('after_setup_theme', 'hide_admin_bar_for_members');
  * Блокируем доступ к админке для участников
  */
 function block_admin_access_for_members() {
+    // КРИТИЧНАЯ ЗАЩИТА: User ID 1 ВСЕГДА имеет доступ
+    if (get_current_user_id() === 1) {
+        return;
+    }
+
     // Don't redirect if plugin is being activated (transient set during activation)
     if (get_transient('metoda_members_activating')) {
         return;
@@ -2287,8 +2292,11 @@ function block_admin_access_for_members() {
         return;
     }
 
-    // Administrators and users with manage_options capability always have access
-    if (current_user_can('manage_options') || current_user_can('administrator')) {
+    // ДВОЙНАЯ ПРОВЕРКА: Administrators and users with manage_options capability always have access
+    $user = wp_get_current_user();
+    if (current_user_can('manage_options') ||
+        current_user_can('administrator') ||
+        in_array('administrator', (array) $user->roles)) {
         return;
     }
 
@@ -2308,9 +2316,6 @@ function block_admin_access_for_members() {
     if (isset($_SERVER['HTTP_REFERER']) && strpos($_SERVER['HTTP_REFERER'], 'plugins.php') !== false) {
         return;
     }
-
-    // Get current user
-    $user = wp_get_current_user();
 
     // Check if user has member or expert role (not checking capabilities to avoid conflicts)
     if (!empty($user->roles)) {
