@@ -2237,10 +2237,16 @@ add_action('wp_ajax_member_update_profile', 'member_update_profile_ajax');
  */
 function member_login_redirect($redirect_to, $request, $user) {
     if (isset($user->roles) && is_array($user->roles)) {
-        // Менеджеры и админы в панель управления
-        if (in_array('manager', $user->roles) || in_array('administrator', $user->roles)) {
+        // ВАЖНО: Администраторы идут в АДМИНКУ, не в manager-panel!
+        if (in_array('administrator', $user->roles)) {
+            return admin_url(); // В админку WordPress
+        }
+
+        // Менеджеры в панель управления
+        if (in_array('manager', $user->roles)) {
             return home_url('/manager-panel/');
         }
+
         // Участники и эксперты в личный кабинет
         if (in_array('member', $user->roles) || in_array('expert', $user->roles)) {
             return home_url('/member-dashboard/');
