@@ -23,6 +23,7 @@ require_once plugin_dir_path(__FILE__) . 'includes/class-member-manager.php';
 require_once plugin_dir_path(__FILE__) . 'includes/class-member-csv-importer.php';
 require_once plugin_dir_path(__FILE__) . 'includes/class-member-page-templates.php';
 require_once plugin_dir_path(__FILE__) . 'includes/class-member-template-loader.php';
+require_once plugin_dir_path(__FILE__) . 'includes/class-member-email-templates.php';
 
 // Хуки активации/деактивации плагина
 register_activation_hook(__FILE__, 'metoda_members_activate');
@@ -2044,6 +2045,14 @@ function member_register_ajax() {
     // Автоматический вход
     wp_set_current_user($user_id);
     wp_set_auth_cookie($user_id);
+
+    // Отправка email уведомлений
+    do_action('metoda_member_registered', $user_id, $member_id, $is_claimed_profile);
+
+    // Если профиль был активирован по коду доступа
+    if ($is_claimed_profile && !empty($access_code)) {
+        do_action('metoda_profile_activated', $user_id, $member_id, $access_code);
+    }
 
     $message = $is_claimed_profile
         ? 'Регистрация завершена! Ваш профиль успешно активирован.'
