@@ -15,6 +15,7 @@ $paged = (get_query_var('paged')) ? get_query_var('paged') : 1;
 $search = isset($_GET['s']) ? sanitize_text_field($_GET['s']) : '';
 $city_filter = isset($_GET['city']) ? sanitize_text_field($_GET['city']) : '';
 $role_filter = isset($_GET['role']) ? sanitize_text_field($_GET['role']) : '';
+$type_filter = isset($_GET['member_type']) ? sanitize_text_field($_GET['member_type']) : '';
 
 // Формируем запрос
 $args = array(
@@ -39,8 +40,23 @@ if (!empty($city_filter)) {
     );
 }
 
+// Добавляем фильтр по типу (Эксперт/Участник)
+if (!empty($type_filter)) {
+    if (!isset($args['tax_query'])) {
+        $args['tax_query'] = array();
+    }
+    $args['tax_query'][] = array(
+        'taxonomy' => 'member_type',
+        'field' => 'slug',
+        'terms' => $type_filter
+    );
+}
+
 // Добавляем фильтр по роли
 if (!empty($role_filter)) {
+    if (!isset($args['tax_query'])) {
+        $args['tax_query'] = array();
+    }
     $args['tax_query'][] = array(
         'taxonomy' => 'member_role',
         'field' => 'slug',
@@ -138,6 +154,30 @@ $roles = get_terms(array(
                         </div>
                     </div>
 
+                    <!-- Type Filter -->
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium text-gray-700 mb-3">Тип</label>
+                        <div class="flex gap-2">
+                            <button type="button" onclick="window.location.href='<?php echo remove_query_arg('member_type'); ?>'" class="flex-1 px-4 py-2 <?php echo empty($type_filter) ? 'metoda-primary-bg text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'; ?> rounded-lg font-medium text-sm">
+                                Все
+                            </button>
+                            <button type="button" onclick="setMemberType('uchastnik')" class="flex-1 px-4 py-2 <?php echo $type_filter === 'uchastnik' ? 'bg-green-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'; ?> rounded-lg font-medium text-sm">
+                                Участники
+                            </button>
+                            <button type="button" onclick="setMemberType('ekspert')" class="flex-1 px-4 py-2 <?php echo $type_filter === 'ekspert' ? 'metoda-primary-bg text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'; ?> rounded-lg font-medium text-sm">
+                                Эксперты
+                            </button>
+                        </div>
+                        <input type="hidden" name="member_type" id="member_type_input" value="<?php echo esc_attr($type_filter); ?>">
+                    </div>
+
+                    <script>
+                    function setMemberType(type) {
+                        document.getElementById('member_type_input').value = type;
+                        document.querySelector('form').submit();
+                    }
+                    </script>
+
                     <!-- City Filter -->
                     <?php if (!empty($cities)): ?>
                     <div class="mb-6">
@@ -188,6 +228,18 @@ $roles = get_terms(array(
                         $company = get_post_meta($member_id, 'member_company', true);
                         $city = get_post_meta($member_id, 'member_city', true);
                         $roles = wp_get_post_terms($member_id, 'member_role');
+                        $member_types = wp_get_post_terms($member_id, 'member_type');
+
+                        // Определяем тип участника для плашки
+                        $is_expert = false;
+                        if ($member_types && !is_wp_error($member_types)) {
+                            foreach ($member_types as $type) {
+                                if ($type->slug === 'ekspert' || $type->name === 'Эксперт') {
+                                    $is_expert = true;
+                                    break;
+                                }
+                            }
+                        }
                     ?>
                     <article class="bg-white rounded-xl shadow-sm border p-6 hover:shadow-md transition-shadow">
                         <a href="<?php the_permalink(); ?>" class="flex items-start gap-4">
@@ -202,6 +254,17 @@ $roles = get_terms(array(
                             </div>
 
                             <div class="flex-1 min-w-0">
+                                <!-- Member Type Badge -->
+                                <?php if ($member_types && !is_wp_error($member_types) && !empty($member_types)): ?>
+                                <div class="flex items-center justify-between mb-2">
+                                    <?php if ($is_expert): ?>
+                                        <span class="px-3 py-1 bg-blue-100 text-blue-700 text-xs font-semibold rounded-full">Эксперт</span>
+                                    <?php else: ?>
+                                        <span class="px-3 py-1 bg-green-100 text-green-700 text-xs font-semibold rounded-full">Участник</span>
+                                    <?php endif; ?>
+                                </div>
+                                <?php endif; ?>
+
                                 <h3 class="text-lg font-semibold text-gray-900 mb-1 truncate"><?php the_title(); ?></h3>
 
                                 <?php if ($position): ?>
