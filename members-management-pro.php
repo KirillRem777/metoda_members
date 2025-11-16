@@ -13,6 +13,12 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
+// 🔴 ЯДЕРНАЯ КНОПКА: Полное отключение плагина
+// Добавь в wp-config.php: define('METODA_DISABLE_PLUGIN', true);
+if (defined('METODA_DISABLE_PLUGIN') && METODA_DISABLE_PLUGIN) {
+    return; // Плагин ПОЛНОСТЬЮ отключен - ничего не загружается!
+}
+
 // Подключение классов личного кабинета
 require_once plugin_dir_path(__FILE__) . 'includes/class-member-user-link.php';
 require_once plugin_dir_path(__FILE__) . 'includes/class-member-file-manager.php';
