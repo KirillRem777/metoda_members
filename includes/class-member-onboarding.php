@@ -93,8 +93,18 @@ class Member_Onboarding {
             return;
         }
 
-        // Skip if in admin area
-        if (is_admin()) {
+        // Skip if in admin area or AJAX requests
+        if (is_admin() || wp_doing_ajax() || (defined('DOING_AJAX') && DOING_AJAX)) {
+            return;
+        }
+
+        // Skip for REST API requests
+        if (defined('REST_REQUEST') && REST_REQUEST) {
+            return;
+        }
+
+        // Skip for cron jobs
+        if (defined('DOING_CRON') && DOING_CRON) {
             return;
         }
 
@@ -109,6 +119,8 @@ class Member_Onboarding {
             current_user_can('administrator') ||
             in_array('administrator', (array) $user->roles) ||
             in_array('manager', (array) $user->roles)) {
+            // Убираем флаг онбординга для админов если он случайно установлен
+            delete_user_meta(get_current_user_id(), '_member_needs_onboarding');
             return;
         }
 
@@ -119,8 +131,7 @@ class Member_Onboarding {
 
         // Skip if already on onboarding page or login page
         if (is_page('member-onboarding') ||
-            $GLOBALS['pagenow'] === 'wp-login.php' ||
-            (defined('DOING_AJAX') && DOING_AJAX)) {
+            $GLOBALS['pagenow'] === 'wp-login.php') {
             return;
         }
 
