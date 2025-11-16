@@ -18,6 +18,7 @@ $header_mapping = array(
     'Компания' => 'member_company',
     'Должность' => 'member_position',
     'Город' => 'member_city',
+    'Тип участника' => 'taxonomy_member_type',  // Эксперт или Участник
     'Роль в ассоциации' => 'taxonomy_member_role',
     'Специализация и стаж' => 'member_specialization_experience',
     'Сфера профессиональных интересов' => 'member_professional_interests',

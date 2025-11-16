@@ -37,8 +37,9 @@ while (have_posts()) : the_post();
     // Обработка буллетов для специализации
     $specialization_items = array();
     if ($specialization_experience) {
-        // Разделяем по символу | (данные из CSV)
-        $lines = explode('|', $specialization_experience);
+        // Разделяем по символу | (данные из CSV) или по \n (legacy)
+        $delimiter = (strpos($specialization_experience, '|') !== false) ? '|' : "\n";
+        $lines = explode($delimiter, $specialization_experience);
         foreach ($lines as $line) {
             $line = trim($line);
             if (!empty($line)) {
@@ -54,8 +55,9 @@ while (have_posts()) : the_post();
     // Обработка буллетов для интересов
     $interest_items = array();
     if ($professional_interests) {
-        // Разделяем по символу | (данные из CSV)
-        $lines = explode('|', $professional_interests);
+        // Разделяем по символу | (данные из CSV) или по \n (legacy)
+        $delimiter = (strpos($professional_interests, '|') !== false) ? '|' : "\n";
+        $lines = explode($delimiter, $professional_interests);
         foreach ($lines as $line) {
             $line = trim($line);
             if (!empty($line)) {

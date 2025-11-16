@@ -365,16 +365,25 @@ class Member_CSV_Importer {
         }
 
         // Handle taxonomies
+        // Support both taxonomy_member_type and taxonomy_member_types
         if (!empty($data['taxonomy_member_type'])) {
             self::set_taxonomy_terms($member_id, 'member_type', $data['taxonomy_member_type']);
+        } elseif (!empty($data['taxonomy_member_types'])) {
+            self::set_taxonomy_terms($member_id, 'member_type', $data['taxonomy_member_types']);
         }
 
-        if (!empty($data['taxonomy_member_roles'])) {
+        // Support both taxonomy_member_role and taxonomy_member_roles
+        if (!empty($data['taxonomy_member_role'])) {
+            self::set_taxonomy_terms($member_id, 'member_role', $data['taxonomy_member_role']);
+        } elseif (!empty($data['taxonomy_member_roles'])) {
             self::set_taxonomy_terms($member_id, 'member_role', $data['taxonomy_member_roles']);
         }
 
+        // Support both taxonomy_member_location and taxonomy_member_locations
         if (!empty($data['taxonomy_member_location'])) {
             self::set_taxonomy_terms($member_id, 'member_location', $data['taxonomy_member_location']);
+        } elseif (!empty($data['taxonomy_member_locations'])) {
+            self::set_taxonomy_terms($member_id, 'member_location', $data['taxonomy_member_locations']);
         }
 
         // Try to attach photo
@@ -428,14 +437,38 @@ class Member_CSV_Importer {
      */
     private static function attach_photo($member_id, $member_name, $photos_dir) {
         // Try different extensions
-        $extensions = array('jpg', 'jpeg', 'png', 'JPG', 'JPEG', 'PNG');
+        $extensions = array('jpg', 'jpeg', 'png', 'JPG', 'JPEG', 'PNG', 'gif', 'GIF', 'webp', 'WEBP');
         $photo_path = null;
 
+        // Normalize member name for matching
+        $normalized_name = trim($member_name);
+
+        // Try exact match first
         foreach ($extensions as $ext) {
-            $path = $photos_dir . '/' . $member_name . '.' . $ext;
+            $path = $photos_dir . '/' . $normalized_name . '.' . $ext;
             if (file_exists($path)) {
                 $photo_path = $path;
                 break;
+            }
+        }
+
+        // If not found, try case-insensitive search
+        if (!$photo_path && is_dir($photos_dir)) {
+            $files = scandir($photos_dir);
+            $name_lower = mb_strtolower($normalized_name);
+
+            foreach ($files as $file) {
+                if ($file === '.' || $file === '..') continue;
+
+                $file_basename = pathinfo($file, PATHINFO_FILENAME);
+                $file_ext = pathinfo($file, PATHINFO_EXTENSION);
+
+                // Case-insensitive comparison
+                if (mb_strtolower($file_basename) === $name_lower &&
+                    in_array(strtolower($file_ext), array('jpg', 'jpeg', 'png', 'gif', 'webp'))) {
+                    $photo_path = $photos_dir . '/' . $file;
+                    break;
+                }
             }
         }
 
