@@ -25,7 +25,7 @@ class Member_Onboarding {
         add_action('wp_enqueue_scripts', array($this, 'enqueue_onboarding_assets'));
 
         // Onboarding redirect (with proper admin/manager checks)
-        add_action('template_redirect', array($this, 'force_onboarding_redirect'));
+        // ВРЕМЕННО ОТКЛЮЧЕНО: add_action('template_redirect', array($this, 'force_onboarding_redirect'));
     }
 
     /**
