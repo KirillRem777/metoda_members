@@ -72,10 +72,11 @@
    - Поддержка новых полей
    - Правильная обработка HTML и буллетов
 
-3. **templates/single-members-new.php**
-   - Новый шаблон профиля участника
+3. **single-members.php**
+   - Шаблон профиля участника
    - Дизайн на базе Tailwind CSS
    - Фирменные цвета Метода (#0066cc, #ff6600)
+   - Поддержка фотогалереи
 
 4. **templates/archive-members.php**
    - Архив всех участников
@@ -121,14 +122,16 @@ php convert_csv.php
 
 ### Шаг 3: Активация новых шаблонов
 
-Скопируйте файлы шаблонов в тему:
+Плагин автоматически загружает шаблоны из своей директории, если тема их не содержит.
+
+Если хотите кастомизировать шаблоны:
 
 ```bash
-cp templates/single-members-new.php /path/to/theme/single-members.php
+cp single-members.php /path/to/theme/single-members.php
 cp templates/archive-members.php /path/to/theme/archive-members.php
 ```
 
-Или активируйте их через админку WordPress при редактировании участника.
+Или используйте кнопку "Скопировать шаблон в тему" в админке WordPress.
 
 ## Цветовая схема
 
@@ -153,19 +156,19 @@ cp templates/archive-members.php /path/to/theme/archive-members.php
 
 2. **Profile Desktop.html / Profile Mobile.html**
    - Профиль участника
-   - Реализовано в `templates/single-members-new.php`
+   - ✅ Реализовано в `single-members.php`
 
 3. **Member Admin Page Desktop/Mobile.html**
    - Личный кабинет участника
-   - TODO: требуется реализация
+   - ✅ Реализовано в `templates/member-dashboard.php`
 
 4. **Manager Admin Panel Desktop/Mobile.html**
    - Админка менеджера
-   - TODO: требуется реализация
+   - ✅ Реализовано в `templates/manager-panel.php`
 
 5. **New Member Registration Desktop/Mobile.html**
    - Регистрация нового участника
-   - TODO: требуется реализация
+   - ✅ Реализовано в `templates/member-registration.php`
 
 ## Технологии
 
