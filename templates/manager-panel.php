@@ -29,13 +29,13 @@ $pending_members = wp_count_posts('members')->pending;
 $draft_members = wp_count_posts('members')->draft;
 
 // Получаем города для фильтра
-$cities = $wpdb->get_col("
+$cities = $wpdb->get_col($wpdb->prepare("
     SELECT DISTINCT meta_value
     FROM {$wpdb->postmeta}
-    WHERE meta_key = 'member_city'
+    WHERE meta_key = %s
     AND meta_value != ''
     ORDER BY meta_value ASC
-");
+", 'member_city'));
 
 // Получаем типы участников
 $member_types = get_terms(array(

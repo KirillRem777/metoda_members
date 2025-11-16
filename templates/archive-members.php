@@ -68,13 +68,13 @@ $members_query = new WP_Query($args);
 
 // Получаем все города для фильтра
 global $wpdb;
-$cities = $wpdb->get_col("
+$cities = $wpdb->get_col($wpdb->prepare("
     SELECT DISTINCT meta_value
     FROM {$wpdb->postmeta}
-    WHERE meta_key = 'member_city'
+    WHERE meta_key = %s
     AND meta_value != ''
     ORDER BY meta_value ASC
-");
+", 'member_city'));
 
 // Получаем все роли для фильтра
 $roles = get_terms(array(
