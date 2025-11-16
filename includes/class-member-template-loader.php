@@ -15,7 +15,12 @@ class Member_Template_Loader {
      * Initialize
      */
     public static function init() {
-        add_filter('template_include', array(__CLASS__, 'load_member_template'), 99);
+        // 🛡️ ЗАЩИТА: Не загружаем хуки в админке!
+        if (!is_admin()) {
+            add_filter('template_include', array(__CLASS__, 'load_member_template'), 99);
+        }
+        
+        // Эти хуки безопасны - они нужны только в админке
         add_action('admin_notices', array(__CLASS__, 'template_notice'));
         add_action('admin_post_copy_member_template', array(__CLASS__, 'handle_copy_template'));
     }

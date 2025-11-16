@@ -313,5 +313,7 @@ class Member_Dashboard {
     }
 }
 
-// Initialize the class
-new Member_Dashboard();
+// Initialize the class only on frontend
+if (!is_admin()) {
+    new Member_Dashboard();
+}

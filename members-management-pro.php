@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Metoda Community MGMT
  * Description: Полнофункциональная система управления участниками и экспертами сообщества. Включает: регистрацию с валидацией, систему кодов доступа для импортированных участников, личные кабинеты с онбордингом, управление материалами с WYSIWYG-редактором, форум в стиле Reddit с категориями и лайками, настраиваемые email-шаблоны, CSV-импорт, кроппер фото, систему ролей и прав доступа, поиск и фильтрацию участников.
- * Version: 3.1.1
+ * Version: 3.1.0
  * Author: Kirill Rem
  * Text Domain: metoda-community-mgmt
  * Domain Path: /languages
@@ -19,28 +19,26 @@ if (defined('METODA_DISABLE_PLUGIN') && METODA_DISABLE_PLUGIN) {
     return; // Плагин ПОЛНОСТЬЮ отключен - ничего не загружается!
 }
 
-// Универсальные классы (нужны везде)
-require_once plugin_dir_path(__FILE__) . 'includes/class-member-user-link.php';
-require_once plugin_dir_path(__FILE__) . 'includes/class-member-file-manager.php';
-
-// Админ-классы (только в админке)
-if (is_admin()) {
-    require_once plugin_dir_path(__FILE__) . 'includes/class-member-access-codes.php';
-    require_once plugin_dir_path(__FILE__) . 'includes/class-member-bulk-users.php';
-    require_once plugin_dir_path(__FILE__) . 'includes/class-member-csv-importer.php';
-    require_once plugin_dir_path(__FILE__) . 'includes/class-member-page-templates.php';
-    require_once plugin_dir_path(__FILE__) . 'includes/class-member-email-templates.php';
-}
-
-// Фронтенд-классы (только НЕ в админке)
+// 🛡️ ЗАЩИТА ОТ РЕДИРЕКТОВ В АДМИНКЕ
+// Классы фронтенда НЕ загружаются в админке
 if (!is_admin()) {
+    // Подключение классов личного кабинета ТОЛЬКО на фронтенде
+    require_once plugin_dir_path(__FILE__) . 'includes/class-member-user-link.php';
+    require_once plugin_dir_path(__FILE__) . 'includes/class-member-file-manager.php';
     require_once plugin_dir_path(__FILE__) . 'includes/class-member-archive.php';
     require_once plugin_dir_path(__FILE__) . 'includes/class-member-dashboard.php';
     require_once plugin_dir_path(__FILE__) . 'includes/class-member-onboarding.php';
+    require_once plugin_dir_path(__FILE__) . 'includes/class-member-access-codes.php';
+    require_once plugin_dir_path(__FILE__) . 'includes/class-member-bulk-users.php';
     require_once plugin_dir_path(__FILE__) . 'includes/class-member-manager.php';
+    require_once plugin_dir_path(__FILE__) . 'includes/class-member-page-templates.php';
     require_once plugin_dir_path(__FILE__) . 'includes/class-member-template-loader.php';
     require_once plugin_dir_path(__FILE__) . 'includes/class-member-forum.php';
 }
+
+// Эти классы безопасны - нужны и в админке
+require_once plugin_dir_path(__FILE__) . 'includes/class-member-csv-importer.php';
+require_once plugin_dir_path(__FILE__) . 'includes/class-member-email-templates.php';
 
 // Хуки активации/деактивации плагина
 register_activation_hook(__FILE__, 'metoda_members_activate');
