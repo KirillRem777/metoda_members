@@ -9,7 +9,7 @@ if (php_sapi_name() !== 'cli') {
     die('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>CLI Only</title><style>body{font-family:sans-serif;padding:50px;text-align:center;background:#f5f5f5;}h1{color:#dc3545;}</style></head><body><h1>❌ Этот скрипт можно запускать только из командной строки</h1><p>Используйте: <code>php convert_csv.php</code></p></body></html>');
 }
 
-$input_file = 'uchastniki_experts_corrected.csv';
+$input_file = 'uchastniki_experts_final.csv';
 $output_file = 'wordpress_members_import_FINAL.csv';
 
 // Маппинг заголовков
