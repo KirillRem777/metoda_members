@@ -52,6 +52,20 @@ class Member_Template_Loader {
             }
         }
 
+        // Check if this is a single forum topic
+        if (is_singular('forum_topic')) {
+            // Check if theme has the template
+            $theme_template = locate_template(array('single-forum_topic.php'));
+
+            // If theme doesn't have template, use plugin's template
+            if (!$theme_template) {
+                $plugin_template = plugin_dir_path(dirname(__FILE__)) . 'templates/forum-topic.php';
+                if (file_exists($plugin_template)) {
+                    return $plugin_template;
+                }
+            }
+        }
+
         return $template;
     }
 
