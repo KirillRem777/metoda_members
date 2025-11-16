@@ -40,7 +40,6 @@
             }
         })
         .catch(error => {
-            console.error('Error:', error);
             alert('Произошла ошибка при изменении статуса');
         });
     };
@@ -72,7 +71,6 @@
             }
         })
         .catch(error => {
-            console.error('Error:', error);
             alert('Произошла ошибка при удалении участника');
         });
     };

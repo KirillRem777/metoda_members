@@ -90,11 +90,9 @@
                             }, 300);
                         }
                     } else {
-                        console.error('Error:', response.data.message);
                     }
                 },
                 error: function(xhr, status, error) {
-                    console.error('AJAX Error:', error);
                     alert('Произошла ошибка при загрузке участников. Попробуйте обновить страницу.');
                 },
                 complete: function() {

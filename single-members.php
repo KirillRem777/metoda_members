@@ -30,10 +30,15 @@ while (have_posts()) : the_post();
     $roles = wp_get_post_terms($member_id, 'member_role');
     $locations = wp_get_post_terms($member_id, 'member_location');
 
+    // Получаем галерею фотографий
+    $gallery_ids_string = get_post_meta($member_id, 'member_gallery', true);
+    $gallery_ids = !empty($gallery_ids_string) ? explode(',', $gallery_ids_string) : array();
+
     // Обработка буллетов для специализации
     $specialization_items = array();
     if ($specialization_experience) {
-        $lines = explode("\n", $specialization_experience);
+        // Разделяем по символу | (данные из CSV)
+        $lines = explode('|', $specialization_experience);
         foreach ($lines as $line) {
             $line = trim($line);
             if (!empty($line)) {
@@ -49,7 +54,8 @@ while (have_posts()) : the_post();
     // Обработка буллетов для интересов
     $interest_items = array();
     if ($professional_interests) {
-        $lines = explode("\n", $professional_interests);
+        // Разделяем по символу | (данные из CSV)
+        $lines = explode('|', $professional_interests);
         foreach ($lines as $line) {
             $line = trim($line);
             if (!empty($line)) {
@@ -267,6 +273,36 @@ while (have_posts()) : the_post();
                     </div>
                 </div>
                 <?php endif; ?>
+
+                <!-- Photo Gallery -->
+                <?php if (!empty($gallery_ids) && count($gallery_ids) > 1): ?>
+                <div class="bg-white rounded-xl shadow-sm border p-8">
+                    <h3 class="text-2xl font-bold text-gray-900 mb-6">
+                        <i class="fa-solid fa-images metoda-primary mr-2"></i>
+                        Фотогалерея
+                    </h3>
+                    <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+                        <?php foreach ($gallery_ids as $attachment_id):
+                            $attachment_id = intval(trim($attachment_id));
+                            if (!$attachment_id) continue;
+                            $image_url = wp_get_attachment_image_url($attachment_id, 'medium');
+                            $image_full = wp_get_attachment_image_url($attachment_id, 'full');
+                            if (!$image_url) continue;
+                        ?>
+                        <a href="<?php echo esc_url($image_full); ?>"
+                           class="gallery-item group relative overflow-hidden rounded-lg aspect-square bg-gray-100 hover:opacity-90 transition-opacity"
+                           data-lightbox="member-gallery">
+                            <img src="<?php echo esc_url($image_url); ?>"
+                                 alt="<?php the_title(); ?>"
+                                 class="w-full h-full object-cover">
+                            <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all flex items-center justify-center">
+                                <i class="fa-solid fa-search-plus text-white text-2xl opacity-0 group-hover:opacity-100 transition-opacity"></i>
+                            </div>
+                        </a>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+                <?php endif; ?>
             </div>
 
             <!-- Right Column (Sidebar) -->
@@ -334,6 +370,47 @@ while (have_posts()) : the_post();
     </main>
 
     <?php wp_footer(); ?>
+
+    <!-- Simple Lightbox for Gallery -->
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const galleryItems = document.querySelectorAll('.gallery-item');
+        if (galleryItems.length === 0) return;
+
+        // Create lightbox overlay
+        const overlay = document.createElement('div');
+        overlay.className = 'fixed inset-0 bg-black bg-opacity-90 z-50 hidden flex items-center justify-center p-4';
+        overlay.innerHTML = `
+            <button class="absolute top-4 right-4 text-white text-4xl hover:text-gray-300 transition-colors" onclick="this.parentElement.classList.add('hidden')">&times;</button>
+            <img src="" alt="" class="max-w-full max-h-full object-contain">
+        `;
+        document.body.appendChild(overlay);
+
+        const overlayImg = overlay.querySelector('img');
+
+        galleryItems.forEach(item => {
+            item.addEventListener('click', function(e) {
+                e.preventDefault();
+                overlayImg.src = this.href;
+                overlay.classList.remove('hidden');
+            });
+        });
+
+        // Close on overlay click (but not on image)
+        overlay.addEventListener('click', function(e) {
+            if (e.target === this || e.target.tagName === 'BUTTON') {
+                this.classList.add('hidden');
+            }
+        });
+
+        // Close on Escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && !overlay.classList.contains('hidden')) {
+                overlay.classList.add('hidden');
+            }
+        });
+    });
+    </script>
 </body>
 </html>
 

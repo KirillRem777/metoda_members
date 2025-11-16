@@ -343,9 +343,10 @@ class Member_CSV_Importer {
 
         foreach ($textarea_fields as $field) {
             if (isset($data[$field]) && !empty($data[$field])) {
-                // Заменяем разделитель | на перевод строки с буллетом
-                $value = str_replace('|', "\n", $data[$field]);
-                update_post_meta($member_id, $field, sanitize_textarea_field($value));
+                // Сохраняем с разделителем | (будем делать explode в шаблоне)
+                // Используем wp_kses для удаления опасных тегов, но сохраняем символ |
+                $value = wp_kses($data[$field], array());
+                update_post_meta($member_id, $field, $value);
             }
         }
 

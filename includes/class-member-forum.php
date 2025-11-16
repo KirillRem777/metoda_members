@@ -122,7 +122,27 @@ class Member_Forum {
      * Enqueue assets
      */
     public function enqueue_assets() {
-        if (is_page('forum') || is_singular('forum_topic')) {
+        global $post;
+
+        // Проверяем несколько условий для загрузки стилей форума
+        $should_load = false;
+
+        // 1. Страница форума (любой slug)
+        if (is_singular('forum_topic')) {
+            $should_load = true;
+        }
+
+        // 2. Страница содержит шорткод [member_forum]
+        if (is_a($post, 'WP_Post') && has_shortcode($post->post_content, 'member_forum')) {
+            $should_load = true;
+        }
+
+        // 3. Явная проверка slug для обратной совместимости
+        if (is_page('forum')) {
+            $should_load = true;
+        }
+
+        if ($should_load) {
             wp_enqueue_style('member-forum', plugin_dir_url(dirname(__FILE__)) . 'assets/css/member-forum.css', array(), '1.0.0');
             wp_enqueue_script('member-forum', plugin_dir_url(dirname(__FILE__)) . 'assets/js/member-forum.js', array('jquery'), '1.0.0', true);
 
