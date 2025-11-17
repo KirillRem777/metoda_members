@@ -311,6 +311,88 @@ function register_members_post_type() {
 }
 add_action('init', 'register_members_post_type');
 
+// Регистрация специальных размеров изображений для участников
+function register_member_image_sizes() {
+    // Квадратная аватарка - будет кропиться в центр
+    add_image_size('member-avatar', 400, 400, true); // hard crop
+
+    // Размер для карточек в списке
+    add_image_size('member-card', 300, 300, true); // hard crop
+
+    // Размер для хедера профиля
+    add_image_size('member-profile', 500, 500, true); // hard crop
+}
+add_action('after_setup_theme', 'register_member_image_sizes');
+
+// Добавляем подсказку по кропу изображений в медиа-библиотеку
+function add_image_crop_help_notice() {
+    $screen = get_current_screen();
+
+    // Показываем только на страницах редактирования участников и в медиа-библиотеке
+    if (!$screen || ($screen->post_type !== 'members' && $screen->id !== 'upload')) {
+        return;
+    }
+
+    // Проверяем, не скрыл ли пользователь уведомление
+    $user_id = get_current_user_id();
+    if (get_user_meta($user_id, 'dismissed_image_crop_notice', true)) {
+        return;
+    }
+
+    ?>
+    <div class="notice notice-info is-dismissible" data-dismissible="image-crop-notice">
+        <h3>💡 Как кропировать (обрезать) фотографии участников</h3>
+        <p><strong>Способ 1: Встроенный редактор WordPress</strong></p>
+        <ol style="margin-left: 20px;">
+            <li>Откройте <strong>Медиафайлы</strong> в меню WordPress</li>
+            <li>Найдите нужную фотографию и нажмите на неё</li>
+            <li>В правой панели нажмите кнопку <strong>"Редактировать изображение"</strong></li>
+            <li>Используйте инструмент <strong>"Кадрирование"</strong> (значок квадрата)</li>
+            <li>Выделите нужную область и нажмите <strong>"Обрезать"</strong></li>
+            <li>Нажмите <strong>"Сохранить"</strong></li>
+        </ol>
+
+        <p><strong>Способ 2: Автоматический кроп при загрузке</strong></p>
+        <p>Все новые изображения будут автоматически обрезаться в квадрат при загрузке благодаря специальным размерам:</p>
+        <ul style="margin-left: 20px;">
+            <li><code>member-avatar</code> - 400×400px (для профиля)</li>
+            <li><code>member-card</code> - 300×300px (для карточек)</li>
+            <li><code>member-profile</code> - 500×500px (для шапки профиля)</li>
+        </ul>
+
+        <p><strong>Способ 3: Плагин для массового кропа</strong></p>
+        <p>Для кропа всех существующих изображений установите плагин <a href="<?php echo admin_url('plugin-install.php?s=crop-thumbnails&tab=search'); ?>" target="_blank"><strong>Crop-Thumbnails</strong></a></p>
+        <p style="margin-top: 10px;">
+            <a href="<?php echo admin_url('plugin-install.php?s=crop-thumbnails&tab=search'); ?>" class="button button-primary">Установить Crop-Thumbnails</a>
+            <a href="<?php echo admin_url('upload.php'); ?>" class="button">Перейти к медиафайлам</a>
+        </p>
+    </div>
+    <script>
+    jQuery(document).ready(function($) {
+        // Обработка закрытия уведомления
+        $(document).on('click', '.notice[data-dismissible="image-crop-notice"] .notice-dismiss', function() {
+            $.post(ajaxurl, {
+                action: 'dismiss_image_crop_notice',
+                nonce: '<?php echo wp_create_nonce('dismiss_image_crop_notice'); ?>'
+            });
+        });
+    });
+    </script>
+    <?php
+}
+add_action('admin_notices', 'add_image_crop_help_notice');
+
+// AJAX обработчик для скрытия уведомления
+function dismiss_image_crop_notice_ajax() {
+    check_ajax_referer('dismiss_image_crop_notice', 'nonce');
+
+    $user_id = get_current_user_id();
+    update_user_meta($user_id, 'dismissed_image_crop_notice', true);
+
+    wp_send_json_success();
+}
+add_action('wp_ajax_dismiss_image_crop_notice', 'dismiss_image_crop_notice_ajax');
+
 // Регистрация таксономии для типов участников (Эксперт/Участник)
 function register_member_type_taxonomy() {
     $labels = array(
