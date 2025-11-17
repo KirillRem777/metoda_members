@@ -138,8 +138,25 @@ while (have_posts()) : the_post();
                     
                     <?php if ($specialization) : ?>
                         <div class="info-item">
-                            <h3>Специализация</h3>
-                            <p><?php echo nl2br(esc_html($specialization)); ?></p>
+                            <h3>Специализация и стаж</h3>
+                            <?php
+                            // Парсим специализацию - разделяем по |
+                            $spec_items = explode('|', $specialization);
+                            if (count($spec_items) > 1) {
+                                echo '<ul class="member-bullet-list">';
+                                foreach ($spec_items as $item) {
+                                    $item = trim($item);
+                                    // Убираем символ • в начале если есть
+                                    $item = preg_replace('/^[•·●]\s*/', '', $item);
+                                    if (!empty($item)) {
+                                        echo '<li>' . esc_html($item) . '</li>';
+                                    }
+                                }
+                                echo '</ul>';
+                            } else {
+                                echo '<p>' . nl2br(esc_html($specialization)) . '</p>';
+                            }
+                            ?>
                         </div>
                     <?php endif; ?>
                 </div>
@@ -147,8 +164,25 @@ while (have_posts()) : the_post();
                 
                 <?php if ($interests) : ?>
                 <div class="info-section">
-                    <h2>Профессиональные интересы</h2>
-                    <p><?php echo nl2br(esc_html($interests)); ?></p>
+                    <h2>Сфера профессиональных интересов</h2>
+                    <?php
+                    // Парсим интересы - разделяем по |
+                    $interest_items = explode('|', $interests);
+                    if (count($interest_items) > 1) {
+                        echo '<ul class="member-bullet-list">';
+                        foreach ($interest_items as $item) {
+                            $item = trim($item);
+                            // Убираем символ • в начале если есть
+                            $item = preg_replace('/^[•·●]\s*/', '', $item);
+                            if (!empty($item)) {
+                                echo '<li>' . esc_html($item) . '</li>';
+                            }
+                        }
+                        echo '</ul>';
+                    } else {
+                        echo '<p>' . nl2br(esc_html($interests)) . '</p>';
+                    }
+                    ?>
                 </div>
                 <?php endif; ?>
                 
