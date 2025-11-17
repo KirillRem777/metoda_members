@@ -659,33 +659,147 @@ function render_member_details_meta_box($post) {
     </div>
 
     <hr style="margin: 30px 0;">
-    <h3>Дополнительные материалы</h3>
-    <table class="form-table">
-        <tr>
-            <th><label for="member_testimonials">Отзывы</label></th>
-            <td><textarea id="member_testimonials" name="member_testimonials" rows="4" class="large-text"><?php echo esc_textarea($testimonials); ?></textarea></td>
-        </tr>
-        <tr>
-            <th><label for="member_gratitudes">Благодарности</label></th>
-            <td><textarea id="member_gratitudes" name="member_gratitudes" rows="4" class="large-text"><?php echo esc_textarea($gratitudes); ?></textarea></td>
-        </tr>
-        <tr>
-            <th><label for="member_interviews">Интервью (ссылки через запятую)</label></th>
-            <td><textarea id="member_interviews" name="member_interviews" rows="3" class="large-text"><?php echo esc_textarea($interviews); ?></textarea></td>
-        </tr>
-        <tr>
-            <th><label for="member_videos">Видео (YouTube/Vimeo ссылки через запятую)</label></th>
-            <td><textarea id="member_videos" name="member_videos" rows="3" class="large-text"><?php echo esc_textarea($videos); ?></textarea></td>
-        </tr>
-        <tr>
-            <th><label for="member_reviews">Рецензии</label></th>
-            <td><textarea id="member_reviews" name="member_reviews" rows="4" class="large-text"><?php echo esc_textarea($reviews); ?></textarea></td>
-        </tr>
-        <tr>
-            <th><label for="member_developments">Разработки (ссылки через запятую)</label></th>
-            <td><textarea id="member_developments" name="member_developments" rows="3" class="large-text"><?php echo esc_textarea($developments); ?></textarea></td>
-        </tr>
-    </table>
+    <h3>📂 Портфолио и достижения</h3>
+    <p class="description">Добавляйте отзывы, благодарности, интервью, видео, рецензии и разработки. Каждая категория может содержать текст, файлы или ссылки.</p>
+
+    <?php
+    // Получаем данные для материалов (теперь в формате JSON)
+    $testimonials_data = get_post_meta($post->ID, 'member_testimonials_data', true);
+    $gratitudes_data = get_post_meta($post->ID, 'member_gratitudes_data', true);
+    $interviews_data = get_post_meta($post->ID, 'member_interviews_data', true);
+    $videos_data = get_post_meta($post->ID, 'member_videos_data', true);
+    $reviews_data = get_post_meta($post->ID, 'member_reviews_data', true);
+    $developments_data = get_post_meta($post->ID, 'member_developments_data', true);
+
+    $testimonials_data = $testimonials_data ? json_decode($testimonials_data, true) : array();
+    $gratitudes_data = $gratitudes_data ? json_decode($gratitudes_data, true) : array();
+    $interviews_data = $interviews_data ? json_decode($interviews_data, true) : array();
+    $videos_data = $videos_data ? json_decode($videos_data, true) : array();
+    $reviews_data = $reviews_data ? json_decode($reviews_data, true) : array();
+    $developments_data = $developments_data ? json_decode($developments_data, true) : array();
+
+    // Функция для рендера repeater поля
+    function render_material_repeater($field_name, $label, $data, $icon = '📝') {
+        ?>
+        <div class="member-field-group">
+            <h4><?php echo $icon; ?> <?php echo $label; ?> <span class="material-count">(<?php echo count($data); ?>)</span></h4>
+            <div class="material-repeater" data-field="<?php echo $field_name; ?>">
+                <div class="material-items">
+                    <?php
+                    if (!empty($data)) {
+                        foreach ($data as $index => $item) {
+                            render_material_item($field_name, $index, $item);
+                        }
+                    }
+                    ?>
+                </div>
+                <button type="button" class="button button-primary add-material-item" data-field="<?php echo $field_name; ?>">
+                    <span class="dashicons dashicons-plus-alt" style="vertical-align: middle;"></span> Добавить
+                </button>
+            </div>
+        </div>
+        <?php
+    }
+
+    // Функция для рендера одного элемента
+    function render_material_item($field_name, $index, $item = array()) {
+        $type = isset($item['type']) ? $item['type'] : 'text';
+        $title = isset($item['title']) ? $item['title'] : '';
+        $content = isset($item['content']) ? $item['content'] : '';
+        $url = isset($item['url']) ? $item['url'] : '';
+        $file_id = isset($item['file_id']) ? $item['file_id'] : '';
+        $author = isset($item['author']) ? $item['author'] : '';
+        $date = isset($item['date']) ? $item['date'] : '';
+        $description = isset($item['description']) ? $item['description'] : '';
+        ?>
+        <div class="member-repeater-item" data-index="<?php echo $index; ?>">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <select name="<?php echo $field_name; ?>[<?php echo $index; ?>][type]" class="material-type-select" style="width: 150px;">
+                    <option value="text" <?php selected($type, 'text'); ?>>💬 Текст</option>
+                    <option value="file" <?php selected($type, 'file'); ?>>📄 Файл</option>
+                    <option value="link" <?php selected($type, 'link'); ?>>🔗 Ссылка</option>
+                    <option value="video" <?php selected($type, 'video'); ?>>🎥 Видео</option>
+                </select>
+                <button type="button" class="button button-remove remove-material-item">
+                    <span class="dashicons dashicons-trash" style="vertical-align: middle;"></span> Удалить
+                </button>
+            </div>
+
+            <table class="form-table" style="margin: 0;">
+                <tr>
+                    <th style="width: 150px;"><label>Заголовок</label></th>
+                    <td><input type="text" name="<?php echo $field_name; ?>[<?php echo $index; ?>][title]" value="<?php echo esc_attr($title); ?>" class="large-text" placeholder="Название материала"></td>
+                </tr>
+
+                <!-- Поле для текста -->
+                <tr class="field-text" style="display: <?php echo $type === 'text' ? 'table-row' : 'none'; ?>;">
+                    <th><label>Текст</label></th>
+                    <td><textarea name="<?php echo $field_name; ?>[<?php echo $index; ?>][content]" rows="4" class="large-text" placeholder="Содержание отзыва, благодарности или рецензии..."><?php echo esc_textarea($content); ?></textarea></td>
+                </tr>
+
+                <!-- Поле для файла -->
+                <tr class="field-file" style="display: <?php echo $type === 'file' ? 'table-row' : 'none'; ?>;">
+                    <th><label>Файл</label></th>
+                    <td>
+                        <input type="hidden" name="<?php echo $field_name; ?>[<?php echo $index; ?>][file_id]" value="<?php echo esc_attr($file_id); ?>" class="material-file-id">
+                        <button type="button" class="button upload-material-file">
+                            <span class="dashicons dashicons-upload" style="vertical-align: middle;"></span> Выбрать файл
+                        </button>
+                        <div class="material-file-preview" style="margin-top: 10px;">
+                            <?php if ($file_id):
+                                $file_url = wp_get_attachment_url($file_id);
+                                $file_name = basename($file_url);
+                            ?>
+                                <div style="padding: 10px; background: #f0f0f0; border-radius: 4px; display: inline-block;">
+                                    📎 <a href="<?php echo esc_url($file_url); ?>" target="_blank"><?php echo esc_html($file_name); ?></a>
+                                    <button type="button" class="button button-small remove-file" style="margin-left: 10px;">×</button>
+                                </div>
+                            <?php endif; ?>
+                        </div>
+                    </td>
+                </tr>
+
+                <!-- Поле для ссылки -->
+                <tr class="field-link" style="display: <?php echo $type === 'link' ? 'table-row' : 'none'; ?>;">
+                    <th><label>Ссылка</label></th>
+                    <td><input type="url" name="<?php echo $field_name; ?>[<?php echo $index; ?>][url]" value="<?php echo esc_attr($url); ?>" class="large-text" placeholder="https://example.com"></td>
+                </tr>
+
+                <!-- Поле для видео -->
+                <tr class="field-video" style="display: <?php echo $type === 'video' ? 'table-row' : 'none'; ?>;">
+                    <th><label>Видео URL</label></th>
+                    <td>
+                        <input type="url" name="<?php echo $field_name; ?>[<?php echo $index; ?>][url]" value="<?php echo esc_attr($url); ?>" class="large-text" placeholder="https://rutube.ru/video/... или https://vk.com/video...">
+                        <p class="description">Поддерживаются: Rutube, VK Video, YouTube</p>
+                    </td>
+                </tr>
+
+                <!-- Общие поля -->
+                <tr>
+                    <th><label>Автор/Источник</label></th>
+                    <td><input type="text" name="<?php echo $field_name; ?>[<?php echo $index; ?>][author]" value="<?php echo esc_attr($author); ?>" class="regular-text" placeholder="Имя автора или источника"></td>
+                </tr>
+                <tr>
+                    <th><label>Дата</label></th>
+                    <td><input type="date" name="<?php echo $field_name; ?>[<?php echo $index; ?>][date]" value="<?php echo esc_attr($date); ?>" class="regular-text"></td>
+                </tr>
+                <tr>
+                    <th><label>Описание</label></th>
+                    <td><input type="text" name="<?php echo $field_name; ?>[<?php echo $index; ?>][description]" value="<?php echo esc_attr($description); ?>" class="large-text" placeholder="Краткое описание (опционально)"></td>
+                </tr>
+            </table>
+        </div>
+        <?php
+    }
+
+    // Рендерим repeater для каждой категории
+    render_material_repeater('member_testimonials_data', 'Отзывы', $testimonials_data, '💬');
+    render_material_repeater('member_gratitudes_data', 'Благодарности', $gratitudes_data, '🏆');
+    render_material_repeater('member_interviews_data', 'Интервью', $interviews_data, '🎤');
+    render_material_repeater('member_videos_data', 'Видео', $videos_data, '🎥');
+    render_material_repeater('member_reviews_data', 'Рецензии', $reviews_data, '📝');
+    render_material_repeater('member_developments_data', 'Разработки', $developments_data, '💾');
+    ?>
 
     <script>
     jQuery(document).ready(function($) {
@@ -738,6 +852,144 @@ function render_member_details_meta_box($post) {
             $('#member_gallery').val(idsArray.join(','));
             $item.remove();
         });
+
+        // === REPEATER ПОЛЯ ДЛЯ МАТЕРИАЛОВ ===
+
+        // Добавление нового элемента
+        $('.add-material-item').on('click', function() {
+            var $button = $(this);
+            var fieldName = $button.data('field');
+            var $container = $button.siblings('.material-items');
+            var index = $container.find('.member-repeater-item').length;
+
+            var html = `
+                <div class="member-repeater-item" data-index="${index}">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                        <select name="${fieldName}[${index}][type]" class="material-type-select" style="width: 150px;">
+                            <option value="text">💬 Текст</option>
+                            <option value="file">📄 Файл</option>
+                            <option value="link">🔗 Ссылка</option>
+                            <option value="video">🎥 Видео</option>
+                        </select>
+                        <button type="button" class="button button-remove remove-material-item">
+                            <span class="dashicons dashicons-trash" style="vertical-align: middle;"></span> Удалить
+                        </button>
+                    </div>
+
+                    <table class="form-table" style="margin: 0;">
+                        <tr>
+                            <th style="width: 150px;"><label>Заголовок</label></th>
+                            <td><input type="text" name="${fieldName}[${index}][title]" value="" class="large-text" placeholder="Название материала"></td>
+                        </tr>
+                        <tr class="field-text">
+                            <th><label>Текст</label></th>
+                            <td><textarea name="${fieldName}[${index}][content]" rows="4" class="large-text" placeholder="Содержание отзыва, благодарности или рецензии..."></textarea></td>
+                        </tr>
+                        <tr class="field-file" style="display: none;">
+                            <th><label>Файл</label></th>
+                            <td>
+                                <input type="hidden" name="${fieldName}[${index}][file_id]" value="" class="material-file-id">
+                                <button type="button" class="button upload-material-file">
+                                    <span class="dashicons dashicons-upload" style="vertical-align: middle;"></span> Выбрать файл
+                                </button>
+                                <div class="material-file-preview" style="margin-top: 10px;"></div>
+                            </td>
+                        </tr>
+                        <tr class="field-link" style="display: none;">
+                            <th><label>Ссылка</label></th>
+                            <td><input type="url" name="${fieldName}[${index}][url]" value="" class="large-text" placeholder="https://example.com"></td>
+                        </tr>
+                        <tr class="field-video" style="display: none;">
+                            <th><label>Видео URL</label></th>
+                            <td>
+                                <input type="url" name="${fieldName}[${index}][url]" value="" class="large-text" placeholder="https://rutube.ru/video/... или https://vk.com/video...">
+                                <p class="description">Поддерживаются: Rutube, VK Video, YouTube</p>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th><label>Автор/Источник</label></th>
+                            <td><input type="text" name="${fieldName}[${index}][author]" value="" class="regular-text" placeholder="Имя автора или источника"></td>
+                        </tr>
+                        <tr>
+                            <th><label>Дата</label></th>
+                            <td><input type="date" name="${fieldName}[${index}][date]" value="" class="regular-text"></td>
+                        </tr>
+                        <tr>
+                            <th><label>Описание</label></th>
+                            <td><input type="text" name="${fieldName}[${index}][description]" value="" class="large-text" placeholder="Краткое описание (опционально)"></td>
+                        </tr>
+                    </table>
+                </div>
+            `;
+
+            $container.append(html);
+            updateMaterialCount($button.closest('.member-field-group'));
+        });
+
+        // Удаление элемента
+        $(document).on('click', '.remove-material-item', function() {
+            var $item = $(this).closest('.member-repeater-item');
+            var $group = $item.closest('.member-field-group');
+            $item.remove();
+            updateMaterialCount($group);
+        });
+
+        // Переключение типа поля
+        $(document).on('change', '.material-type-select', function() {
+            var type = $(this).val();
+            var $item = $(this).closest('.member-repeater-item');
+
+            $item.find('.field-text, .field-file, .field-link, .field-video').hide();
+            $item.find('.field-' + type).show();
+        });
+
+        // Загрузка файла
+        var fileFrame;
+        $(document).on('click', '.upload-material-file', function(e) {
+            e.preventDefault();
+
+            var $button = $(this);
+            var $item = $button.closest('.member-repeater-item');
+            var $fileInput = $item.find('.material-file-id');
+            var $preview = $item.find('.material-file-preview');
+
+            if (fileFrame) {
+                fileFrame.open();
+                return;
+            }
+
+            fileFrame = wp.media({
+                title: 'Выберите файл',
+                multiple: false,
+                button: { text: 'Использовать этот файл' }
+            });
+
+            fileFrame.on('select', function() {
+                var attachment = fileFrame.state().get('selection').first().toJSON();
+                $fileInput.val(attachment.id);
+
+                var html = '<div style="padding: 10px; background: #f0f0f0; border-radius: 4px; display: inline-block;">' +
+                    '📎 <a href="' + attachment.url + '" target="_blank">' + attachment.filename + '</a>' +
+                    '<button type="button" class="button button-small remove-file" style="margin-left: 10px;">×</button>' +
+                    '</div>';
+                $preview.html(html);
+            });
+
+            fileFrame.open();
+        });
+
+        // Удаление файла
+        $(document).on('click', '.remove-file', function() {
+            var $item = $(this).closest('.member-repeater-item');
+            $item.find('.material-file-id').val('');
+            $item.find('.material-file-preview').empty();
+        });
+
+        // Обновление счетчика материалов
+        function updateMaterialCount($group) {
+            var count = $group.find('.member-repeater-item').length;
+            $group.find('.material-count').text('(' + count + ')');
+        }
     });
     </script>
     <?php
@@ -803,6 +1055,40 @@ function save_member_details($post_id) {
     foreach ($html_fields as $field) {
         if (isset($_POST[$field])) {
             update_post_meta($post_id, $field, wp_kses_post($_POST[$field]));
+        }
+    }
+
+    // Сохранение repeater полей для материалов (в формате JSON)
+    $material_fields = array(
+        'member_testimonials_data',
+        'member_gratitudes_data',
+        'member_interviews_data',
+        'member_videos_data',
+        'member_reviews_data',
+        'member_developments_data'
+    );
+
+    foreach ($material_fields as $field) {
+        if (isset($_POST[$field]) && is_array($_POST[$field])) {
+            // Очищаем и валидируем данные
+            $clean_data = array();
+            foreach ($_POST[$field] as $item) {
+                $clean_item = array(
+                    'type' => isset($item['type']) ? sanitize_text_field($item['type']) : 'text',
+                    'title' => isset($item['title']) ? sanitize_text_field($item['title']) : '',
+                    'content' => isset($item['content']) ? sanitize_textarea_field($item['content']) : '',
+                    'url' => isset($item['url']) ? esc_url_raw($item['url']) : '',
+                    'file_id' => isset($item['file_id']) ? intval($item['file_id']) : 0,
+                    'author' => isset($item['author']) ? sanitize_text_field($item['author']) : '',
+                    'date' => isset($item['date']) ? sanitize_text_field($item['date']) : '',
+                    'description' => isset($item['description']) ? sanitize_text_field($item['description']) : '',
+                );
+                $clean_data[] = $clean_item;
+            }
+            update_post_meta($post_id, $field, wp_json_encode($clean_data, JSON_UNESCAPED_UNICODE));
+        } else {
+            // Если поле пустое - сохраняем пустой массив
+            update_post_meta($post_id, $field, wp_json_encode(array(), JSON_UNESCAPED_UNICODE));
         }
     }
 }

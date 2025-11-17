@@ -26,6 +26,25 @@ while (have_posts()) : the_post();
     $expectations = get_post_meta($member_id, 'member_expectations', true);
     $bio = get_post_meta($member_id, 'member_bio', true);
 
+    // Получаем материалы (repeater поля)
+    $testimonials_data = get_post_meta($member_id, 'member_testimonials_data', true);
+    $gratitudes_data = get_post_meta($member_id, 'member_gratitudes_data', true);
+    $interviews_data = get_post_meta($member_id, 'member_interviews_data', true);
+    $videos_data = get_post_meta($member_id, 'member_videos_data', true);
+    $reviews_data = get_post_meta($member_id, 'member_reviews_data', true);
+    $developments_data = get_post_meta($member_id, 'member_developments_data', true);
+
+    $testimonials_data = $testimonials_data ? json_decode($testimonials_data, true) : array();
+    $gratitudes_data = $gratitudes_data ? json_decode($gratitudes_data, true) : array();
+    $interviews_data = $interviews_data ? json_decode($interviews_data, true) : array();
+    $videos_data = $videos_data ? json_decode($videos_data, true) : array();
+    $reviews_data = $reviews_data ? json_decode($reviews_data, true) : array();
+    $developments_data = $developments_data ? json_decode($developments_data, true) : array();
+
+    // Подсчитываем общее количество материалов
+    $total_materials = count($testimonials_data) + count($gratitudes_data) + count($interviews_data) +
+                       count($videos_data) + count($reviews_data) + count($developments_data);
+
     // Получаем таксономии
     $roles = wp_get_post_terms($member_id, 'member_role');
     $locations = wp_get_post_terms($member_id, 'member_location');
@@ -348,6 +367,11 @@ while (have_posts()) : the_post();
                     </div>
                 </div>
                 <?php endif; ?>
+
+                <!-- Portfolio & Achievements Section -->
+                <?php if ($total_materials > 0): ?>
+                    <?php include(plugin_dir_path(__FILE__) . 'templates/materials-section.php'); ?>
+                <?php endif; ?>
             </div>
 
             <!-- Right Column (Sidebar) -->
@@ -525,6 +549,37 @@ while (have_posts()) : the_post();
                 nextImage();
             }
         });
+    });
+
+    // === МОДАЛЬНЫЕ ОКНА ДЛЯ МАТЕРИАЛОВ ===
+    function openMaterialModal(modalId) {
+        const modal = document.getElementById(modalId);
+        if (modal) {
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            document.body.style.overflow = 'hidden';
+        }
+    }
+
+    function closeMaterialModal(modalId) {
+        const modal = document.getElementById(modalId);
+        if (modal) {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            document.body.style.overflow = 'auto';
+        }
+    }
+
+    // Закрытие по Escape
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            const openModals = document.querySelectorAll('.material-modal.flex');
+            openModals.forEach(modal => {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+                document.body.style.overflow = 'auto';
+            });
+        }
     });
     </script>
 </body>
