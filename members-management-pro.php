@@ -2797,3 +2797,303 @@ function member_delete_material_ajax() {
     }
 }
 add_action('wp_ajax_member_delete_material', 'member_delete_material_ajax');
+
+/**
+ * AJAX обработчик для загрузки дополнительных участников (Load More)
+ */
+function load_more_members_ajax() {
+    $offset = intval($_POST['offset']);
+    $search = sanitize_text_field($_POST['search']);
+    $city = sanitize_text_field($_POST['city']);
+    $role = sanitize_text_field($_POST['role']);
+    $type_filter = sanitize_text_field($_POST['member_type']);
+
+    $posts_per_page = 12;
+
+    // Если нет фильтра по типу - делаем два отдельных запроса и объединяем
+    if (empty($type_filter)) {
+        // Запрос для экспертов
+        $experts_args = array(
+            'post_type' => 'members',
+            'posts_per_page' => -1,
+            'orderby' => 'title',
+            'order' => 'ASC',
+            'tax_query' => array(
+                array(
+                    'taxonomy' => 'member_type',
+                    'field' => 'slug',
+                    'terms' => 'ekspert'
+                )
+            )
+        );
+
+        if (!empty($search)) {
+            $experts_args['s'] = $search;
+        }
+        if (!empty($city)) {
+            $experts_args['meta_query'][] = array(
+                'key' => 'member_city',
+                'value' => $city,
+                'compare' => 'LIKE'
+            );
+        }
+        if (!empty($role)) {
+            $experts_args['tax_query'][] = array(
+                'taxonomy' => 'member_role',
+                'field' => 'slug',
+                'terms' => $role
+            );
+        }
+
+        $experts_query = new WP_Query($experts_args);
+
+        // Запрос для участников
+        $members_args = array(
+            'post_type' => 'members',
+            'posts_per_page' => -1,
+            'orderby' => 'title',
+            'order' => 'ASC',
+            'tax_query' => array(
+                array(
+                    'taxonomy' => 'member_type',
+                    'field' => 'slug',
+                    'terms' => 'uchastnik'
+                )
+            )
+        );
+
+        if (!empty($search)) {
+            $members_args['s'] = $search;
+        }
+        if (!empty($city)) {
+            $members_args['meta_query'][] = array(
+                'key' => 'member_city',
+                'value' => $city,
+                'compare' => 'LIKE'
+            );
+        }
+        if (!empty($role)) {
+            $members_args['tax_query'][] = array(
+                'taxonomy' => 'member_role',
+                'field' => 'slug',
+                'terms' => $role
+            );
+        }
+
+        $members_query = new WP_Query($members_args);
+
+        // Объединяем результаты
+        $all_members = array_merge($experts_query->posts, $members_query->posts);
+
+        // Берем порцию с offset
+        $paged_members = array_slice($all_members, $offset, $posts_per_page);
+
+    } else {
+        // Если выбран конкретный тип
+        $args = array(
+            'post_type' => 'members',
+            'posts_per_page' => $posts_per_page,
+            'offset' => $offset,
+            'orderby' => 'title',
+            'order' => 'ASC'
+        );
+
+        if (!empty($search)) {
+            $args['s'] = $search;
+        }
+        if (!empty($city)) {
+            $args['meta_query'][] = array(
+                'key' => 'member_city',
+                'value' => $city,
+                'compare' => 'LIKE'
+            );
+        }
+
+        $args['tax_query'] = array();
+        if (!empty($type_filter)) {
+            $args['tax_query'][] = array(
+                'taxonomy' => 'member_type',
+                'field' => 'slug',
+                'terms' => $type_filter
+            );
+        }
+        if (!empty($role)) {
+            $args['tax_query'][] = array(
+                'taxonomy' => 'member_role',
+                'field' => 'slug',
+                'terms' => $role
+            );
+        }
+
+        $members_query = new WP_Query($args);
+        $paged_members = $members_query->posts;
+    }
+
+    // Генерируем HTML для карточек
+    ob_start();
+    foreach ($paged_members as $post) {
+        setup_postdata($post);
+        $member_id = $post->ID;
+        include(plugin_dir_path(__FILE__) . 'templates/member-card.php');
+    }
+    wp_reset_postdata();
+    $html = ob_get_clean();
+
+    wp_send_json_success(array(
+        'html' => $html,
+        'count' => count($paged_members)
+    ));
+}
+add_action('wp_ajax_load_more_members', 'load_more_members_ajax');
+add_action('wp_ajax_nopriv_load_more_members', 'load_more_members_ajax');
+
+/**
+ * AJAX обработчик для фильтрации участников
+ */
+function filter_members_ajax() {
+    $search = sanitize_text_field($_POST['search']);
+    $city = sanitize_text_field($_POST['city']);
+    $role = sanitize_text_field($_POST['role']);
+    $type_filter = sanitize_text_field($_POST['member_type']);
+
+    $posts_per_page = 12;
+
+    // Если нет фильтра по типу - делаем два отдельных запроса и объединяем
+    if (empty($type_filter)) {
+        // Запрос для экспертов
+        $experts_args = array(
+            'post_type' => 'members',
+            'posts_per_page' => -1,
+            'orderby' => 'title',
+            'order' => 'ASC',
+            'tax_query' => array(
+                array(
+                    'taxonomy' => 'member_type',
+                    'field' => 'slug',
+                    'terms' => 'ekspert'
+                )
+            )
+        );
+
+        if (!empty($search)) {
+            $experts_args['s'] = $search;
+        }
+        if (!empty($city)) {
+            $experts_args['meta_query'][] = array(
+                'key' => 'member_city',
+                'value' => $city,
+                'compare' => 'LIKE'
+            );
+        }
+        if (!empty($role)) {
+            $experts_args['tax_query'][] = array(
+                'taxonomy' => 'member_role',
+                'field' => 'slug',
+                'terms' => $role
+            );
+        }
+
+        $experts_query = new WP_Query($experts_args);
+
+        // Запрос для участников
+        $members_args = array(
+            'post_type' => 'members',
+            'posts_per_page' => -1,
+            'orderby' => 'title',
+            'order' => 'ASC',
+            'tax_query' => array(
+                array(
+                    'taxonomy' => 'member_type',
+                    'field' => 'slug',
+                    'terms' => 'uchastnik'
+                )
+            )
+        );
+
+        if (!empty($search)) {
+            $members_args['s'] = $search;
+        }
+        if (!empty($city)) {
+            $members_args['meta_query'][] = array(
+                'key' => 'member_city',
+                'value' => $city,
+                'compare' => 'LIKE'
+            );
+        }
+        if (!empty($role)) {
+            $members_args['tax_query'][] = array(
+                'taxonomy' => 'member_role',
+                'field' => 'slug',
+                'terms' => $role
+            );
+        }
+
+        $members_query = new WP_Query($members_args);
+
+        // Объединяем результаты
+        $all_members = array_merge($experts_query->posts, $members_query->posts);
+        $total_found = count($all_members);
+
+        // Берем первые N
+        $paged_members = array_slice($all_members, 0, $posts_per_page);
+
+    } else {
+        // Если выбран конкретный тип
+        $args = array(
+            'post_type' => 'members',
+            'posts_per_page' => $posts_per_page,
+            'orderby' => 'title',
+            'order' => 'ASC'
+        );
+
+        if (!empty($search)) {
+            $args['s'] = $search;
+        }
+        if (!empty($city)) {
+            $args['meta_query'][] = array(
+                'key' => 'member_city',
+                'value' => $city,
+                'compare' => 'LIKE'
+            );
+        }
+
+        $args['tax_query'] = array();
+        if (!empty($type_filter)) {
+            $args['tax_query'][] = array(
+                'taxonomy' => 'member_type',
+                'field' => 'slug',
+                'terms' => $type_filter
+            );
+        }
+        if (!empty($role)) {
+            $args['tax_query'][] = array(
+                'taxonomy' => 'member_role',
+                'field' => 'slug',
+                'terms' => $role
+            );
+        }
+
+        $members_query = new WP_Query($args);
+        $paged_members = $members_query->posts;
+        $total_found = $members_query->found_posts;
+    }
+
+    // Генерируем HTML для карточек
+    ob_start();
+    foreach ($paged_members as $post) {
+        setup_postdata($post);
+        $member_id = $post->ID;
+        include(plugin_dir_path(__FILE__) . 'templates/member-card.php');
+    }
+    wp_reset_postdata();
+    $html = ob_get_clean();
+
+    wp_send_json_success(array(
+        'html' => $html,
+        'shown' => count($paged_members),
+        'total' => $total_found,
+        'has_more' => $total_found > count($paged_members)
+    ));
+}
+add_action('wp_ajax_filter_members', 'filter_members_ajax');
+add_action('wp_ajax_nopriv_filter_members', 'filter_members_ajax');

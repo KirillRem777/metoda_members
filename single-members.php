@@ -114,10 +114,10 @@ while (have_posts()) : the_post();
     <title><?php the_title(); ?> - <?php bloginfo('name'); ?></title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js" crossorigin="anonymous"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         ::-webkit-scrollbar { display: none; }
-        * { font-family: 'Inter', sans-serif; }
+        * { font-family: 'Montserrat', sans-serif; }
 
         .metoda-primary { color: <?php echo $primary_color; ?>; }
         .metoda-primary-bg { background-color: <?php echo $primary_color; ?>; }
