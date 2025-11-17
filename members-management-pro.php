@@ -3820,3 +3820,52 @@ function ajax_send_member_message() {
     ));
 }
 add_action('wp_ajax_send_member_message', 'ajax_send_member_message');
+
+/**
+ * AJAX обработчик для просмотра сообщения
+ */
+function ajax_view_member_message() {
+    check_ajax_referer('member_dashboard_nonce', 'nonce');
+
+    if (!is_user_logged_in()) {
+        wp_send_json_error(array('message' => 'Необходимо войти в систему'));
+    }
+
+    $message_id = intval($_POST['message_id']);
+    $message = get_post($message_id);
+
+    if (!$message || $message->post_type !== 'member_message') {
+        wp_send_json_error(array('message' => 'Сообщение не найдено'));
+    }
+
+    $current_member_id = Member_User_Link::get_current_user_member_id();
+    $recipient_id = get_post_meta($message_id, 'recipient_member_id', true);
+    $sender_id = get_post_meta($message_id, 'sender_member_id', true);
+
+    // Проверка доступа: только отправитель или получатель могут просмотреть
+    if ($current_member_id != $recipient_id && $current_member_id != $sender_id) {
+        wp_send_json_error(array('message' => 'Доступ запрещен'));
+    }
+
+    // Помечаем как прочитанное (если это получатель)
+    if ($current_member_id == $recipient_id) {
+        update_post_meta($message_id, 'is_read', 1);
+        update_post_meta($message_id, 'read_at', current_time('mysql'));
+    }
+
+    // Формируем мета информацию
+    $meta = '';
+    if ($current_member_id == $recipient_id) {
+        $meta .= '<strong>От:</strong> ' . get_the_title($sender_id) . '<br>';
+    } else {
+        $meta .= '<strong>Кому:</strong> ' . get_the_title($recipient_id) . '<br>';
+    }
+    $meta .= '<strong>Дата:</strong> ' . get_the_date('d.m.Y H:i', $message_id);
+
+    wp_send_json_success(array(
+        'title' => $message->post_title,
+        'content' => $message->post_content,
+        'meta' => $meta
+    ));
+}
+add_action('wp_ajax_view_member_message', 'ajax_view_member_message');

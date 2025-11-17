@@ -97,6 +97,12 @@ $accent_color = '#ff6600';
                         <span>Форум</span>
                     </button>
                 </li>
+                <li>
+                    <button onclick="showSection('messages')" id="nav-messages" class="nav-item w-full flex items-center gap-3 px-4 py-3 text-left rounded-lg text-gray-600 hover:bg-gray-50 font-medium transition-all">
+                        <i class="fas fa-envelope text-lg"></i>
+                        <span>Сообщения</span>
+                    </button>
+                </li>
             </ul>
         </nav>
 
@@ -331,6 +337,9 @@ $accent_color = '#ff6600';
 
         <!-- Forum Section -->
         <?php include(plugin_dir_path(__FILE__) . 'dashboard-forum-section.php'); ?>
+
+        <!-- Messages Section -->
+        <?php include(plugin_dir_path(__FILE__) . 'dashboard-messages-section.php'); ?>
 
     </main>
 
