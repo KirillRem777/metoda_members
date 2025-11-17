@@ -99,16 +99,23 @@ foreach ($csv_data as $row_index => $row) {
     update_post_meta($member_id, 'member_location', $data['Город']);
     update_post_meta($member_id, 'member_bio', $data['О себе']);
 
+    echo "<div class='info'>   → Компания: " . esc_html($data['Компания']) . "</div>";
+    echo "<div class='info'>   → Должность: " . esc_html($data['Должность']) . "</div>";
+
     // Специализация и стаж - объединённое поле, парсим его
     $spec_and_exp = $data['Специализация и стаж'];
     if (!empty($spec_and_exp)) {
         update_post_meta($member_id, 'member_specialization', $spec_and_exp);
+        $spec_preview = mb_substr($spec_and_exp, 0, 100);
+        echo "<div class='info'>   → Специализация: " . esc_html($spec_preview) . "...</div>";
     }
 
     // Сфера профессиональных интересов
     $interests = $data['Сфера профессиональных интересов'];
     if (!empty($interests)) {
         update_post_meta($member_id, 'member_interests', $interests);
+        $interests_preview = mb_substr($interests, 0, 100);
+        echo "<div class='info'>   → Интересы: " . esc_html($interests_preview) . "...</div>";
     }
 
     // Ожидания от сотрудничества
