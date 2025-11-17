@@ -55,56 +55,34 @@ while (have_posts()) : the_post();
     // Обработка буллетов для специализации
     $specialization_items = array();
     if ($specialization_experience) {
-        // ОТЛАДКА: Временно показываем что приходит
-        echo '<!-- DEBUG SPECIALIZATION: ' . esc_html($specialization_experience) . ' -->';
-
         // Разделяем по символу | (данные из CSV) или по \n (legacy)
         $delimiter = (strpos($specialization_experience, '|') !== false) ? '|' : "\n";
         $lines = explode($delimiter, $specialization_experience);
 
-        echo '<!-- DEBUG LINES COUNT: ' . count($lines) . ' -->';
-
         foreach ($lines as $line) {
             $line = trim($line);
-            echo '<!-- DEBUG LINE BEFORE: [' . esc_html($line) . '] -->';
 
             if (!empty($line)) {
                 // Убираем символ буллета если он есть
-                // Проверяем первый символ
                 $first_char = mb_substr($line, 0, 1);
                 if (in_array($first_char, ['•', '●', '○', '·', '▪', '▫', '■', '□', '◆', '◇', '-', '*', '»', '›'])) {
-                    // Срезаем первый символ и пробелы после него
                     $line = mb_substr($line, 1);
                     $line = ltrim($line);
                 }
 
-                echo '<!-- DEBUG LINE AFTER: [' . esc_html($line) . '] LENGTH: ' . mb_strlen($line) . ' EMPTY: ' . (empty($line) ? 'YES' : 'NO') . ' -->';
-
                 if (!empty($line)) {
                     $specialization_items[] = $line;
-                    echo '<!-- DEBUG: ADDED TO ARRAY -->';
-                } else {
-                    echo '<!-- DEBUG: NOT ADDED (EMPTY) -->';
                 }
             }
         }
-
-        echo '<!-- DEBUG ITEMS COUNT: ' . count($specialization_items) . ' -->';
-    } else {
-        echo '<!-- DEBUG: NO SPECIALIZATION DATA -->';
     }
 
     // Обработка буллетов для интересов
     $interest_items = array();
     if ($professional_interests) {
-        // ОТЛАДКА: Временно показываем что приходит
-        echo '<!-- DEBUG INTERESTS: ' . esc_html($professional_interests) . ' -->';
-
         // Разделяем по символу | (данные из CSV) или по \n (legacy)
         $delimiter = (strpos($professional_interests, '|') !== false) ? '|' : "\n";
         $lines = explode($delimiter, $professional_interests);
-
-        echo '<!-- DEBUG INTERESTS LINES COUNT: ' . count($lines) . ' -->';
 
         foreach ($lines as $line) {
             $line = trim($line);
@@ -121,10 +99,6 @@ while (have_posts()) : the_post();
                 }
             }
         }
-
-        echo '<!-- DEBUG INTERESTS ITEMS COUNT: ' . count($interest_items) . ' -->';
-    } else {
-        echo '<!-- DEBUG: NO INTERESTS DATA -->';
     }
 
     // Цвета "Метода" - синий и красный
