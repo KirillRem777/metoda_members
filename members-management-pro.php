@@ -731,10 +731,28 @@ function render_member_details_meta_box($post) {
                     <td><input type="text" name="<?php echo $field_name; ?>[<?php echo $index; ?>][title]" value="<?php echo esc_attr($title); ?>" class="large-text" placeholder="Название материала"></td>
                 </tr>
 
-                <!-- Поле для текста -->
+                <!-- Поле для текста с WYSIWYG редактором -->
                 <tr class="field-text" style="display: <?php echo $type === 'text' ? 'table-row' : 'none'; ?>;">
                     <th><label>Текст</label></th>
-                    <td><textarea name="<?php echo $field_name; ?>[<?php echo $index; ?>][content]" rows="4" class="large-text" placeholder="Содержание отзыва, благодарности или рецензии..."><?php echo esc_textarea($content); ?></textarea></td>
+                    <td>
+                        <?php
+                        $editor_id = $field_name . '_' . $index . '_content';
+                        $editor_id = str_replace(array('[', ']'), '_', $editor_id);
+
+                        wp_editor($content, $editor_id, array(
+                            'textarea_name' => $field_name . '[' . $index . '][content]',
+                            'textarea_rows' => 10,
+                            'media_buttons' => false,
+                            'teeny' => false,
+                            'tinymce' => array(
+                                'toolbar1' => 'formatselect,bold,italic,underline,bullist,numlist,link,unlink,blockquote',
+                                'toolbar2' => '',
+                            ),
+                            'quicktags' => array('buttons' => 'strong,em,ul,ol,li,link,close'),
+                        ));
+                        ?>
+                        <p class="description">Используйте редактор для форматирования текста: жирный, курсив, списки, ссылки.</p>
+                    </td>
                 </tr>
 
                 <!-- Поле для файла -->
@@ -862,6 +880,9 @@ function render_member_details_meta_box($post) {
             var $container = $button.siblings('.material-items');
             var index = $container.find('.member-repeater-item').length;
 
+            // Создаем уникальный ID для редактора
+            var editorId = fieldName.replace(/\[/g, '_').replace(/\]/g, '_') + index + '_content';
+
             var html = `
                 <div class="member-repeater-item" data-index="${index}">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
@@ -883,7 +904,14 @@ function render_member_details_meta_box($post) {
                         </tr>
                         <tr class="field-text">
                             <th><label>Текст</label></th>
-                            <td><textarea name="${fieldName}[${index}][content]" rows="4" class="large-text" placeholder="Содержание отзыва, благодарности или рецензии..."></textarea></td>
+                            <td>
+                                <div id="wp-${editorId}-wrap" class="wp-core-ui wp-editor-wrap html-active">
+                                    <div id="wp-${editorId}-editor-container" class="wp-editor-container">
+                                        <textarea id="${editorId}" name="${fieldName}[${index}][content]" class="wp-editor-area" rows="10" style="width: 100%;"></textarea>
+                                    </div>
+                                </div>
+                                <p class="description">Используйте редактор для форматирования текста. Сохраните изменения, чтобы активировать полный редактор.</p>
+                            </td>
                         </tr>
                         <tr class="field-file" style="display: none;">
                             <th><label>Файл</label></th>
@@ -924,12 +952,33 @@ function render_member_details_meta_box($post) {
 
             $container.append(html);
             updateMaterialCount($button.closest('.member-field-group'));
+
+            // Инициализируем TinyMCE для нового textarea
+            if (typeof wp !== 'undefined' && wp.editor) {
+                wp.editor.initialize(editorId, {
+                    tinymce: {
+                        wpautop: true,
+                        toolbar1: 'formatselect,bold,italic,underline,bullist,numlist,link,unlink,blockquote',
+                        toolbar2: ''
+                    },
+                    quicktags: {buttons: 'strong,em,ul,ol,li,link,close'},
+                    mediaButtons: false,
+                });
+            }
         });
 
         // Удаление элемента
         $(document).on('click', '.remove-material-item', function() {
             var $item = $(this).closest('.member-repeater-item');
             var $group = $item.closest('.member-field-group');
+
+            // Удаляем TinyMCE редактор если он существует
+            var $editor = $item.find('.wp-editor-area');
+            if ($editor.length > 0 && typeof wp !== 'undefined' && wp.editor) {
+                var editorId = $editor.attr('id');
+                wp.editor.remove(editorId);
+            }
+
             $item.remove();
             updateMaterialCount($group);
         });
