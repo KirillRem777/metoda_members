@@ -176,6 +176,34 @@ $roles = get_terms(array(
                         document.getElementById('member_type_input').value = type;
                         document.querySelector('form').submit();
                     }
+
+                    // Автоматическая отправка формы при изменении фильтров
+                    jQuery(document).ready(function($) {
+                        const $form = $('.bg-white.rounded-xl.shadow-sm.border.p-6.sticky');
+
+                        // Показать индикатор загрузки
+                        function showLoading() {
+                            $('body').css('opacity', '0.7');
+                            $('body').css('pointer-events', 'none');
+                        }
+
+                        // Автоотправка при изменении селектов
+                        $('select[name="city"], select[name="role"]').on('change', function() {
+                            showLoading();
+                            $(this).closest('form').submit();
+                        });
+
+                        // Поиск с задержкой (500ms после ввода)
+                        let searchTimeout;
+                        $('input[name="s"]').on('input', function() {
+                            clearTimeout(searchTimeout);
+                            const $currentForm = $(this).closest('form');
+                            searchTimeout = setTimeout(function() {
+                                showLoading();
+                                $currentForm.submit();
+                            }, 500);
+                        });
+                    });
                     </script>
 
                     <!-- City Filter -->
@@ -196,15 +224,15 @@ $roles = get_terms(array(
                     <!-- Role Filter -->
                     <?php if (!empty($roles) && !is_wp_error($roles)): ?>
                     <div class="mb-6">
-                        <label class="block text-sm font-medium text-gray-700 mb-3">Роль в ассоциации</label>
-                        <div class="space-y-2">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Роль в ассоциации</label>
+                        <select name="role" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
+                            <option value="">Все роли...</option>
                             <?php foreach ($roles as $role): ?>
-                            <label class="flex items-center">
-                                <input type="checkbox" name="role" value="<?php echo esc_attr($role->slug); ?>" <?php checked($role_filter, $role->slug); ?> class="w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary">
-                                <span class="ml-3 text-sm text-gray-700"><?php echo esc_html($role->name); ?></span>
-                            </label>
+                                <option value="<?php echo esc_attr($role->slug); ?>" <?php selected($role_filter, $role->slug); ?>>
+                                    <?php echo esc_html($role->name); ?>
+                                </option>
                             <?php endforeach; ?>
-                        </div>
+                        </select>
                     </div>
                     <?php endif; ?>
 
