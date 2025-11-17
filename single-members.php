@@ -190,10 +190,16 @@ while (have_posts()) : the_post();
                     <h1 class="text-xl font-semibold text-gray-900">Профиль участника</h1>
                 </div>
                 <div class="flex items-center space-x-3">
+                    <?php if (is_user_logged_in() && get_current_user_id() != get_the_author_meta('ID')): ?>
+                    <button onclick="openMessageModal(<?php echo $member_id; ?>, '<?php echo esc_js(get_the_title()); ?>')" class="metoda-primary-bg text-white px-4 py-2 rounded-lg hover:opacity-90 transition-opacity">
+                        <i class="fa-solid fa-paper-plane mr-2"></i>
+                        Написать сообщение
+                    </button>
+                    <?php endif; ?>
                     <?php if ($email): ?>
-                    <a href="mailto:<?php echo esc_attr($email); ?>" class="metoda-primary-bg text-white px-4 py-2 rounded-lg hover:opacity-90 transition-opacity">
+                    <a href="mailto:<?php echo esc_attr($email); ?>" class="border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors">
                         <i class="fa-solid fa-envelope mr-2"></i>
-                        Написать
+                        Email
                     </a>
                     <?php endif; ?>
                     <button onclick="window.print()" class="text-gray-600 hover:text-primary transition-colors">
@@ -580,6 +586,165 @@ while (have_posts()) : the_post();
                 document.body.style.overflow = 'auto';
             });
         }
+    });
+
+    // === ЛИЧНЫЕ СООБЩЕНИЯ ===
+    function openMessageModal(recipientId, recipientName) {
+        document.getElementById('message_recipient_id').value = recipientId;
+        document.getElementById('message_recipient_name').textContent = recipientName;
+        document.getElementById('send-message-modal').classList.remove('hidden');
+        document.getElementById('send-message-modal').classList.add('flex');
+        document.body.style.overflow = 'hidden';
+
+        // Clear form
+        document.getElementById('message_subject').value = '';
+        if (window.messageQuill) {
+            window.messageQuill.setContents([]);
+        }
+    }
+
+    function closeMessageModal() {
+        document.getElementById('send-message-modal').classList.add('hidden');
+        document.getElementById('send-message-modal').classList.remove('flex');
+        document.body.style.overflow = 'auto';
+    }
+    </script>
+
+    <!-- Send Message Modal -->
+    <div id="send-message-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50" style="display: none;">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div class="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 rounded-t-2xl flex items-center justify-between">
+                <div>
+                    <h3 class="text-xl font-bold text-gray-900">Новое сообщение</h3>
+                    <p class="text-sm text-gray-500 mt-1">Для: <span id="message_recipient_name" class="font-semibold"></span></p>
+                </div>
+                <button type="button" onclick="closeMessageModal()" class="text-gray-400 hover:text-gray-600 text-2xl leading-none">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <form id="send-message-form" class="p-6">
+                <input type="hidden" name="recipient_id" id="message_recipient_id">
+
+                <!-- Honeypot (антиспам) -->
+                <div style="position: absolute; left: -5000px;">
+                    <input type="text" name="website" id="message_website" tabindex="-1" autocomplete="off">
+                </div>
+
+                <div class="space-y-4">
+                    <!-- Тема -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Тема сообщения *</label>
+                        <input type="text" name="subject" id="message_subject" required maxlength="200" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none" placeholder="О чем вы хотите написать?">
+                    </div>
+
+                    <!-- Текст сообщения -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Сообщение *</label>
+                        <div class="quill-editor-wrapper">
+                            <div id="message-editor" class="quill-editor"></div>
+                        </div>
+                        <textarea name="content" id="message_content_hidden" style="display: none;"></textarea>
+                        <p class="text-xs text-gray-500 mt-2">✨ Используйте панель инструментов для форматирования</p>
+                    </div>
+
+                    <!-- Кнопки -->
+                    <div class="flex gap-3 pt-4">
+                        <button type="submit" class="flex-1 px-6 py-3 text-white rounded-lg font-medium hover:opacity-90 transition-opacity metoda-primary-bg">
+                            <i class="fas fa-paper-plane mr-2"></i>
+                            <span class="btn-text">Отправить сообщение</span>
+                            <span class="btn-loader hidden">
+                                <i class="fas fa-spinner fa-spin"></i> Отправка...
+                            </span>
+                        </button>
+                        <button type="button" onclick="closeMessageModal()" class="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 transition-colors">
+                            Отмена
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Quill.js для сообщений -->
+    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+    <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
+    <script>
+    // Initialize Quill editor for messages
+    window.messageQuill = new Quill('#message-editor', {
+        theme: 'snow',
+        placeholder: 'Напишите ваше сообщение...',
+        modules: {
+            toolbar: [
+                [{ 'header': [2, 3, false] }],
+                ['bold', 'italic', 'underline'],
+                [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                ['blockquote', 'link'],
+                ['clean']
+            ]
+        }
+    });
+
+    // Handle form submission
+    document.getElementById('send-message-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        // Check honeypot
+        if (document.getElementById('message_website').value !== '') {
+            alert('Обнаружена подозрительная активность');
+            return;
+        }
+
+        // Get content from Quill
+        var content = window.messageQuill.root.innerHTML;
+        document.getElementById('message_content_hidden').value = content;
+
+        var formData = new FormData(this);
+        formData.append('action', 'send_member_message');
+        formData.append('nonce', '<?php echo wp_create_nonce("send_member_message"); ?>');
+
+        var $form = jQuery(this);
+        var $btn = $form.find('button[type="submit"]');
+
+        jQuery.ajax({
+            url: '<?php echo admin_url("admin-ajax.php"); ?>',
+            type: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            beforeSend: function() {
+                $btn.prop('disabled', true);
+                $btn.find('.btn-text').hide();
+                $btn.find('.btn-loader').removeClass('hidden').show();
+            },
+            success: function(response) {
+                if (response.success) {
+                    // Success notification
+                    var notification = jQuery('<div class="fixed top-4 right-4 bg-green-500 text-white px-6 py-4 rounded-lg shadow-lg z-50 flex items-center gap-3">' +
+                        '<i class="fas fa-check-circle text-xl"></i>' +
+                        '<span>Сообщение отправлено!</span>' +
+                    '</div>');
+                    jQuery('body').append(notification);
+
+                    setTimeout(function() {
+                        notification.fadeOut(function() {
+                            jQuery(this).remove();
+                        });
+                        closeMessageModal();
+                    }, 2000);
+                } else {
+                    alert('Ошибка: ' + response.data.message);
+                }
+            },
+            error: function() {
+                alert('Произошла ошибка при отправке');
+            },
+            complete: function() {
+                $btn.prop('disabled', false);
+                $btn.find('.btn-text').show();
+                $btn.find('.btn-loader').hide();
+            }
+        });
     });
     </script>
 </body>
