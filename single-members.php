@@ -29,6 +29,7 @@ while (have_posts()) : the_post();
     // Получаем таксономии
     $roles = wp_get_post_terms($member_id, 'member_role');
     $locations = wp_get_post_terms($member_id, 'member_location');
+    $member_types = wp_get_post_terms($member_id, 'member_type'); // Эксперт или Участник
 
     // Получаем галерею фотографий из мета-поля
     $gallery_ids_string = get_post_meta($member_id, 'member_gallery', true);
@@ -126,9 +127,9 @@ while (have_posts()) : the_post();
         echo '<!-- DEBUG: NO INTERESTS DATA -->';
     }
 
-    // Цвета "Метода" - синий и оранжевый
-    $primary_color = '#0066cc'; // Синий
-    $accent_color = '#ff6600';  // Оранжевый
+    // Цвета "Метода" - синий и красный
+    $primary_color = '#2e466f'; // Темно-синий
+    $accent_color = '#ef4e4c';  // Красный
 ?>
 
 <!DOCTYPE html>
@@ -232,20 +233,28 @@ while (have_posts()) : the_post();
                 <!-- Info -->
                 <div class="flex-1 text-center md:text-left">
                     <div class="mb-4">
-                        <?php if ($roles && !is_wp_error($roles)): ?>
-                            <div class="flex flex-wrap gap-2 mb-3 justify-center md:justify-start">
+                        <div class="flex flex-wrap gap-2 mb-3 justify-center md:justify-start">
+                            <?php if ($member_types && !is_wp_error($member_types)): ?>
+                                <?php foreach ($member_types as $type): ?>
+                                    <span class="inline-block metoda-accent-bg text-white px-3 py-1 rounded-full text-sm font-medium">
+                                        <?php echo esc_html($type->name); ?>
+                                    </span>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
+
+                            <?php if ($roles && !is_wp_error($roles)): ?>
                                 <?php foreach ($roles as $role): ?>
                                     <span class="inline-block metoda-primary-bg text-white px-3 py-1 rounded-full text-sm font-medium">
                                         <?php echo esc_html($role->name); ?>
                                     </span>
                                 <?php endforeach; ?>
-                            </div>
-                        <?php endif; ?>
+                            <?php endif; ?>
+                        </div>
 
                         <h1 class="text-2xl md:text-4xl font-bold text-gray-900 mb-2"><?php the_title(); ?></h1>
 
                         <?php if ($position): ?>
-                            <h2 class="text-lg md:text-2xl font-semibold text-gray-700 mb-3"><?php echo esc_html($position); ?></h2>
+                            <h2 class="text-base md:text-lg font-medium text-gray-600 mb-3"><?php echo esc_html($position); ?></h2>
                         <?php endif; ?>
                     </div>
 
@@ -341,7 +350,9 @@ while (have_posts()) : the_post();
                         <span class="text-sm font-normal text-gray-500 ml-2">(<?php echo count($gallery_ids); ?>)</span>
                     </h3>
                     <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
-                        <?php foreach ($gallery_ids as $attachment_id):
+                        <?php
+                        $index = 0;
+                        foreach ($gallery_ids as $attachment_id):
                             $attachment_id = intval(trim($attachment_id));
                             if (!$attachment_id) continue;
                             $image_url = wp_get_attachment_image_url($attachment_id, 'medium');
@@ -349,16 +360,17 @@ while (have_posts()) : the_post();
                             if (!$image_url) continue;
                         ?>
                         <a href="<?php echo esc_url($image_full); ?>"
-                           class="gallery-item group relative overflow-hidden rounded-lg aspect-square bg-gray-100 hover:opacity-90 transition-opacity"
+                           class="gallery-item group relative overflow-hidden rounded-lg aspect-square bg-gray-100 hover:opacity-90 transition-opacity cursor-pointer"
+                           data-image-index="<?php echo $index; ?>"
                            data-lightbox="member-gallery">
                             <img src="<?php echo esc_url($image_url); ?>"
                                  alt="<?php the_title(); ?>"
-                                 class="w-full h-full object-cover">
+                                 class="w-full h-full object-cover object-top">
                             <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all flex items-center justify-center">
                                 <i class="fa-solid fa-search-plus text-white text-2xl opacity-0 group-hover:opacity-100 transition-opacity"></i>
                             </div>
                         </a>
-                        <?php endforeach; ?>
+                        <?php $index++; endforeach; ?>
                     </div>
                 </div>
                 <?php endif; ?>
@@ -369,6 +381,7 @@ while (have_posts()) : the_post();
                 <div class="sticky top-24 space-y-6">
 
                     <!-- Contact Card -->
+                    <?php if ($email || $phone || $linkedin || $website): ?>
                     <div class="bg-white rounded-xl shadow-sm border p-6">
                         <h4 class="text-lg font-semibold text-gray-900 mb-4">Контактная информация</h4>
                         <div class="space-y-3">
@@ -401,6 +414,7 @@ while (have_posts()) : the_post();
                             <?php endif; ?>
                         </div>
                     </div>
+                    <?php endif; ?>
 
                     <!-- Actions Card -->
                     <div class="bg-white rounded-xl shadow-sm border p-6">
@@ -430,42 +444,111 @@ while (have_posts()) : the_post();
 
     <?php wp_footer(); ?>
 
-    <!-- Simple Lightbox for Gallery -->
+    <!-- Enhanced Lightbox for Gallery with Navigation -->
     <script>
     document.addEventListener('DOMContentLoaded', function() {
         const galleryItems = document.querySelectorAll('.gallery-item');
         if (galleryItems.length === 0) return;
 
-        // Create lightbox overlay
+        let currentIndex = 0;
+        const images = Array.from(galleryItems).map(item => item.href);
+
+        // Create lightbox overlay with navigation
         const overlay = document.createElement('div');
-        overlay.className = 'fixed inset-0 bg-black bg-opacity-90 z-50 hidden flex items-center justify-center p-4';
+        overlay.className = 'fixed inset-0 bg-black bg-opacity-95 z-50 hidden items-center justify-center p-4';
         overlay.innerHTML = `
-            <button class="absolute top-4 right-4 text-white text-4xl hover:text-gray-300 transition-colors" onclick="this.parentElement.classList.add('hidden')">&times;</button>
-            <img src="" alt="" class="max-w-full max-h-full object-contain">
+            <button class="close-btn absolute top-4 right-4 text-white text-4xl hover:text-gray-300 transition-colors z-10">&times;</button>
+            <button class="prev-btn absolute left-4 top-1/2 -translate-y-1/2 text-white text-5xl hover:text-gray-300 transition-colors z-10 bg-black bg-opacity-50 w-14 h-14 rounded-full flex items-center justify-center">
+                <i class="fa-solid fa-chevron-left"></i>
+            </button>
+            <button class="next-btn absolute right-4 top-1/2 -translate-y-1/2 text-white text-5xl hover:text-gray-300 transition-colors z-10 bg-black bg-opacity-50 w-14 h-14 rounded-full flex items-center justify-center">
+                <i class="fa-solid fa-chevron-right"></i>
+            </button>
+            <div class="counter absolute top-4 left-4 text-white text-lg bg-black bg-opacity-50 px-4 py-2 rounded-lg"></div>
+            <img src="" alt="" class="max-w-full max-h-full object-contain" style="object-position: top center;">
         `;
         document.body.appendChild(overlay);
 
         const overlayImg = overlay.querySelector('img');
+        const closeBtn = overlay.querySelector('.close-btn');
+        const prevBtn = overlay.querySelector('.prev-btn');
+        const nextBtn = overlay.querySelector('.next-btn');
+        const counter = overlay.querySelector('.counter');
 
-        galleryItems.forEach(item => {
+        function showImage(index) {
+            currentIndex = index;
+            overlayImg.src = images[currentIndex];
+            counter.textContent = `${currentIndex + 1} / ${images.length}`;
+
+            // Show/hide navigation buttons
+            prevBtn.style.display = currentIndex > 0 ? 'flex' : 'none';
+            nextBtn.style.display = currentIndex < images.length - 1 ? 'flex' : 'none';
+        }
+
+        function openLightbox(index) {
+            showImage(index);
+            overlay.classList.remove('hidden');
+            overlay.classList.add('flex');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeLightbox() {
+            overlay.classList.add('hidden');
+            overlay.classList.remove('flex');
+            document.body.style.overflow = 'auto';
+        }
+
+        function nextImage() {
+            if (currentIndex < images.length - 1) {
+                showImage(currentIndex + 1);
+            }
+        }
+
+        function prevImage() {
+            if (currentIndex > 0) {
+                showImage(currentIndex - 1);
+            }
+        }
+
+        // Open lightbox on gallery item click
+        galleryItems.forEach((item, index) => {
             item.addEventListener('click', function(e) {
                 e.preventDefault();
-                overlayImg.src = this.href;
-                overlay.classList.remove('hidden');
+                openLightbox(index);
             });
         });
 
-        // Close on overlay click (but not on image)
+        // Close button
+        closeBtn.addEventListener('click', closeLightbox);
+
+        // Navigation buttons
+        prevBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            prevImage();
+        });
+
+        nextBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            nextImage();
+        });
+
+        // Close on overlay click (but not on image or buttons)
         overlay.addEventListener('click', function(e) {
-            if (e.target === this || e.target.tagName === 'BUTTON') {
-                this.classList.add('hidden');
+            if (e.target === this) {
+                closeLightbox();
             }
         });
 
-        // Close on Escape key
+        // Keyboard navigation
         document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape' && !overlay.classList.contains('hidden')) {
-                overlay.classList.add('hidden');
+            if (overlay.classList.contains('hidden')) return;
+
+            if (e.key === 'Escape') {
+                closeLightbox();
+            } else if (e.key === 'ArrowLeft') {
+                prevImage();
+            } else if (e.key === 'ArrowRight') {
+                nextImage();
             }
         });
     });
