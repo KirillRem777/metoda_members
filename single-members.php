@@ -68,8 +68,8 @@ while (have_posts()) : the_post();
             echo '<!-- DEBUG LINE BEFORE: [' . esc_html($line) . '] -->';
 
             if (!empty($line)) {
-                // Убираем символ буллета если он есть
-                $line = preg_replace('/^[•\-\*]\s*/', '', $line);
+                // Убираем символ буллета если он есть (с флагом u для UTF-8)
+                $line = preg_replace('/^[•\-\*\x{2022}\x{2023}\x{25E6}\x{2043}\x{2219}\x{25AA}\x{25CF}]\s*/u', '', $line);
                 $line = trim($line); // ещё раз trim после удаления буллета
 
                 echo '<!-- DEBUG LINE AFTER: [' . esc_html($line) . '] -->';
@@ -100,8 +100,8 @@ while (have_posts()) : the_post();
         foreach ($lines as $line) {
             $line = trim($line);
             if (!empty($line)) {
-                // Убираем символ буллета если он есть
-                $line = preg_replace('/^[•\-\*]\s*/', '', $line);
+                // Убираем символ буллета если он есть (с флагом u для UTF-8)
+                $line = preg_replace('/^[•\-\*\x{2022}\x{2023}\x{25E6}\x{2043}\x{2219}\x{25AA}\x{25CF}]\s*/u', '', $line);
                 $line = trim($line); // ещё раз trim после удаления буллета
 
                 if (!empty($line)) {
