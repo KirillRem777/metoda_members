@@ -68,9 +68,14 @@ while (have_posts()) : the_post();
             echo '<!-- DEBUG LINE BEFORE: [' . esc_html($line) . '] -->';
 
             if (!empty($line)) {
-                // Убираем символ буллета если он есть (с флагом u для UTF-8)
-                $line = preg_replace('/^[•\-\*\x{2022}\x{2023}\x{25E6}\x{2043}\x{2219}\x{25AA}\x{25CF}]\s*/u', '', $line);
-                $line = trim($line); // ещё раз trim после удаления буллета
+                // Убираем символ буллета если он есть
+                // Проверяем первый символ
+                $first_char = mb_substr($line, 0, 1);
+                if (in_array($first_char, ['•', '●', '○', '·', '▪', '▫', '■', '□', '◆', '◇', '-', '*', '»', '›'])) {
+                    // Срезаем первый символ и пробелы после него
+                    $line = mb_substr($line, 1);
+                    $line = ltrim($line);
+                }
 
                 echo '<!-- DEBUG LINE AFTER: [' . esc_html($line) . '] LENGTH: ' . mb_strlen($line) . ' EMPTY: ' . (empty($line) ? 'YES' : 'NO') . ' -->';
 
@@ -103,9 +108,12 @@ while (have_posts()) : the_post();
         foreach ($lines as $line) {
             $line = trim($line);
             if (!empty($line)) {
-                // Убираем символ буллета если он есть (с флагом u для UTF-8)
-                $line = preg_replace('/^[•\-\*\x{2022}\x{2023}\x{25E6}\x{2043}\x{2219}\x{25AA}\x{25CF}]\s*/u', '', $line);
-                $line = trim($line); // ещё раз trim после удаления буллета
+                // Убираем символ буллета если он есть
+                $first_char = mb_substr($line, 0, 1);
+                if (in_array($first_char, ['•', '●', '○', '·', '▪', '▫', '■', '□', '◆', '◇', '-', '*', '»', '›'])) {
+                    $line = mb_substr($line, 1);
+                    $line = ltrim($line);
+                }
 
                 if (!empty($line)) {
                     $interest_items[] = $line;
