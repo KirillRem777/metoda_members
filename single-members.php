@@ -30,9 +30,26 @@ while (have_posts()) : the_post();
     $roles = wp_get_post_terms($member_id, 'member_role');
     $locations = wp_get_post_terms($member_id, 'member_location');
 
-    // Получаем галерею фотографий
+    // Получаем галерею фотографий из мета-поля
     $gallery_ids_string = get_post_meta($member_id, 'member_gallery', true);
     $gallery_ids = !empty($gallery_ids_string) ? explode(',', $gallery_ids_string) : array();
+
+    // Также получаем все прикрепленные изображения
+    $attached_images = get_attached_media('image', $member_id);
+    if (!empty($attached_images)) {
+        foreach ($attached_images as $image) {
+            // Добавляем только те изображения, которых еще нет в галерее
+            if (!in_array($image->ID, $gallery_ids)) {
+                $gallery_ids[] = $image->ID;
+            }
+        }
+    }
+
+    // Убираем миниатюру поста из галереи
+    $thumbnail_id = get_post_thumbnail_id($member_id);
+    if ($thumbnail_id) {
+        $gallery_ids = array_diff($gallery_ids, array($thumbnail_id));
+    }
 
     // Обработка буллетов для специализации
     $specialization_items = array();
@@ -158,11 +175,11 @@ while (have_posts()) : the_post();
     <main class="max-w-7xl mx-auto px-6 py-8">
 
         <!-- Hero Section -->
-        <section class="bg-white rounded-xl shadow-sm border p-8 mb-8">
-            <div class="flex items-start space-x-8 flex-col md:flex-row">
+        <section class="bg-white rounded-xl shadow-sm border p-4 md:p-8 mb-8">
+            <div class="flex items-start space-x-0 md:space-x-8 space-y-6 md:space-y-0 flex-col md:flex-row">
                 <!-- Photo -->
-                <div class="flex-shrink-0">
-                    <div class="w-48 h-48 rounded-2xl overflow-hidden bg-gray-100">
+                <div class="flex-shrink-0 mx-auto md:mx-0">
+                    <div class="w-32 h-32 md:w-48 md:h-48 rounded-2xl overflow-hidden bg-gray-100">
                         <?php if (has_post_thumbnail()): ?>
                             <?php the_post_thumbnail('medium', array('class' => 'w-full h-full object-cover')); ?>
                         <?php else: ?>
@@ -174,10 +191,10 @@ while (have_posts()) : the_post();
                 </div>
 
                 <!-- Info -->
-                <div class="flex-1">
+                <div class="flex-1 text-center md:text-left">
                     <div class="mb-4">
                         <?php if ($roles && !is_wp_error($roles)): ?>
-                            <div class="flex flex-wrap gap-2 mb-3">
+                            <div class="flex flex-wrap gap-2 mb-3 justify-center md:justify-start">
                                 <?php foreach ($roles as $role): ?>
                                     <span class="inline-block metoda-primary-bg text-white px-3 py-1 rounded-full text-sm font-medium">
                                         <?php echo esc_html($role->name); ?>
@@ -186,23 +203,23 @@ while (have_posts()) : the_post();
                             </div>
                         <?php endif; ?>
 
-                        <h1 class="text-4xl font-bold text-gray-900 mb-2"><?php the_title(); ?></h1>
+                        <h1 class="text-2xl md:text-4xl font-bold text-gray-900 mb-2"><?php the_title(); ?></h1>
 
                         <?php if ($position): ?>
-                            <h2 class="text-2xl font-semibold text-gray-700 mb-3"><?php echo esc_html($position); ?></h2>
+                            <h2 class="text-lg md:text-2xl font-semibold text-gray-700 mb-3"><?php echo esc_html($position); ?></h2>
                         <?php endif; ?>
                     </div>
 
                     <div class="space-y-3">
                         <?php if ($company): ?>
-                        <div class="flex items-center text-gray-600">
+                        <div class="flex items-center text-gray-600 justify-center md:justify-start">
                             <i class="fa-solid fa-building metoda-primary mr-3"></i>
                             <span class="font-medium"><?php echo esc_html($company); ?></span>
                         </div>
                         <?php endif; ?>
 
                         <?php if ($city): ?>
-                        <div class="flex items-center text-gray-600">
+                        <div class="flex items-center text-gray-600 justify-center md:justify-start">
                             <i class="fa-solid fa-location-dot metoda-primary mr-3"></i>
                             <span><?php echo esc_html($city); ?></span>
                         </div>
@@ -219,8 +236,8 @@ while (have_posts()) : the_post();
             <div class="lg:col-span-2 space-y-8">
 
                 <!-- Professional Information -->
-                <section class="bg-white rounded-xl shadow-sm border p-8">
-                    <h3 class="text-2xl font-bold text-gray-900 mb-6">Профессиональная информация</h3>
+                <section class="bg-white rounded-xl shadow-sm border p-4 md:p-8">
+                    <h3 class="text-xl md:text-2xl font-bold text-gray-900 mb-6">Профессиональная информация</h3>
 
                     <div class="space-y-8">
 
@@ -258,8 +275,8 @@ while (have_posts()) : the_post();
 
                 <!-- About Me -->
                 <?php if ($bio): ?>
-                <div class="bg-white rounded-xl shadow-sm border p-8">
-                    <h3 class="text-2xl font-bold text-gray-900 mb-6">О себе</h3>
+                <div class="bg-white rounded-xl shadow-sm border p-4 md:p-8">
+                    <h3 class="text-xl md:text-2xl font-bold text-gray-900 mb-6">О себе</h3>
                     <div class="member-content prose prose-gray max-w-none text-gray-700">
                         <?php echo wpautop($bio); ?>
                     </div>
@@ -268,8 +285,8 @@ while (have_posts()) : the_post();
 
                 <!-- Collaboration Expectations -->
                 <?php if ($expectations): ?>
-                <div class="bg-white rounded-xl shadow-sm border p-8">
-                    <h3 class="text-2xl font-bold text-gray-900 mb-6">Ожидания от сотрудничества</h3>
+                <div class="bg-white rounded-xl shadow-sm border p-4 md:p-8">
+                    <h3 class="text-xl md:text-2xl font-bold text-gray-900 mb-6">Ожидания от сотрудничества</h3>
                     <div class="member-content prose prose-gray max-w-none text-gray-700">
                         <?php echo wpautop($expectations); ?>
                     </div>
@@ -277,11 +294,12 @@ while (have_posts()) : the_post();
                 <?php endif; ?>
 
                 <!-- Photo Gallery -->
-                <?php if (!empty($gallery_ids) && count($gallery_ids) > 1): ?>
-                <div class="bg-white rounded-xl shadow-sm border p-8">
-                    <h3 class="text-2xl font-bold text-gray-900 mb-6">
+                <?php if (!empty($gallery_ids) && count($gallery_ids) > 0): ?>
+                <div class="bg-white rounded-xl shadow-sm border p-4 md:p-8">
+                    <h3 class="text-xl md:text-2xl font-bold text-gray-900 mb-6">
                         <i class="fa-solid fa-images metoda-primary mr-2"></i>
                         Фотогалерея
+                        <span class="text-sm font-normal text-gray-500 ml-2">(<?php echo count($gallery_ids); ?>)</span>
                     </h3>
                     <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
                         <?php foreach ($gallery_ids as $attachment_id):
