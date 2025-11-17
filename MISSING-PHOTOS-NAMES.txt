@@ -1,0 +1,43 @@
+📸 НАЗВАНИЯ ФАЙЛОВ ДЛЯ НЕДОСТАЮЩИХ ФОТОГРАФИЙ
+
+Для этих 7 участников нужно добавить фотографии с такими названиями:
+
+1. Бердникова Ирина Евгеньевна
+   Файлы: berdnikova1.jpg, berdnikova2.jpg, berdnikova3.jpg
+   ИЛИ: irina berdnikova1.jpg, irina berdnikova2.jpg
+
+2. Голубицкая Татьяна Анатольевна
+   Файлы: golubitskaya1.jpg, golubitskaya2.jpg, golubitskaya3.jpg
+   ИЛИ: tatyana golubitskaya1.jpg, tatyana golubitskaya2.jpg
+
+3. Ильина Людмила Николаевна
+   Файлы: ilina1.jpg, ilina2.jpg, ilina3.jpg
+   ИЛИ: lyudmila ilina1.jpg, lyudmila ilina2.jpg
+
+4. Половинко Владимир Семенович
+   Файлы: polovinko1.jpg, polovinko2.jpg, polovinko3.jpg
+   ИЛИ: vladimir polovinko1.jpg, vladimir polovinko2.jpg
+
+5. Рукин Константин Николаевич
+   Файлы: rukin1.jpg, rukin2.jpg, rukin3.jpg
+   ИЛИ: konstantin rukin1.jpg, konstantin rukin2.jpg
+
+6. Фахретдинова Айсылу Амировна
+   Файлы: fakhretdinova1.jpg, fakhretdinova2.jpg, fakhretdinova3.jpg
+   ИЛИ: aysylu fakhretdinova1.jpg, aysylu fakhretdinova2.jpg
+
+7. Хаметзянов Александр Владимирович
+   Файлы: khametzyanov1.jpg, khametzyanov2.jpg, khametzyanov3.jpg
+   ИЛИ: alexander khametzyanov1.jpg, alexander khametzyanov2.jpg
+
+ВАЖНО:
+- Все буквы строчные (маленькие)
+- Пробел между именем и фамилией (если используешь полное имя)
+- Номер в конце без дефиса (berdnikova1.jpg, berdnikova2.jpg)
+- Расширение .jpg
+
+ПРИМЕРЫ СУЩЕСТВУЮЩИХ ФАЙЛОВ:
+✓ abramova viktoria1.jpg
+✓ alexey abolmasov1.jpg
+✓ borovik1.jpg
+✓ anuchina1.jpg
