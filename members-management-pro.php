@@ -3432,3 +3432,170 @@ function filter_members_ajax() {
 }
 add_action('wp_ajax_filter_members', 'filter_members_ajax');
 add_action('wp_ajax_nopriv_filter_members', 'filter_members_ajax');
+
+/**
+ * AJAX обработчик для добавления материала в портфолио (новая JSON система)
+ */
+function ajax_add_portfolio_material() {
+    // Проверка nonce
+    check_ajax_referer('member_dashboard_nonce', 'nonce');
+
+    $member_id = Member_User_Link::get_current_user_member_id();
+    if (!$member_id) {
+        wp_send_json_error(array('message' => 'Участник не найден'));
+    }
+
+    $category = sanitize_text_field($_POST['category']);
+    $material_type = sanitize_text_field($_POST['material_type']);
+
+    // Валидируем категорию
+    $valid_categories = array('testimonials', 'gratitudes', 'interviews', 'videos', 'reviews', 'developments');
+    if (!in_array($category, $valid_categories)) {
+        wp_send_json_error(array('message' => 'Неверная категория'));
+    }
+
+    // Получаем текущие данные
+    $field_name = 'member_' . $category . '_data';
+    $current_data = get_post_meta($member_id, $field_name, true);
+    $data_array = $current_data ? json_decode($current_data, true) : array();
+
+    // Собираем новый материал
+    $new_material = array(
+        'type' => $material_type,
+        'title' => sanitize_text_field($_POST['title']),
+        'content' => isset($_POST['content']) ? wp_kses_post($_POST['content']) : '',
+        'url' => isset($_POST['url']) ? esc_url_raw($_POST['url']) : '',
+        'file_id' => 0,
+        'author' => isset($_POST['author']) ? sanitize_text_field($_POST['author']) : '',
+        'date' => isset($_POST['date']) ? sanitize_text_field($_POST['date']) : '',
+        'description' => isset($_POST['description']) ? sanitize_textarea_field($_POST['description']) : '',
+    );
+
+    // Обработка загрузки файла
+    if ($material_type === 'file' && !empty($_FILES['file'])) {
+        require_once(ABSPATH . 'wp-admin/includes/file.php');
+        require_once(ABSPATH . 'wp-admin/includes/image.php');
+        require_once(ABSPATH . 'wp-admin/includes/media.php');
+
+        $file_id = media_handle_upload('file', $member_id);
+
+        if (is_wp_error($file_id)) {
+            wp_send_json_error(array('message' => 'Ошибка загрузки файла: ' . $file_id->get_error_message()));
+        }
+
+        $new_material['file_id'] = $file_id;
+        $new_material['url'] = wp_get_attachment_url($file_id);
+    }
+
+    // Добавляем новый материал
+    $data_array[] = $new_material;
+
+    // Сохраняем
+    update_post_meta($member_id, $field_name, wp_json_encode($data_array, JSON_UNESCAPED_UNICODE));
+
+    wp_send_json_success(array(
+        'message' => 'Материал успешно добавлен!',
+        'reload' => true
+    ));
+}
+add_action('wp_ajax_add_portfolio_material', 'ajax_add_portfolio_material');
+
+/**
+ * AJAX обработчик для удаления материала из портфолио (новая JSON система)
+ */
+function ajax_delete_portfolio_material() {
+    // Проверка nonce
+    check_ajax_referer('member_dashboard_nonce', 'nonce');
+
+    $member_id = Member_User_Link::get_current_user_member_id();
+    if (!$member_id) {
+        wp_send_json_error(array('message' => 'Участник не найден'));
+    }
+
+    $category = sanitize_text_field($_POST['category']);
+    $index = intval($_POST['index']);
+
+    // Валидируем категорию
+    $valid_categories = array('testimonials', 'gratitudes', 'interviews', 'videos', 'reviews', 'developments');
+    if (!in_array($category, $valid_categories)) {
+        wp_send_json_error(array('message' => 'Неверная категория'));
+    }
+
+    // Получаем текущие данные
+    $field_name = 'member_' . $category . '_data';
+    $current_data = get_post_meta($member_id, $field_name, true);
+    $data_array = $current_data ? json_decode($current_data, true) : array();
+
+    // Проверяем что элемент существует
+    if (!isset($data_array[$index])) {
+        wp_send_json_error(array('message' => 'Материал не найден'));
+    }
+
+    // Удаляем файл если это был файл
+    if (isset($data_array[$index]['type']) && $data_array[$index]['type'] === 'file' && isset($data_array[$index]['file_id'])) {
+        wp_delete_attachment($data_array[$index]['file_id'], true);
+    }
+
+    // Удаляем элемент
+    unset($data_array[$index]);
+    $data_array = array_values($data_array); // Переиндексируем массив
+
+    // Сохраняем
+    update_post_meta($member_id, $field_name, wp_json_encode($data_array, JSON_UNESCAPED_UNICODE));
+
+    wp_send_json_success(array(
+        'message' => 'Материал успешно удален!',
+        'reload' => true
+    ));
+}
+add_action('wp_ajax_delete_portfolio_material', 'ajax_delete_portfolio_material');
+
+/**
+ * AJAX обработчик для создания темы форума из личного кабинета
+ */
+function ajax_create_forum_topic_dashboard() {
+    // Проверка nonce
+    check_ajax_referer('member_dashboard_nonce', 'nonce');
+
+    if (!is_user_logged_in()) {
+        wp_send_json_error(array('message' => 'Необходимо войти в систему'));
+    }
+
+    $title = sanitize_text_field($_POST['title']);
+    $content = wp_kses_post($_POST['content']);
+    $category_id = !empty($_POST['category']) ? intval($_POST['category']) : 0;
+
+    if (empty($title) || empty($content)) {
+        wp_send_json_error(array('message' => 'Заполните все обязательные поля'));
+    }
+
+    // Создаем новую тему
+    $topic_data = array(
+        'post_title' => $title,
+        'post_content' => $content,
+        'post_type' => 'forum_topic',
+        'post_status' => 'publish',
+        'post_author' => get_current_user_id()
+    );
+
+    $topic_id = wp_insert_post($topic_data);
+
+    if (is_wp_error($topic_id)) {
+        wp_send_json_error(array('message' => 'Ошибка создания темы: ' . $topic_id->get_error_message()));
+    }
+
+    // Устанавливаем категорию если указана
+    if ($category_id > 0) {
+        wp_set_post_terms($topic_id, array($category_id), 'forum_category');
+    }
+
+    // Инициализируем счетчики
+    update_post_meta($topic_id, 'views_count', 0);
+
+    wp_send_json_success(array(
+        'message' => 'Тема успешно создана!',
+        'url' => get_permalink($topic_id),
+        'reload' => true
+    ));
+}
+add_action('wp_ajax_create_forum_topic_dashboard', 'ajax_create_forum_topic_dashboard');

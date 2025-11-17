@@ -26,10 +26,10 @@ $accent_color = '#ff6600';
     <title>Личный кабинет - <?php bloginfo('name'); ?></title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js" crossorigin="anonymous"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         ::-webkit-scrollbar { display: none; }
-        * { font-family: 'Inter', sans-serif; }
+        * { font-family: 'Montserrat', sans-serif; }
         .wysiwyg-toolbar { display: flex; gap: 0.5rem; padding: 0.75rem; background: #f8fafc; border-bottom: 1px solid #e2e8f0; border-radius: 0.5rem 0.5rem 0 0; }
         .wysiwyg-toolbar button { padding: 0.5rem 0.75rem; background: white; border: 1px solid #e2e8f0; border-radius: 0.375rem; cursor: pointer; transition: all 0.2s; }
         .wysiwyg-toolbar button:hover { background: #f1f5f9; }
@@ -88,7 +88,13 @@ $accent_color = '#ff6600';
                 <li>
                     <button onclick="showSection('materials')" id="nav-materials" class="nav-item w-full flex items-center gap-3 px-4 py-3 text-left rounded-lg text-gray-600 hover:bg-gray-50 font-medium transition-all">
                         <i class="fas fa-folder-open text-lg"></i>
-                        <span>Материалы</span>
+                        <span>Портфолио</span>
+                    </button>
+                </li>
+                <li>
+                    <button onclick="showSection('forum')" id="nav-forum" class="nav-item w-full flex items-center gap-3 px-4 py-3 text-left rounded-lg text-gray-600 hover:bg-gray-50 font-medium transition-all">
+                        <i class="fas fa-comments text-lg"></i>
+                        <span>Форум</span>
                     </button>
                 </li>
             </ul>
@@ -320,153 +326,11 @@ $accent_color = '#ff6600';
             </div>
         </section>
 
-        <!-- Materials Section -->
-        <section id="materials-section" class="section-content hidden">
-            <div class="bg-white border-b border-gray-200 px-8 py-6">
-                <div class="max-w-5xl mx-auto">
-                    <h2 class="text-2xl font-bold text-gray-900">Управление материалами</h2>
-                    <p class="text-sm text-gray-500 mt-1">Добавляйте файлы или ссылки на ваши работы</p>
-                </div>
-            </div>
+        <!-- Materials/Portfolio Section -->
+        <?php include(plugin_dir_path(__FILE__) . 'dashboard-materials-section.php'); ?>
 
-            <div class="p-8">
-                <div class="max-w-5xl mx-auto">
-                    <!-- Material Categories Tabs -->
-                    <div class="bg-white rounded-t-xl shadow-sm border border-gray-200 border-b-0 p-4">
-                        <div class="flex gap-2 overflow-x-auto">
-                            <?php
-                            $categories = Member_File_Manager::get_categories();
-                            $first = true;
-                            foreach ($categories as $key => $label) :
-                                $active = $first ? 'active' : '';
-                                $first = false;
-                                $active_classes = $active ? 'bg-primary text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200';
-                            ?>
-                                <button class="materials-tab <?php echo $active; ?> px-4 py-2 rounded-lg font-medium text-sm transition-all whitespace-nowrap <?php echo $active_classes; ?>" data-category="<?php echo esc_attr($key); ?>" style="<?php echo $active ? 'background-color: ' . $primary_color : ''; ?>">
-                                    <?php echo esc_html($label); ?>
-                                </button>
-                            <?php endforeach; ?>
-                        </div>
-                    </div>
-
-                    <!-- Materials Content -->
-                    <div class="bg-white rounded-b-xl shadow-sm border border-gray-200 p-8">
-                        <?php
-                        $first = true;
-                        foreach ($categories as $key => $label) :
-                            $active = $first ? 'active' : '';
-                            $first = false;
-                            $materials = get_post_meta($member_id, 'member_' . $key, true);
-                            $parsed_materials = Member_File_Manager::parse_material_content($materials);
-                        ?>
-                            <div class="materials-pane <?php echo $active ? '' : 'hidden'; ?>" id="materials-<?php echo esc_attr($key); ?>" data-category="<?php echo esc_attr($key); ?>">
-                                <!-- Add Material Form -->
-                                <div class="mb-8 p-6 bg-gray-50 rounded-lg">
-                                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Добавить материал</h3>
-
-                                    <div class="flex gap-2 mb-4">
-                                        <button type="button" class="type-btn flex-1 px-4 py-2 rounded-lg font-medium text-sm transition-all active bg-primary text-white" data-type="link" style="background-color: <?php echo $primary_color; ?>">
-                                            <i class="fas fa-link mr-2"></i> Ссылка
-                                        </button>
-                                        <button type="button" class="type-btn flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-medium text-sm hover:bg-gray-300 transition-all" data-type="file">
-                                            <i class="fas fa-paperclip mr-2"></i> Файл
-                                        </button>
-                                    </div>
-
-                                    <!-- Link Form -->
-                                    <form class="material-form link-form">
-                                        <div class="space-y-4">
-                                            <div>
-                                                <label class="block text-sm font-medium text-gray-700 mb-2">Название *</label>
-                                                <input type="text" name="title" required class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none">
-                                            </div>
-                                            <div>
-                                                <label class="block text-sm font-medium text-gray-700 mb-2">URL *</label>
-                                                <input type="url" name="url" required placeholder="https://example.com" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none">
-                                            </div>
-                                            <div>
-                                                <label class="block text-sm font-medium text-gray-700 mb-2">Описание</label>
-                                                <textarea name="description" rows="3" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none"></textarea>
-                                            </div>
-                                            <button type="submit" class="btn-add-link px-6 py-3 text-white rounded-lg font-medium hover:opacity-90 transition-opacity flex items-center gap-2" style="background-color: <?php echo $primary_color; ?>">
-                                                <i class="fas fa-plus"></i>
-                                                <span class="btn-text">Добавить ссылку</span>
-                                                <span class="btn-loader hidden">
-                                                    <i class="fas fa-spinner fa-spin"></i>
-                                                </span>
-                                            </button>
-                                        </div>
-                                    </form>
-
-                                    <!-- File Form -->
-                                    <form class="material-form file-form hidden">
-                                        <div class="space-y-4">
-                                            <div>
-                                                <label class="block text-sm font-medium text-gray-700 mb-2">Название *</label>
-                                                <input type="text" name="title" required class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none">
-                                            </div>
-                                            <div>
-                                                <label class="block text-sm font-medium text-gray-700 mb-2">Файл *</label>
-                                                <input type="file" name="file" required class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none">
-                                            </div>
-                                            <div>
-                                                <label class="block text-sm font-medium text-gray-700 mb-2">Описание</label>
-                                                <textarea name="description" rows="3" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none"></textarea>
-                                            </div>
-                                            <button type="submit" class="btn-add-file px-6 py-3 text-white rounded-lg font-medium hover:opacity-90 transition-opacity flex items-center gap-2" style="background-color: <?php echo $primary_color; ?>">
-                                                <i class="fas fa-upload"></i>
-                                                <span class="btn-text">Загрузить файл</span>
-                                                <span class="btn-loader hidden">
-                                                    <i class="fas fa-spinner fa-spin"></i>
-                                                </span>
-                                            </button>
-                                        </div>
-                                    </form>
-                                </div>
-
-                                <!-- Materials List -->
-                                <div>
-                                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Существующие материалы</h3>
-
-                                    <?php if (!empty($parsed_materials)) : ?>
-                                        <div class="grid grid-cols-2 gap-4">
-                                            <?php foreach ($parsed_materials as $material) : ?>
-                                                <div class="material-card p-6 border border-gray-200 rounded-lg hover:shadow-md transition-shadow" data-index="<?php echo esc_attr($material['index']); ?>">
-                                                    <div class="flex items-start justify-between mb-3">
-                                                        <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium <?php echo $material['type'] === 'file' ? 'bg-blue-100 text-blue-700' : 'bg-green-100 text-green-700'; ?>">
-                                                            <i class="fas fa-<?php echo $material['type'] === 'file' ? 'paperclip' : 'link'; ?>"></i>
-                                                            <?php echo $material['type'] === 'file' ? 'Файл' : 'Ссылка'; ?>
-                                                        </span>
-                                                        <button type="button" class="delete-material text-gray-400 hover:text-red-500 transition-colors" data-index="<?php echo esc_attr($material['index']); ?>" title="Удалить">
-                                                            <i class="fas fa-trash"></i>
-                                                        </button>
-                                                    </div>
-                                                    <h4 class="font-semibold text-gray-900 mb-2"><?php echo esc_html($material['title']); ?></h4>
-                                                    <?php if (!empty($material['description'])) : ?>
-                                                        <p class="text-sm text-gray-600 mb-3"><?php echo esc_html($material['description']); ?></p>
-                                                    <?php endif; ?>
-                                                    <a href="<?php echo esc_url($material['url']); ?>" target="_blank" class="inline-flex items-center gap-2 text-sm font-medium hover:underline" style="color: <?php echo $primary_color; ?>">
-                                                        Открыть <i class="fas fa-external-link-alt text-xs"></i>
-                                                    </a>
-                                                    <?php if (!empty($material['formatted_date'])) : ?>
-                                                        <div class="text-xs text-gray-400 mt-3"><?php echo esc_html($material['formatted_date']); ?></div>
-                                                    <?php endif; ?>
-                                                </div>
-                                            <?php endforeach; ?>
-                                        </div>
-                                    <?php else : ?>
-                                        <div class="text-center py-12 text-gray-500">
-                                            <i class="fas fa-folder-open text-4xl mb-4 opacity-50"></i>
-                                            <p>Материалов пока нет. Добавьте первый материал выше.</p>
-                                        </div>
-                                    <?php endif; ?>
-                                </div>
-                            </div>
-                        <?php endforeach; ?>
-                    </div>
-                </div>
-            </div>
-        </section>
+        <!-- Forum Section -->
+        <?php include(plugin_dir_path(__FILE__) . 'dashboard-forum-section.php'); ?>
 
     </main>
 
@@ -498,53 +362,6 @@ function showSection(sectionName) {
     activeNav.style.backgroundColor = 'rgba(0, 102, 204, 0.1)';
     activeNav.style.color = '<?php echo $primary_color; ?>';
 }
-
-// Material type toggle
-document.querySelectorAll('.type-btn').forEach(btn => {
-    btn.addEventListener('click', function() {
-        const type = this.dataset.type;
-        const pane = this.closest('.materials-pane');
-
-        // Toggle buttons
-        pane.querySelectorAll('.type-btn').forEach(b => {
-            b.classList.remove('active', 'bg-primary', 'text-white');
-            b.classList.add('bg-gray-200', 'text-gray-700');
-            b.style.backgroundColor = '';
-        });
-        this.classList.add('active', 'bg-primary', 'text-white');
-        this.classList.remove('bg-gray-200', 'text-gray-700');
-        this.style.backgroundColor = '<?php echo $primary_color; ?>';
-
-        // Toggle forms
-        pane.querySelectorAll('.material-form').forEach(form => {
-            form.classList.add('hidden');
-        });
-        pane.querySelector('.' + type + '-form').classList.remove('hidden');
-    });
-});
-
-// Material category tabs
-document.querySelectorAll('.materials-tab').forEach(tab => {
-    tab.addEventListener('click', function() {
-        const category = this.dataset.category;
-
-        // Toggle tabs
-        document.querySelectorAll('.materials-tab').forEach(t => {
-            t.classList.remove('active', 'bg-primary', 'text-white');
-            t.classList.add('bg-gray-100', 'text-gray-700');
-            t.style.backgroundColor = '';
-        });
-        this.classList.add('active', 'bg-primary', 'text-white');
-        this.classList.remove('bg-gray-100', 'text-gray-700');
-        this.style.backgroundColor = '<?php echo $primary_color; ?>';
-
-        // Toggle panes
-        document.querySelectorAll('.materials-pane').forEach(pane => {
-            pane.classList.add('hidden');
-        });
-        document.getElementById('materials-' + category).classList.remove('hidden');
-    });
-});
 </script>
 
 <?php wp_footer(); ?>
