@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Metoda Community MGMT
  * Description: Полнофункциональная система управления участниками и экспертами сообщества. Включает: регистрацию с валидацией, систему кодов доступа для импортированных участников, личные кабинеты с онбордингом, управление материалами с WYSIWYG-редактором, форум в стиле Reddit с категориями и лайками, настраиваемые email-шаблоны, CSV-импорт, кроппер фото, систему ролей и прав доступа, поиск и фильтрацию участников.
- * Version: 3.1.3
+ * Version: 3.1.4
  * Author: Kirill Rem
  * Text Domain: metoda-community-mgmt
  * Domain Path: /languages
@@ -1312,6 +1312,19 @@ add_shortcode('manager_panel', 'manager_panel_shortcode');
  * Шорткод для страницы логина
  */
 function custom_login_shortcode() {
+    // KILL SWITCH: Отключение всех редиректов
+    if (defined('METODA_DISABLE_REDIRECTS') && METODA_DISABLE_REDIRECTS) {
+        return '<div style="padding: 20px; background: #ffeb3b; border: 2px solid #ff9800;">
+            <h3>⚠️ Редиректы отключены (METODA_DISABLE_REDIRECTS)</h3>
+            <p><a href="' . admin_url() . '">Перейти в админку →</a></p>
+        </div>';
+    }
+
+    // Не показываем шорткод в админке
+    if (is_admin()) {
+        return '';
+    }
+
     if (is_user_logged_in()) {
         $user = wp_get_current_user();
 
