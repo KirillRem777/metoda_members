@@ -6,14 +6,15 @@
  * Author: Debug Tool
  */
 
-// Этот файл должен быть в wp-content/mu-plugins/EMERGENCY-STOP-REDIRECTS.php
+// ВАЖНО: Этот файл лучше положить в wp-content/mu-plugins/
+// Но если там не работает - можно активировать как обычный плагин
 
 // Лог всех попыток редиректа
 global $redirect_attempts;
 $redirect_attempts = array();
 
-// Перехватываем wp_redirect ОЧЕНЬ рано
-add_filter('wp_redirect', function($location, $status) {
+// Функция которая перехватывает редиректы
+function emergency_stop_redirect($location, $status) {
     global $redirect_attempts;
 
     // Логируем КТО пытается редиректить
@@ -72,7 +73,13 @@ add_filter('wp_redirect', function($location, $status) {
 
     // Другие редиректы пропускаем
     return $location;
-}, 1, 2);
+}
+
+// Регистрируем фильтр на разных хуках
+add_action('plugins_loaded', function() {
+    // Перехватываем wp_redirect ОЧЕНЬ рано
+    add_filter('wp_redirect', 'emergency_stop_redirect', 1, 2);
+}, 1);
 
 // Показываем все попытки редиректов в админке
 add_action('admin_notices', function() {
