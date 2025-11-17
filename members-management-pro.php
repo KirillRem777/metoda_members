@@ -3551,6 +3551,68 @@ function ajax_delete_portfolio_material() {
 add_action('wp_ajax_delete_portfolio_material', 'ajax_delete_portfolio_material');
 
 /**
+ * AJAX обработчик для редактирования материала портфолио (новая JSON система)
+ */
+function ajax_edit_portfolio_material() {
+    // Проверка nonce
+    check_ajax_referer('member_dashboard_nonce', 'nonce');
+
+    $member_id = Member_User_Link::get_current_user_member_id();
+    if (!$member_id) {
+        wp_send_json_error(array('message' => 'Участник не найден'));
+    }
+
+    $category = sanitize_text_field($_POST['category']);
+    $index = intval($_POST['index']);
+    $material_type = sanitize_text_field($_POST['material_type']);
+
+    // Валидируем категорию
+    $valid_categories = array('testimonials', 'gratitudes', 'interviews', 'videos', 'reviews', 'developments');
+    if (!in_array($category, $valid_categories)) {
+        wp_send_json_error(array('message' => 'Неверная категория'));
+    }
+
+    // Получаем текущие данные
+    $field_name = 'member_' . $category . '_data';
+    $current_data = get_post_meta($member_id, $field_name, true);
+    $data_array = $current_data ? json_decode($current_data, true) : array();
+
+    // Проверяем что элемент существует
+    if (!isset($data_array[$index])) {
+        wp_send_json_error(array('message' => 'Материал не найден'));
+    }
+
+    // Обновляем данные материала (сохраняем file_id если был файл)
+    $updated_material = array(
+        'type' => $material_type,
+        'title' => sanitize_text_field($_POST['title']),
+        'content' => isset($_POST['content']) ? wp_kses_post($_POST['content']) : '',
+        'url' => isset($_POST['url']) ? esc_url_raw($_POST['url']) : '',
+        'file_id' => isset($data_array[$index]['file_id']) ? $data_array[$index]['file_id'] : 0,
+        'author' => isset($_POST['author']) ? sanitize_text_field($_POST['author']) : '',
+        'date' => isset($_POST['date']) ? sanitize_text_field($_POST['date']) : '',
+        'description' => isset($_POST['description']) ? sanitize_textarea_field($_POST['description']) : '',
+    );
+
+    // Если это файл, сохраняем URL из старых данных
+    if ($material_type === 'file' && isset($data_array[$index]['url'])) {
+        $updated_material['url'] = $data_array[$index]['url'];
+    }
+
+    // Заменяем элемент
+    $data_array[$index] = $updated_material;
+
+    // Сохраняем
+    update_post_meta($member_id, $field_name, wp_json_encode($data_array, JSON_UNESCAPED_UNICODE));
+
+    wp_send_json_success(array(
+        'message' => 'Материал успешно обновлен!',
+        'reload' => true
+    ));
+}
+add_action('wp_ajax_edit_portfolio_material', 'ajax_edit_portfolio_material');
+
+/**
  * AJAX обработчик для создания темы форума из личного кабинета
  */
 function ajax_create_forum_topic_dashboard() {
