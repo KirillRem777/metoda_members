@@ -35,7 +35,7 @@ h1 { color: #333; }
 
 echo "<h1>📸 Импорт фотографий участников</h1><hr>";
 
-// Маппинг английских имён на русские (из rename-photos.php)
+// Маппинг английских имён на русские
 $name_mapping = array(
     'abramova viktoria' => 'Абрамова Виктория Викторовна',
     'alexey abolmasov' => 'Аболмасов Алексей Владимирович',
@@ -59,6 +59,9 @@ $name_mapping = array(
     'volvatch' => 'Волвач Антон Станиславович'
 );
 
+// Создаём обратный маппинг (русское -> английское)
+$reverse_mapping = array_flip($name_mapping);
+
 // Читаем CSV
 $csv_data = array_map('str_getcsv', file($csv_file));
 $headers = array_shift($csv_data);
@@ -66,6 +69,7 @@ $headers = array_shift($csv_data);
 $imported = 0;
 $not_found = 0;
 $already_has_photo = 0;
+$total_photos_imported = 0;
 
 foreach ($csv_data as $row) {
     $data = array();
@@ -88,7 +92,7 @@ foreach ($csv_data as $row) {
     ));
 
     if (!$member) {
-        echo "<div class='warning'>⚠️ Участник не найден: $fio</div>";
+        echo "<div class='warning'>⚠️ Участник не найден в базе: $fio</div>";
         continue;
     }
 
@@ -101,113 +105,110 @@ foreach ($csv_data as $row) {
         continue;
     }
 
-    // Ищем фото по маппингу
-    $photo_found = false;
+    // Ищем фотографии для этого участника
+    $photos = array();
 
-    foreach ($name_mapping as $english_name => $russian_name) {
-        if ($russian_name === $fio) {
-            // Ищем все фотографии с этим именем
-            $pattern = $photos_dir . $english_name . '*.jpg';
-            $photos = glob($pattern);
+    // 1. Пробуем найти по английскому имени из маппинга
+    if (isset($reverse_mapping[$fio])) {
+        $english_name = $reverse_mapping[$fio];
+        $pattern = $photos_dir . $english_name . '*.jpg';
+        $found = glob($pattern);
+        if ($found) {
+            $photos = array_merge($photos, $found);
+        }
+    }
 
-            if (empty($photos)) {
-                // Пробуем также искать файлы с русским именем
-                $pattern_ru = $photos_dir . $fio . '*.jpg';
-                $photos = glob($pattern_ru);
-            }
+    // 2. Пробуем найти напрямую по русскому имени
+    $pattern_ru = $photos_dir . $fio . '*.jpg';
+    $found_ru = glob($pattern_ru);
+    if ($found_ru) {
+        $photos = array_merge($photos, $found_ru);
+    }
 
-            if (!empty($photos)) {
-                // Берём первую фотографию
-                $photo_path = $photos[0];
-                $photo_filename = basename($photo_path);
+    // 3. Пробуем найти по фамилии (первое слово из ФИО)
+    $name_parts = explode(' ', $fio);
+    if (count($name_parts) > 0) {
+        $lastname = mb_strtolower($name_parts[0]);
 
-                // Импортируем фото в медиатеку
-                $upload_file = wp_upload_bits($photo_filename, null, file_get_contents($photo_path));
-
-                if ($upload_file['error']) {
-                    echo "<div class='error'>❌ $fio — ошибка загрузки: {$upload_file['error']}</div>";
+        // Ищем среди английских имён
+        foreach ($reverse_mapping as $ru => $en) {
+            if (stripos($ru, $name_parts[0]) === 0) {
+                $pattern = $photos_dir . $en . '*.jpg';
+                $found = glob($pattern);
+                if ($found) {
+                    $photos = array_merge($photos, $found);
                     break;
                 }
-
-                $wp_filetype = wp_check_filetype($photo_filename, null);
-
-                $attachment = array(
-                    'post_mime_type' => $wp_filetype['type'],
-                    'post_title' => $fio,
-                    'post_content' => '',
-                    'post_status' => 'inherit'
-                );
-
-                $attach_id = wp_insert_attachment($attachment, $upload_file['file'], $member_id);
-
-                if (!is_wp_error($attach_id)) {
-                    require_once(ABSPATH . 'wp-admin/includes/image.php');
-                    $attach_data = wp_generate_attachment_metadata($attach_id, $upload_file['file']);
-                    wp_update_attachment_metadata($attach_id, $attach_data);
-                    set_post_thumbnail($member_id, $attach_id);
-
-                    echo "<div class='success'>✅ $fio — фото импортировано ($photo_filename)</div>";
-                    $imported++;
-                    $photo_found = true;
-                }
-
-                break;
             }
         }
     }
 
-    if (!$photo_found) {
-        // Пробуем искать напрямую по русскому имени
-        $pattern_direct = $photos_dir . $fio . '*.jpg';
-        $photos_direct = glob($pattern_direct);
+    // Удаляем дубликаты
+    $photos = array_unique($photos);
 
-        if (!empty($photos_direct)) {
-            $photo_path = $photos_direct[0];
-            $photo_filename = basename($photo_path);
-
-            $upload_file = wp_upload_bits($photo_filename, null, file_get_contents($photo_path));
-
-            if (!$upload_file['error']) {
-                $wp_filetype = wp_check_filetype($photo_filename, null);
-
-                $attachment = array(
-                    'post_mime_type' => $wp_filetype['type'],
-                    'post_title' => $fio,
-                    'post_content' => '',
-                    'post_status' => 'inherit'
-                );
-
-                $attach_id = wp_insert_attachment($attachment, $upload_file['file'], $member_id);
-
-                if (!is_wp_error($attach_id)) {
-                    require_once(ABSPATH . 'wp-admin/includes/image.php');
-                    $attach_data = wp_generate_attachment_metadata($attach_id, $upload_file['file']);
-                    wp_update_attachment_metadata($attach_id, $attach_data);
-                    set_post_thumbnail($member_id, $attach_id);
-
-                    echo "<div class='success'>✅ $fio — фото импортировано ($photo_filename)</div>";
-                    $imported++;
-                    $photo_found = true;
-                }
-            }
-        }
-    }
-
-    if (!$photo_found) {
+    if (empty($photos)) {
         echo "<div class='warning'>⚠️ $fio — фото не найдено</div>";
         $not_found++;
+        continue;
     }
+
+    // Сортируем фото по имени файла
+    sort($photos);
+
+    // Импортируем ПЕРВУЮ фотографию как featured image
+    $first_photo = $photos[0];
+    $photo_filename = basename($first_photo);
+
+    $upload_file = wp_upload_bits($photo_filename, null, file_get_contents($first_photo));
+
+    if ($upload_file['error']) {
+        echo "<div class='error'>❌ $fio — ошибка загрузки: {$upload_file['error']}</div>";
+        continue;
+    }
+
+    $wp_filetype = wp_check_filetype($photo_filename, null);
+
+    $attachment = array(
+        'post_mime_type' => $wp_filetype['type'],
+        'post_title' => $fio,
+        'post_content' => '',
+        'post_status' => 'inherit'
+    );
+
+    $attach_id = wp_insert_attachment($attachment, $upload_file['file'], $member_id);
+
+    if (is_wp_error($attach_id)) {
+        echo "<div class='error'>❌ $fio — ошибка создания вложения</div>";
+        continue;
+    }
+
+    require_once(ABSPATH . 'wp-admin/includes/image.php');
+    $attach_data = wp_generate_attachment_metadata($attach_id, $upload_file['file']);
+    wp_update_attachment_metadata($attach_id, $attach_data);
+    set_post_thumbnail($member_id, $attach_id);
+
+    echo "<div class='success'>✅ $fio — фото импортировано: $photo_filename</div>";
+
+    // Если есть дополнительные фото, показываем их
+    if (count($photos) > 1) {
+        echo "<div class='info'>   → Найдено ещё " . (count($photos) - 1) . " фото: " . implode(', ', array_map('basename', array_slice($photos, 1))) . "</div>";
+    }
+
+    $imported++;
+    $total_photos_imported += count($photos);
 }
 
 echo "<hr>";
 echo "<h2>📊 Статистика:</h2>";
 echo "<ul>";
-echo "<li style='color: green;'><strong>✅ Импортировано:</strong> $imported</li>";
+echo "<li style='color: green;'><strong>✅ Участников с импортированным фото:</strong> $imported</li>";
+echo "<li style='color: gray;'><strong>📸 Всего фото найдено:</strong> $total_photos_imported</li>";
 echo "<li style='color: blue;'><strong>ℹ️ Уже были фото:</strong> $already_has_photo</li>";
 echo "<li style='color: orange;'><strong>⚠️ Не найдено:</strong> $not_found</li>";
 echo "</ul>";
 
 echo "<hr>";
 echo "<h2>✅ Готово!</h2>";
+echo "<p><strong>⚠️ УДАЛИ этот файл после использования!</strong></p>";
 echo "<p><a href='" . admin_url('edit.php?post_type=members') . "'>Перейти к участникам →</a></p>";
 echo "</body></html>";

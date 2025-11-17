@@ -18,9 +18,9 @@ while (have_posts()) : the_post();
     $email = get_post_meta($member_id, 'member_email', true);
     $phone = get_post_meta($member_id, 'member_phone', true);
     $bio = get_post_meta($member_id, 'member_bio', true);
-    $specialization = get_post_meta($member_id, 'member_specialization', true);
+    $specialization = get_post_meta($member_id, 'member_specialization_experience', true);
     $experience = get_post_meta($member_id, 'member_experience', true);
-    $interests = get_post_meta($member_id, 'member_interests', true);
+    $interests = get_post_meta($member_id, 'member_professional_interests', true);
     $linkedin = get_post_meta($member_id, 'member_linkedin', true);
     $website = get_post_meta($member_id, 'member_website', true);
     

@@ -96,24 +96,25 @@ foreach ($csv_data as $row_index => $row) {
     // Сохраняем мета-поля
     update_post_meta($member_id, 'member_company', $data['Компания']);
     update_post_meta($member_id, 'member_position', $data['Должность']);
-    update_post_meta($member_id, 'member_location', $data['Город']);
+    update_post_meta($member_id, 'member_city', $data['Город']); // Мета-поле для города
     update_post_meta($member_id, 'member_bio', $data['О себе']);
 
     echo "<div class='info'>   → Компания: " . esc_html($data['Компания']) . "</div>";
     echo "<div class='info'>   → Должность: " . esc_html($data['Должность']) . "</div>";
+    echo "<div class='info'>   → Город: " . esc_html($data['Город']) . "</div>";
 
-    // Специализация и стаж - объединённое поле, парсим его
+    // Специализация и стаж - ПРАВИЛЬНОЕ название поля
     $spec_and_exp = $data['Специализация и стаж'];
     if (!empty($spec_and_exp)) {
-        update_post_meta($member_id, 'member_specialization', $spec_and_exp);
+        update_post_meta($member_id, 'member_specialization_experience', $spec_and_exp);
         $spec_preview = mb_substr($spec_and_exp, 0, 100);
         echo "<div class='info'>   → Специализация: " . esc_html($spec_preview) . "...</div>";
     }
 
-    // Сфера профессиональных интересов
+    // Сфера профессиональных интересов - ПРАВИЛЬНОЕ название поля
     $interests = $data['Сфера профессиональных интересов'];
     if (!empty($interests)) {
-        update_post_meta($member_id, 'member_interests', $interests);
+        update_post_meta($member_id, 'member_professional_interests', $interests);
         $interests_preview = mb_substr($interests, 0, 100);
         echo "<div class='info'>   → Интересы: " . esc_html($interests_preview) . "...</div>";
     }
