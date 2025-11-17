@@ -6,6 +6,24 @@
 
 if (!defined('ABSPATH')) exit;
 
+// KILL SWITCH: Не редиректим если отключены редиректы
+if (defined('METODA_DISABLE_REDIRECTS') && METODA_DISABLE_REDIRECTS) {
+    echo '<div style="padding: 20px; background: #ffeb3b; border: 2px solid #ff9800;">';
+    echo '<h3>⚠️ Редиректы отключены (METODA_DISABLE_REDIRECTS)</h3>';
+    if (is_user_logged_in()) {
+        echo '<p>Вы авторизованы. <a href="' . admin_url() . '">Перейти в админку →</a></p>';
+    } else {
+        echo '<p>Вам нужно авторизоваться. <a href="' . wp_login_url() . '">Войти →</a></p>';
+    }
+    echo '</div>';
+    return;
+}
+
+// Не показываем в админке
+if (is_admin()) {
+    return;
+}
+
 // Проверка доступа
 if (!is_user_logged_in()) {
     wp_redirect(home_url('/login/'));

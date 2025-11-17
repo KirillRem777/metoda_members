@@ -4,8 +4,35 @@
  * Кастомная страница восстановления пароля в стиле "Метода"
  */
 
+// KILL SWITCH: Не редиректим если отключены редиректы
+if (defined('METODA_DISABLE_REDIRECTS') && METODA_DISABLE_REDIRECTS) {
+    if (is_user_logged_in()) {
+        echo '<div style="padding: 20px; background: #ffeb3b; border: 2px solid #ff9800;">';
+        echo '<h3>⚠️ Редиректы отключены (METODA_DISABLE_REDIRECTS)</h3>';
+        echo '<p>Вы уже авторизованы. <a href="' . admin_url() . '">Перейти в админку →</a></p>';
+        echo '</div>';
+        return;
+    }
+}
+
+// Не показываем в админке
+if (is_admin()) {
+    return;
+}
+
 // Если пользователь уже авторизован, редиректим
 if (is_user_logged_in()) {
+    $user = wp_get_current_user();
+
+    // Администраторы не должны редиректиться
+    if (current_user_can('administrator') || current_user_can('manage_options')) {
+        echo '<div style="padding: 20px; text-align: center;">';
+        echo '<h3>Вы уже авторизованы как администратор</h3>';
+        echo '<p><a href="' . admin_url() . '">Перейти в админку →</a></p>';
+        echo '</div>';
+        return;
+    }
+
     wp_redirect(home_url('/member-dashboard/'));
     exit;
 }
