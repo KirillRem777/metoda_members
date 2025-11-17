@@ -72,10 +72,13 @@ while (have_posts()) : the_post();
                 $line = preg_replace('/^[•\-\*\x{2022}\x{2023}\x{25E6}\x{2043}\x{2219}\x{25AA}\x{25CF}]\s*/u', '', $line);
                 $line = trim($line); // ещё раз trim после удаления буллета
 
-                echo '<!-- DEBUG LINE AFTER: [' . esc_html($line) . '] -->';
+                echo '<!-- DEBUG LINE AFTER: [' . esc_html($line) . '] LENGTH: ' . mb_strlen($line) . ' EMPTY: ' . (empty($line) ? 'YES' : 'NO') . ' -->';
 
                 if (!empty($line)) {
                     $specialization_items[] = $line;
+                    echo '<!-- DEBUG: ADDED TO ARRAY -->';
+                } else {
+                    echo '<!-- DEBUG: NOT ADDED (EMPTY) -->';
                 }
             }
         }
