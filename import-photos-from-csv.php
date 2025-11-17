@@ -123,7 +123,21 @@ foreach ($csv_data as $row) {
     // Ищем фотографии для этого участника
     $photos = array();
 
-    // 1. Пробуем найти по английскому имени из маппинга
+    // 1. ПРИОРИТЕТ: Точное совпадение русского имени (без дефиса и с дефисом)
+    // "ФИО.jpg"
+    $pattern_exact = $photos_dir . $fio . '.jpg';
+    if (file_exists($pattern_exact)) {
+        $photos[] = $pattern_exact;
+    }
+
+    // "ФИО-2.jpg", "ФИО-3.jpg" и т.д.
+    $pattern_ru_dash = $photos_dir . $fio . '-*.jpg';
+    $found_ru_dash = glob($pattern_ru_dash);
+    if ($found_ru_dash) {
+        $photos = array_merge($photos, $found_ru_dash);
+    }
+
+    // 2. Пробуем найти по английскому имени из маппинга
     if (isset($reverse_mapping[$fio])) {
         $english_name = $reverse_mapping[$fio];
         $pattern = $photos_dir . $english_name . '*.jpg';
@@ -133,26 +147,26 @@ foreach ($csv_data as $row) {
         }
     }
 
-    // 2. Пробуем найти напрямую по русскому имени
+    // 3. Пробуем найти по старому формату (цифра в конце без дефиса)
     $pattern_ru = $photos_dir . $fio . '*.jpg';
     $found_ru = glob($pattern_ru);
     if ($found_ru) {
         $photos = array_merge($photos, $found_ru);
     }
 
-    // 3. Пробуем найти по фамилии (первое слово из ФИО)
-    $name_parts = explode(' ', $fio);
-    if (count($name_parts) > 0) {
-        $lastname = mb_strtolower($name_parts[0]);
-
-        // Ищем среди английских имён
-        foreach ($reverse_mapping as $ru => $en) {
-            if (stripos($ru, $name_parts[0]) === 0) {
-                $pattern = $photos_dir . $en . '*.jpg';
-                $found = glob($pattern);
-                if ($found) {
-                    $photos = array_merge($photos, $found);
-                    break;
+    // 4. Пробуем найти по фамилии (первое слово из ФИО)
+    if (empty($photos)) {
+        $name_parts = explode(' ', $fio);
+        if (count($name_parts) > 0) {
+            // Ищем среди английских имён
+            foreach ($reverse_mapping as $ru => $en) {
+                if (stripos($ru, $name_parts[0]) === 0) {
+                    $pattern = $photos_dir . $en . '*.jpg';
+                    $found = glob($pattern);
+                    if ($found) {
+                        $photos = array_merge($photos, $found);
+                        break;
+                    }
                 }
             }
         }

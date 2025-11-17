@@ -85,25 +85,44 @@ foreach ($csv_data as $row) {
     // Ищем фотографии
     $photos = array();
 
-    // 1. Точное совпадение через маппинг
+    // 1. ПРИОРИТЕТ: Точное совпадение русского имени
+    $pattern_exact = $photos_dir . $fio . '.jpg';
+    if (file_exists($pattern_exact)) {
+        $photos[] = $pattern_exact;
+    }
+
+    // Русское имя с дефисом
+    $pattern_ru_dash = $photos_dir . $fio . '-*.jpg';
+    $found_ru_dash = glob($pattern_ru_dash);
+    if ($found_ru_dash) {
+        $photos = array_merge($photos, $found_ru_dash);
+    }
+
+    if (!empty($photos)) {
+        echo "<div class='found'>✅ $fio — " . count($photos) . " фото (РУС): " . implode(', ', array_map('basename', $photos)) . "</div>";
+        $found++;
+        continue;
+    }
+
+    // 2. Точное совпадение через маппинг (английское название)
     if (isset($reverse_mapping[$fio])) {
         $english_name = $reverse_mapping[$fio];
         $pattern = $photos_dir . $english_name . '*.jpg';
         $found_photos = glob($pattern);
         if ($found_photos) {
             $photos = $found_photos;
-            echo "<div class='found'>✅ $fio — " . count($found_photos) . " фото: " . implode(', ', array_map('basename', $found_photos)) . "</div>";
+            echo "<div class='found'>✅ $fio — " . count($found_photos) . " фото (ENG): " . implode(', ', array_map('basename', $found_photos)) . "</div>";
             $found++;
             continue;
         }
     }
 
-    // 2. Поиск по русскому имени напрямую
+    // 3. Поиск по русскому имени (старый формат без дефиса)
     $pattern_ru = $photos_dir . $fio . '*.jpg';
     $found_ru = glob($pattern_ru);
     if ($found_ru) {
         $photos = $found_ru;
-        echo "<div class='found'>✅ $fio — " . count($found_ru) . " фото: " . implode(', ', array_map('basename', $found_ru)) . "</div>";
+        echo "<div class='found'>✅ $fio — " . count($found_ru) . " фото (РУС-старый): " . implode(', ', array_map('basename', $found_ru)) . "</div>";
         $found++;
         continue;
     }
