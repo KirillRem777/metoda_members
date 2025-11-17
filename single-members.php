@@ -457,6 +457,31 @@ while (have_posts()) : the_post();
     font-style: italic;
 }
 
+.member-bullet-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.member-bullet-list li {
+    position: relative;
+    padding-left: 28px;
+    margin-bottom: 12px;
+    font-size: 16px;
+    line-height: 1.6;
+    color: #444;
+}
+
+.member-bullet-list li::before {
+    content: "•";
+    position: absolute;
+    left: 0;
+    color: #667eea;
+    font-size: 24px;
+    line-height: 1.3;
+    font-weight: bold;
+}
+
 .sidebar-widget {
     background: white;
     padding: 30px;
