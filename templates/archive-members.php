@@ -17,82 +17,140 @@ $city_filter = isset($_GET['city']) ? sanitize_text_field($_GET['city']) : '';
 $role_filter = isset($_GET['role']) ? sanitize_text_field($_GET['role']) : '';
 $type_filter = isset($_GET['member_type']) ? sanitize_text_field($_GET['member_type']) : '';
 
-// Формируем базовый запрос
-$args = array(
-    'post_type' => 'members',
-    'posts_per_page' => 12,
-    'paged' => $paged,
-);
+// Если нет фильтра по типу - делаем два отдельных запроса и объединяем
+$all_members = array();
+$total_found = 0;
 
-// Добавляем поиск
-if (!empty($search)) {
-    $args['s'] = $search;
-}
-
-// Добавляем фильтр по городу
-if (!empty($city_filter)) {
-    $args['meta_query'][] = array(
-        'key' => 'member_city',
-        'value' => $city_filter,
-        'compare' => 'LIKE'
+if (empty($type_filter)) {
+    // Запрос для экспертов
+    $experts_args = array(
+        'post_type' => 'members',
+        'posts_per_page' => -1,
+        'orderby' => 'title',
+        'order' => 'ASC',
+        'tax_query' => array(
+            array(
+                'taxonomy' => 'member_type',
+                'field' => 'slug',
+                'terms' => 'ekspert'
+            )
+        )
     );
-}
 
-// Добавляем фильтр по типу (Эксперт/Участник)
-if (!empty($type_filter)) {
-    if (!isset($args['tax_query'])) {
-        $args['tax_query'] = array();
+    // Добавляем поиск
+    if (!empty($search)) {
+        $experts_args['s'] = $search;
     }
-    $args['tax_query'][] = array(
-        'taxonomy' => 'member_type',
-        'field' => 'slug',
-        'terms' => $type_filter
+
+    // Добавляем фильтр по городу
+    if (!empty($city_filter)) {
+        $experts_args['meta_query'][] = array(
+            'key' => 'member_city',
+            'value' => $city_filter,
+            'compare' => 'LIKE'
+        );
+    }
+
+    // Добавляем фильтр по роли
+    if (!empty($role_filter)) {
+        $experts_args['tax_query'][] = array(
+            'taxonomy' => 'member_role',
+            'field' => 'slug',
+            'terms' => $role_filter
+        );
+    }
+
+    $experts_query = new WP_Query($experts_args);
+
+    // Запрос для участников
+    $members_args = array(
+        'post_type' => 'members',
+        'posts_per_page' => -1,
+        'orderby' => 'title',
+        'order' => 'ASC',
+        'tax_query' => array(
+            array(
+                'taxonomy' => 'member_type',
+                'field' => 'slug',
+                'terms' => 'uchastnik'
+            )
+        )
     );
-}
 
-// Добавляем фильтр по роли
-if (!empty($role_filter)) {
-    if (!isset($args['tax_query'])) {
-        $args['tax_query'] = array();
+    // Добавляем те же фильтры
+    if (!empty($search)) {
+        $members_args['s'] = $search;
     }
-    $args['tax_query'][] = array(
-        'taxonomy' => 'member_role',
-        'field' => 'slug',
-        'terms' => $role_filter
+    if (!empty($city_filter)) {
+        $members_args['meta_query'][] = array(
+            'key' => 'member_city',
+            'value' => $city_filter,
+            'compare' => 'LIKE'
+        );
+    }
+    if (!empty($role_filter)) {
+        $members_args['tax_query'][] = array(
+            'taxonomy' => 'member_role',
+            'field' => 'slug',
+            'terms' => $role_filter
+        );
+    }
+
+    $members_query_temp = new WP_Query($members_args);
+
+    // Объединяем результаты
+    $all_members = array_merge($experts_query->posts, $members_query_temp->posts);
+    $total_found = count($all_members);
+
+    // Пагинация вручную
+    $posts_per_page = 12;
+    $offset = ($paged - 1) * $posts_per_page;
+    $paged_members = array_slice($all_members, $offset, $posts_per_page);
+
+} else {
+    // Если выбран конкретный тип - обычный запрос
+    $args = array(
+        'post_type' => 'members',
+        'posts_per_page' => 12,
+        'paged' => $paged,
+        'orderby' => 'title',
+        'order' => 'ASC'
     );
-}
 
-// Сортировка: сначала эксперты по алфавиту, потом участники по алфавиту
-$args['orderby'] = array(
-    'meta_value' => 'DESC',  // Эксперты первые
-    'title' => 'ASC'         // Внутри каждой группы - по алфавиту
-);
-$args['meta_key'] = '_member_type_sort';
-
-// Добавляем мета-запрос для определения сортировки
-add_action('pre_get_posts', function($query) {
-    if (!is_admin() && $query->is_post_type_archive('members') && $query->is_main_query()) {
-        // Устанавливаем временное мета-поле для сортировки при выборке
-        add_filter('posts_clauses', function($clauses, $wp_query) {
-            global $wpdb;
-
-            // Добавляем LEFT JOIN для таксономии member_type
-            $clauses['join'] .= " LEFT JOIN {$wpdb->term_relationships} AS tr_type ON ({$wpdb->posts}.ID = tr_type.object_id)";
-            $clauses['join'] .= " LEFT JOIN {$wpdb->term_taxonomy} AS tt_type ON (tr_type.term_taxonomy_id = tt_type.term_taxonomy_id AND tt_type.taxonomy = 'member_type')";
-            $clauses['join'] .= " LEFT JOIN {$wpdb->terms} AS t_type ON (tt_type.term_id = t_type.term_id)";
-
-            // Сортируем: эксперты (slug=ekspert) первые, затем по title
-            $clauses['orderby'] = "CASE WHEN t_type.slug = 'ekspert' THEN 0 ELSE 1 END ASC, {$wpdb->posts}.post_title ASC";
-
-            // Группировка чтобы избежать дублей
-            $clauses['groupby'] = "{$wpdb->posts}.ID";
-
-            return $clauses;
-        }, 10, 2);
+    if (!empty($search)) {
+        $args['s'] = $search;
     }
-}, 1);
 
-$members_query = new WP_Query($args);
+    if (!empty($city_filter)) {
+        $args['meta_query'][] = array(
+            'key' => 'member_city',
+            'value' => $city_filter,
+            'compare' => 'LIKE'
+        );
+    }
+
+    $args['tax_query'] = array();
+
+    if (!empty($type_filter)) {
+        $args['tax_query'][] = array(
+            'taxonomy' => 'member_type',
+            'field' => 'slug',
+            'terms' => $type_filter
+        );
+    }
+
+    if (!empty($role_filter)) {
+        $args['tax_query'][] = array(
+            'taxonomy' => 'member_role',
+            'field' => 'slug',
+            'terms' => $role_filter
+        );
+    }
+
+    $members_query = new WP_Query($args);
+    $paged_members = $members_query->posts;
+    $total_found = $members_query->found_posts;
+}
 
 // Получаем все города для фильтра
 global $wpdb;
@@ -109,6 +167,10 @@ $roles = get_terms(array(
     'taxonomy' => 'member_role',
     'hide_empty' => true
 ));
+
+// Вычисляем количество страниц для пагинации
+$posts_per_page = 12;
+$max_num_pages = ceil($total_found / $posts_per_page);
 ?>
 
 <!DOCTYPE html>
@@ -127,40 +189,86 @@ $roles = get_terms(array(
         .metoda-accent-bg { background-color: <?php echo $accent_color; ?>; }
 
         /* Прописываем все состояния элементов */
-        a { transition: all 0.2s ease; }
+        a {
+            transition: all 0.2s ease;
+            text-decoration: none !important;
+            border: none !important;
+            outline: none !important;
+        }
         a:hover { opacity: 0.9; }
         a:active { transform: scale(0.98); }
 
-        button { transition: all 0.2s ease; }
+        button {
+            transition: all 0.2s ease;
+            border: none !important;
+            outline: none !important;
+        }
         button:hover { opacity: 0.9; }
         button:active { transform: scale(0.98); }
-        button:focus { outline: 2px solid <?php echo $primary_color; ?>; outline-offset: 2px; }
+        button:focus {
+            outline: 2px solid <?php echo $primary_color; ?> !important;
+            outline-offset: 2px;
+            border: none !important;
+        }
 
-        input, select { transition: all 0.2s ease; }
-        input:focus, select:focus { ring: 2px; ring-color: <?php echo $primary_color; ?>; border-color: <?php echo $primary_color; ?>; }
-        input:hover, select:hover { border-color: #9ca3af; }
+        input, select {
+            transition: all 0.2s ease;
+            border-color: #d1d5db !important;
+        }
+        input:focus, select:focus {
+            ring: 2px;
+            ring-color: <?php echo $primary_color; ?>;
+            border-color: <?php echo $primary_color; ?> !important;
+            outline: none !important;
+        }
+        input:hover, select:hover { border-color: #9ca3af !important; }
 
         .member-card { transition: all 0.3s ease; }
         .member-card:hover { transform: translateY(-4px); box-shadow: 0 12px 24px rgba(0,0,0,0.15); }
 
+        /* Кнопки фильтра - серые неактивные */
+        .filter-radio-label {
+            border: 1px solid #e5e7eb !important;
+        }
+        .filter-radio-label:hover {
+            background-color: #f3f4f6 !important;
+            border-color: #d1d5db !important;
+        }
+
         /* Пагинация */
-        .pagination { display: flex; justify-content: center; align-items: center; gap: 0.5rem; margin-top: 2rem; }
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 0.5rem;
+            margin-top: 2rem;
+        }
         .pagination li { display: inline-block; }
         .pagination a, .pagination span {
             display: inline-flex;
             align-items: center;
-            justify-center;
+            justify-content: center;
             min-width: 40px;
             height: 40px;
             padding: 0 12px;
-            border: 1px solid #e5e7eb;
+            border: 1px solid #e5e7eb !important;
             border-radius: 0.5rem;
             font-weight: 500;
             transition: all 0.2s ease;
+            color: #374151 !important;
+            background-color: white !important;
         }
-        .pagination a:hover { background-color: <?php echo $primary_color; ?>; color: white; border-color: <?php echo $primary_color; ?>; }
-        .pagination .current { background-color: <?php echo $primary_color; ?>; color: white; border-color: <?php echo $primary_color; ?>; }
-        .pagination .prev, .pagination .next { background-color: #f9fafb; }
+        .pagination a:hover {
+            background-color: <?php echo $primary_color; ?> !important;
+            color: white !important;
+            border-color: <?php echo $primary_color; ?> !important;
+        }
+        .pagination .current {
+            background-color: <?php echo $primary_color; ?> !important;
+            color: white !important;
+            border-color: <?php echo $primary_color; ?> !important;
+        }
+        .pagination .prev, .pagination .next { background-color: #f9fafb !important; }
     </style>
     <script>
         tailwind.config = {
@@ -206,15 +314,15 @@ $roles = get_terms(array(
                 <form method="get" action="<?php echo esc_url(get_post_type_archive_link('members')); ?>" class="bg-white rounded-xl shadow-sm border p-6 sticky top-24">
                     <div class="flex items-center justify-between mb-6">
                         <h2 class="text-lg font-semibold text-gray-900">Фильтры</h2>
-                        <a href="<?php echo get_post_type_archive_link('members'); ?>" class="text-sm metoda-primary hover:underline font-medium">Сбросить</a>
+                        <a href="<?php echo get_post_type_archive_link('members'); ?>" class="text-sm metoda-primary hover:underline font-medium" style="border: none !important;">Сбросить</a>
                     </div>
 
                     <!-- Search -->
                     <div class="mb-6">
                         <label class="block text-sm font-medium text-gray-700 mb-2">Поиск</label>
                         <div class="relative">
-                            <input type="text" name="s" value="<?php echo esc_attr($search); ?>" placeholder="Поиск по имени..." class="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-all">
-                            <i class="fas fa-search absolute left-3 top-3.5 text-gray-400"></i>
+                            <input type="text" name="s" value="<?php echo esc_attr($search); ?>" placeholder="Поиск по имени..." class="w-full pl-11 pr-4 py-2.5 border border-gray-300 rounded-lg" style="padding-left: 2.75rem !important;">
+                            <i class="fas fa-search absolute left-4 top-3.5 text-gray-400"></i>
                         </div>
                     </div>
 
@@ -222,21 +330,21 @@ $roles = get_terms(array(
                     <div class="mb-6">
                         <label class="block text-sm font-medium text-gray-700 mb-3">Тип</label>
                         <div class="flex gap-2">
-                            <label class="flex-1">
+                            <label class="flex-1 filter-radio-label">
                                 <input type="radio" name="member_type" value="" <?php checked($type_filter, ''); ?> class="sr-only peer" onchange="this.form.submit()">
-                                <div class="px-4 py-2 text-center rounded-lg font-medium text-sm cursor-pointer transition-all peer-checked:metoda-primary-bg peer-checked:text-white bg-gray-100 text-gray-700 hover:bg-gray-200">
+                                <div class="px-4 py-2 text-center rounded-lg font-medium text-sm cursor-pointer transition-all peer-checked:metoda-primary-bg peer-checked:text-white peer-checked:border-<?php echo $primary_color; ?> text-gray-700 bg-gray-100 hover:bg-gray-200" style="border: 1px solid #e5e7eb !important;">
                                     Все
                                 </div>
                             </label>
-                            <label class="flex-1">
+                            <label class="flex-1 filter-radio-label">
                                 <input type="radio" name="member_type" value="uchastnik" <?php checked($type_filter, 'uchastnik'); ?> class="sr-only peer" onchange="this.form.submit()">
-                                <div class="px-4 py-2 text-center rounded-lg font-medium text-sm cursor-pointer transition-all peer-checked:bg-green-600 peer-checked:text-white bg-gray-100 text-gray-700 hover:bg-gray-200">
+                                <div class="px-4 py-2 text-center rounded-lg font-medium text-sm cursor-pointer transition-all peer-checked:bg-green-600 peer-checked:text-white peer-checked:border-green-600 text-gray-700 bg-gray-100 hover:bg-gray-200" style="border: 1px solid #e5e7eb !important;">
                                     Участники
                                 </div>
                             </label>
-                            <label class="flex-1">
+                            <label class="flex-1 filter-radio-label">
                                 <input type="radio" name="member_type" value="ekspert" <?php checked($type_filter, 'ekspert'); ?> class="sr-only peer" onchange="this.form.submit()">
-                                <div class="px-4 py-2 text-center rounded-lg font-medium text-sm cursor-pointer transition-all peer-checked:metoda-primary-bg peer-checked:text-white bg-gray-100 text-gray-700 hover:bg-gray-200">
+                                <div class="px-4 py-2 text-center rounded-lg font-medium text-sm cursor-pointer transition-all peer-checked:metoda-primary-bg peer-checked:text-white peer-checked:border-<?php echo $primary_color; ?> text-gray-700 bg-gray-100 hover:bg-gray-200" style="border: 1px solid #e5e7eb !important;">
                                     Эксперты
                                 </div>
                             </label>
@@ -277,7 +385,7 @@ $roles = get_terms(array(
                     <?php if (!empty($cities)): ?>
                     <div class="mb-6">
                         <label class="block text-sm font-medium text-gray-700 mb-2">Город</label>
-                        <select name="city" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-all">
+                        <select name="city" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg">
                             <option value="">Все города...</option>
                             <?php foreach ($cities as $city): ?>
                                 <option value="<?php echo esc_attr($city); ?>" <?php selected($city_filter, $city); ?>>
@@ -292,7 +400,7 @@ $roles = get_terms(array(
                     <?php if (!empty($roles) && !is_wp_error($roles)): ?>
                     <div class="mb-6">
                         <label class="block text-sm font-medium text-gray-700 mb-2">Роль в ассоциации</label>
-                        <select name="role" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-all">
+                        <select name="role" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg">
                             <option value="">Все роли...</option>
                             <?php foreach ($roles as $role): ?>
                                 <option value="<?php echo esc_attr($role->slug); ?>" <?php selected($role_filter, $role->slug); ?>>
@@ -303,7 +411,7 @@ $roles = get_terms(array(
                     </div>
                     <?php endif; ?>
 
-                    <button type="submit" class="w-full metoda-primary-bg text-white py-2.5 rounded-lg hover:opacity-90 font-medium transition-all focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2">
+                    <button type="submit" class="w-full metoda-primary-bg text-white py-2.5 rounded-lg hover:opacity-90 font-medium transition-all" style="border: none !important; outline: none !important;">
                         Применить фильтры
                     </button>
                 </form>
@@ -312,13 +420,14 @@ $roles = get_terms(array(
             <!-- Members Grid -->
             <section class="flex-1">
                 <div class="mb-6 flex items-center justify-between">
-                    <p class="text-gray-600">Показано <span class="font-semibold text-gray-900"><?php echo $members_query->found_posts; ?></span> участников</p>
+                    <p class="text-gray-600">Показано <span class="font-semibold text-gray-900"><?php echo $total_found; ?></span> участников</p>
                 </div>
 
-                <?php if ($members_query->have_posts()): ?>
+                <?php if (!empty($paged_members)): ?>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <?php while ($members_query->have_posts()): $members_query->the_post();
-                        $member_id = get_the_ID();
+                    <?php foreach ($paged_members as $post):
+                        setup_postdata($post);
+                        $member_id = $post->ID;
                         $position = get_post_meta($member_id, 'member_position', true);
                         $company = get_post_meta($member_id, 'member_company', true);
                         $city = get_post_meta($member_id, 'member_city', true);
@@ -337,7 +446,7 @@ $roles = get_terms(array(
                         }
 
                         // Обработка имени: только Имя Фамилия (без отчества)
-                        $full_name = get_the_title();
+                        $full_name = get_the_title($post);
                         $name_parts = explode(' ', $full_name);
                         $short_name = '';
                         if (count($name_parts) >= 2) {
@@ -348,10 +457,10 @@ $roles = get_terms(array(
                         }
                     ?>
                     <article class="member-card bg-white rounded-xl shadow-sm border p-6">
-                        <a href="<?php the_permalink(); ?>" class="flex items-start gap-4">
+                        <a href="<?php echo get_permalink($post); ?>" class="flex items-start gap-4" style="border: none !important;">
                             <div class="w-20 h-20 rounded-full overflow-hidden bg-gray-100 flex-shrink-0">
-                                <?php if (has_post_thumbnail()): ?>
-                                    <?php the_post_thumbnail('thumbnail', array('class' => 'w-full h-full object-cover object-top')); ?>
+                                <?php if (has_post_thumbnail($post)): ?>
+                                    <?php echo get_the_post_thumbnail($post, 'thumbnail', array('class' => 'w-full h-full object-cover object-top')); ?>
                                 <?php else: ?>
                                     <div class="w-full h-full flex items-center justify-center text-2xl font-bold text-gray-300">
                                         <?php echo mb_substr($short_name, 0, 1); ?>
@@ -400,18 +509,18 @@ $roles = get_terms(array(
                             </div>
                         </a>
                     </article>
-                    <?php endwhile; ?>
+                    <?php endforeach; wp_reset_postdata(); ?>
                 </div>
 
                 <!-- Pagination -->
-                <?php if ($members_query->max_num_pages > 1): ?>
+                <?php if ($max_num_pages > 1): ?>
                 <nav class="pagination">
                     <?php
                     echo paginate_links(array(
                         'base' => str_replace(999999999, '%#%', esc_url(get_pagenum_link(999999999))),
                         'format' => '?paged=%#%',
                         'current' => max(1, $paged),
-                        'total' => $members_query->max_num_pages,
+                        'total' => $max_num_pages,
                         'prev_text' => '<i class="fas fa-chevron-left"></i>',
                         'next_text' => '<i class="fas fa-chevron-right"></i>',
                         'type' => 'list',
@@ -427,13 +536,11 @@ $roles = get_terms(array(
                     <i class="fas fa-search text-6xl text-gray-300 mb-4"></i>
                     <h3 class="text-xl font-semibold text-gray-900 mb-2">Участники не найдены</h3>
                     <p class="text-gray-600 mb-4">Попробуйте изменить фильтры или поисковый запрос</p>
-                    <a href="<?php echo get_post_type_archive_link('members'); ?>" class="inline-block metoda-primary-bg text-white px-6 py-2.5 rounded-lg hover:opacity-90 font-medium transition-all">
+                    <a href="<?php echo get_post_type_archive_link('members'); ?>" class="inline-block metoda-primary-bg text-white px-6 py-2.5 rounded-lg hover:opacity-90 font-medium transition-all" style="border: none !important;">
                         Сбросить фильтры
                     </a>
                 </div>
                 <?php endif; ?>
-
-                <?php wp_reset_postdata(); ?>
             </section>
         </div>
     </main>
