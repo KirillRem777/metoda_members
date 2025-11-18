@@ -70,7 +70,7 @@ if ($total_materials > 0):
 
         <!-- Благодарности -->
         <?php if (count($gratitudes_data) > 0): ?>
-        <div class="material-content" data-content="gratitudes" style="display: none;">
+        <div class="material-content" data-content="gratitudes">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <?php foreach ($gratitudes_data as $item): ?>
                     <?php include plugin_dir_path(__DIR__) . 'templates/material-card.php'; ?>
@@ -81,7 +81,7 @@ if ($total_materials > 0):
 
         <!-- Интервью -->
         <?php if (count($interviews_data) > 0): ?>
-        <div class="material-content" data-content="interviews" style="display: none;">
+        <div class="material-content" data-content="interviews">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <?php foreach ($interviews_data as $item): ?>
                     <?php include plugin_dir_path(__DIR__) . 'templates/material-card.php'; ?>
@@ -92,7 +92,7 @@ if ($total_materials > 0):
 
         <!-- Видео -->
         <?php if (count($videos_data) > 0): ?>
-        <div class="material-content" data-content="videos" style="display: none;">
+        <div class="material-content" data-content="videos">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <?php foreach ($videos_data as $item): ?>
                     <?php include plugin_dir_path(__DIR__) . 'templates/material-card.php'; ?>
@@ -103,7 +103,7 @@ if ($total_materials > 0):
 
         <!-- Рецензии -->
         <?php if (count($reviews_data) > 0): ?>
-        <div class="material-content" data-content="reviews" style="display: none;">
+        <div class="material-content" data-content="reviews">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <?php foreach ($reviews_data as $item): ?>
                     <?php include plugin_dir_path(__DIR__) . 'templates/material-card.php'; ?>
@@ -114,7 +114,7 @@ if ($total_materials > 0):
 
         <!-- Разработки -->
         <?php if (count($developments_data) > 0): ?>
-        <div class="material-content" data-content="developments" style="display: none;">
+        <div class="material-content" data-content="developments">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <?php foreach ($developments_data as $item): ?>
                     <?php include plugin_dir_path(__DIR__) . 'templates/material-card.php'; ?>
@@ -153,6 +153,15 @@ if ($total_materials > 0):
         outline: 2px solid <?php echo $primary_color; ?>;
         outline-offset: 2px;
     }
+
+    /* Content visibility */
+    .material-content {
+        display: none;
+    }
+
+    .material-content.active {
+        display: block;
+    }
 </style>
 
 <script>
@@ -172,8 +181,8 @@ if ($total_materials > 0):
             $(this).addClass('active');
 
             // Show corresponding content
-            $('.material-content').hide();
-            $('.material-content[data-content="' + tab + '"]').fadeIn(300);
+            $('.material-content').removeClass('active');
+            $('.material-content[data-content="' + tab + '"]').addClass('active');
         });
     });
 })(jQuery);
