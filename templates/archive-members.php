@@ -221,13 +221,17 @@ $roles = get_terms(array(
         .member-card { transition: all 0.3s ease; }
         .member-card:hover { transform: translateY(-4px); box-shadow: 0 12px 24px rgba(0,0,0,0.15); }
 
-        /* Кнопки фильтра - серые неактивные */
+        /* Кнопки фильтра - без border */
         .filter-radio-label {
-            border: 1px solid #e5e7eb !important;
+            border: none !important;
         }
-        .filter-radio-label:hover {
-            background-color: #f3f4f6 !important;
-            border-color: #d1d5db !important;
+
+        /* Селекты - увеличиваем padding справа для стрелки */
+        select {
+            padding-right: 2.5rem !important;
+            background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L6 6L11 1' stroke='%236b7280' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 0.75rem center;
         }
 
         /* Loader animation */
@@ -323,19 +327,19 @@ $roles = get_terms(array(
                         <div class="flex gap-2">
                             <label class="flex-1 filter-radio-label">
                                 <input type="radio" name="member_type" value="" <?php checked($type_filter, ''); ?> class="sr-only peer filter-radio">
-                                <div class="px-4 py-2 text-center rounded-lg font-medium text-sm cursor-pointer transition-all peer-checked:metoda-primary-bg peer-checked:text-white peer-checked:border-<?php echo $primary_color; ?> text-gray-700 bg-gray-100 hover:bg-gray-200" style="border: 1px solid #e5e7eb !important;">
+                                <div class="px-2 py-2 text-center rounded-lg font-medium text-xs cursor-pointer transition-all peer-checked:metoda-primary-bg peer-checked:text-white text-gray-600 bg-gray-100 hover:bg-gray-200">
                                     Все
                                 </div>
                             </label>
                             <label class="flex-1 filter-radio-label">
                                 <input type="radio" name="member_type" value="uchastnik" <?php checked($type_filter, 'uchastnik'); ?> class="sr-only peer filter-radio">
-                                <div class="px-4 py-2 text-center rounded-lg font-medium text-sm cursor-pointer transition-all peer-checked:bg-green-600 peer-checked:text-white peer-checked:border-green-600 text-gray-700 bg-gray-100 hover:bg-gray-200" style="border: 1px solid #e5e7eb !important;">
+                                <div class="px-2 py-2 text-center rounded-lg font-medium text-xs cursor-pointer transition-all peer-checked:metoda-primary-bg peer-checked:text-white text-gray-600 bg-gray-100 hover:bg-gray-200">
                                     Участники
                                 </div>
                             </label>
                             <label class="flex-1 filter-radio-label">
                                 <input type="radio" name="member_type" value="ekspert" <?php checked($type_filter, 'ekspert'); ?> class="sr-only peer filter-radio">
-                                <div class="px-4 py-2 text-center rounded-lg font-medium text-sm cursor-pointer transition-all peer-checked:metoda-primary-bg peer-checked:text-white peer-checked:border-<?php echo $primary_color; ?> text-gray-700 bg-gray-100 hover:bg-gray-200" style="border: 1px solid #e5e7eb !important;">
+                                <div class="px-2 py-2 text-center rounded-lg font-medium text-xs cursor-pointer transition-all peer-checked:metoda-primary-bg peer-checked:text-white text-gray-600 bg-gray-100 hover:bg-gray-200">
                                     Эксперты
                                 </div>
                             </label>
@@ -396,7 +400,7 @@ $roles = get_terms(array(
                 <!-- Load More Button -->
                 <?php if ($total_found > count($paged_members)): ?>
                 <div class="mt-8 text-center">
-                    <button id="load-more-btn" data-offset="<?php echo $posts_per_page; ?>" data-total="<?php echo $total_found; ?>" class="metoda-primary-bg text-white px-8 py-3 rounded-lg hover:opacity-90 font-medium transition-all inline-flex items-center gap-2" style="border: none !important; outline: none !important;">
+                    <button id="load-more-btn" data-offset="<?php echo $posts_per_page; ?>" data-total="<?php echo $total_found; ?>" class="metoda-primary-bg text-white px-8 py-3 rounded-lg font-medium transition-all inline-flex items-center gap-2" style="border: none !important; outline: none !important; background-color: <?php echo $primary_color; ?> !important;">
                         <span>Показать еще</span>
                         <i class="fas fa-chevron-down"></i>
                     </button>

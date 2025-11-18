@@ -190,18 +190,6 @@ while (have_posts()) : the_post();
                     <h1 class="text-xl font-semibold text-gray-900">Профиль участника</h1>
                 </div>
                 <div class="flex items-center space-x-3">
-                    <?php if (get_current_user_id() != get_the_author_meta('ID')): ?>
-                    <button onclick="openMessageModal(<?php echo $member_id; ?>, '<?php echo esc_js(get_the_title()); ?>')" class="metoda-primary-bg text-white px-4 py-2 rounded-lg hover:opacity-90 transition-opacity">
-                        <i class="fa-solid fa-paper-plane mr-2"></i>
-                        Написать сообщение
-                    </button>
-                    <?php endif; ?>
-                    <?php if ($email): ?>
-                    <a href="mailto:<?php echo esc_attr($email); ?>" class="border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors">
-                        <i class="fa-solid fa-envelope mr-2"></i>
-                        Email
-                    </a>
-                    <?php endif; ?>
                     <button onclick="window.print()" class="text-gray-600 hover:text-primary transition-colors">
                         <i class="fa-solid fa-print text-lg"></i>
                     </button>
@@ -324,7 +312,7 @@ while (have_posts()) : the_post();
                 <?php if ($bio): ?>
                 <div class="bg-white rounded-xl shadow-sm border p-4 md:p-8">
                     <h3 class="text-xl md:text-2xl font-bold text-gray-900 mb-6">О себе</h3>
-                    <div class="member-content prose prose-gray max-w-none text-gray-700">
+                    <div class="text-gray-700" style="line-height: 1.7;">
                         <?php echo wpautop($bio); ?>
                     </div>
                 </div>
@@ -334,7 +322,7 @@ while (have_posts()) : the_post();
                 <?php if ($expectations): ?>
                 <div class="bg-white rounded-xl shadow-sm border p-4 md:p-8">
                     <h3 class="text-xl md:text-2xl font-bold text-gray-900 mb-6">Ожидания от сотрудничества</h3>
-                    <div class="member-content prose prose-gray max-w-none text-gray-700">
+                    <div class="text-gray-700" style="line-height: 1.7;">
                         <?php echo wpautop($expectations); ?>
                     </div>
                 </div>
@@ -385,10 +373,9 @@ while (have_posts()) : the_post();
                 <div class="sticky top-24 space-y-6">
 
                     <!-- Contact Card -->
-                    <?php if ($email || $phone || $linkedin || $website): ?>
                     <div class="bg-white rounded-xl shadow-sm border p-6">
                         <h4 class="text-lg font-semibold text-gray-900 mb-4">Контактная информация</h4>
-                        <div class="space-y-3">
+                        <div class="space-y-3 mb-4">
                             <?php if ($email): ?>
                             <a href="mailto:<?php echo esc_attr($email); ?>" class="flex items-center text-gray-600 hover:text-primary transition-colors">
                                 <i class="fa-solid fa-envelope metoda-primary mr-3"></i>
@@ -417,19 +404,18 @@ while (have_posts()) : the_post();
                             </a>
                             <?php endif; ?>
                         </div>
+
+                        <?php if (get_current_user_id() != get_the_author_meta('ID')): ?>
+                        <button onclick="openMessageModal(<?php echo $member_id; ?>, '<?php echo esc_js(get_the_title()); ?>')" class="w-full metoda-primary-bg text-white text-center py-3 px-4 rounded-lg hover:opacity-90 transition-opacity font-medium">
+                            <i class="fa-solid fa-paper-plane mr-2"></i>
+                            Отправить сообщение
+                        </button>
+                        <?php endif; ?>
                     </div>
-                    <?php endif; ?>
 
                     <!-- Actions Card -->
                     <div class="bg-white rounded-xl shadow-sm border p-6">
                         <div class="space-y-3">
-                            <?php if ($email): ?>
-                            <a href="mailto:<?php echo esc_attr($email); ?>" class="block w-full metoda-primary-bg text-white text-center py-3 px-4 rounded-lg hover:opacity-90 transition-opacity font-medium">
-                                <i class="fa-solid fa-envelope mr-2"></i>
-                                Отправить сообщение
-                            </a>
-                            <?php endif; ?>
-
                             <a href="<?php echo get_post_type_archive_link('members'); ?>" class="block w-full border border-gray-300 text-gray-700 text-center py-3 px-4 rounded-lg hover:bg-gray-50 transition-colors font-medium">
                                 <i class="fa-solid fa-arrow-left mr-2"></i>
                                 К списку участников

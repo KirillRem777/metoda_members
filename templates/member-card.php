@@ -64,11 +64,11 @@ if (count($name_parts) >= 2) {
             <h3 class="text-lg font-semibold text-gray-900 mb-1 truncate"><?php echo esc_html($short_name); ?></h3>
 
             <?php if ($position): ?>
-            <p class="text-xs text-gray-600 mb-1 line-clamp-2"><?php echo esc_html($position); ?></p>
+            <p class="text-xs text-gray-600 mb-1"><?php echo esc_html($position); ?></p>
             <?php endif; ?>
 
             <?php if ($company): ?>
-            <p class="text-xs font-medium text-gray-500 mb-3 line-clamp-1"><?php echo esc_html($company); ?></p>
+            <p class="text-xs font-medium text-gray-500 mb-3"><?php echo esc_html($company); ?></p>
             <?php endif; ?>
 
             <?php if ($city): ?>

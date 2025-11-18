@@ -156,20 +156,27 @@ if ($total_materials > 0):
 </style>
 
 <script>
-jQuery(document).ready(function($) {
-    // Tab switching
-    $('.material-tab').on('click', function() {
-        var tab = $(this).data('tab');
+(function($) {
+    if (typeof $ === 'undefined') {
+        $ = jQuery;
+    }
 
-        // Update active tab
-        $('.material-tab').removeClass('active');
-        $(this).addClass('active');
+    $(document).ready(function() {
+        // Tab switching
+        $('.material-tab').on('click', function(e) {
+            e.preventDefault();
+            var tab = $(this).data('tab');
 
-        // Show corresponding content
-        $('.material-content').hide();
-        $('.material-content[data-content="' + tab + '"]').fadeIn(300);
+            // Update active tab
+            $('.material-tab').removeClass('active');
+            $(this).addClass('active');
+
+            // Show corresponding content
+            $('.material-content').hide();
+            $('.material-content[data-content="' + tab + '"]').fadeIn(300);
+        });
     });
-});
+})(jQuery);
 </script>
 
 <?php endif; ?>
