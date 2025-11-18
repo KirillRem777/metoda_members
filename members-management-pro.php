@@ -13,6 +13,11 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
+// Определяем константу пути к плагину для использования в шаблонах
+if (!defined('METODA_PLUGIN_DIR')) {
+    define('METODA_PLUGIN_DIR', plugin_dir_path(__FILE__));
+}
+
 // 🔴 ЯДЕРНАЯ КНОПКА: Полное отключение плагина
 // Добавь в wp-config.php: define('METODA_DISABLE_PLUGIN', true);
 if (defined('METODA_DISABLE_PLUGIN') && METODA_DISABLE_PLUGIN) {

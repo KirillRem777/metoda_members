@@ -376,7 +376,7 @@ while (have_posts()) : the_post();
 
                 <!-- Portfolio & Achievements Section -->
                 <?php if ($total_materials > 0): ?>
-                    <?php include(plugin_dir_path(__FILE__) . 'templates/materials-section.php'); ?>
+                    <?php include(METODA_PLUGIN_DIR . 'templates/materials-section.php'); ?>
                 <?php endif; ?>
             </div>
 
