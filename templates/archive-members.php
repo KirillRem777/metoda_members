@@ -474,7 +474,18 @@ $roles = get_terms(array(
 
                         $btn.find('span').text('Показать еще');
                         $btn.find('i').removeClass('fa-spinner fa-spin').addClass('fa-chevron-down');
+                    } else {
+                        console.error('Load more failed:', response);
+                        alert('Ошибка загрузки данных');
+                        $btn.find('span').text('Показать еще');
+                        $btn.find('i').removeClass('fa-spinner fa-spin').addClass('fa-chevron-down');
                     }
+                },
+                error: function(xhr, status, error) {
+                    console.error('AJAX error:', status, error);
+                    alert('Ошибка соединения с сервером');
+                    $btn.find('span').text('Показать еще');
+                    $btn.find('i').removeClass('fa-spinner fa-spin').addClass('fa-chevron-down');
                 },
                 complete: function() {
                     isLoading = false;
@@ -539,7 +550,16 @@ $roles = get_terms(array(
                         }
 
                         $grid.css('opacity', '1');
+                    } else {
+                        console.error('Filter failed:', response);
+                        $grid.html('<div class="text-center text-red-600 p-8">Ошибка загрузки данных</div>');
+                        $grid.css('opacity', '1');
                     }
+                },
+                error: function(xhr, status, error) {
+                    console.error('AJAX error:', status, error);
+                    $grid.html('<div class="text-center text-red-600 p-8">Ошибка соединения с сервером</div>');
+                    $grid.css('opacity', '1');
                 },
                 complete: function() {
                     isLoading = false;

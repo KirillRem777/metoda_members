@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Metoda Community MGMT
  * Description: Полнофункциональная система управления участниками и экспертами сообщества. Включает: регистрацию с валидацией, систему кодов доступа для импортированных участников, личные кабинеты с онбордингом, управление материалами с WYSIWYG-редактором, форум в стиле Reddit с категориями и лайками, настраиваемые email-шаблоны, CSV-импорт, кроппер фото, систему ролей и прав доступа, поиск и фильтрацию участников.
- * Version: 3.2.9
+ * Version: 3.3.0
  * Author: Kirill Rem
  * Text Domain: metoda-community-mgmt
  * Domain Path: /languages
@@ -3182,11 +3182,11 @@ add_action('wp_ajax_member_delete_material', 'member_delete_material_ajax');
  * AJAX обработчик для загрузки дополнительных участников (Load More)
  */
 function load_more_members_ajax() {
-    $offset = intval($_POST['offset']);
-    $search = sanitize_text_field($_POST['search']);
-    $city = sanitize_text_field($_POST['city']);
-    $role = sanitize_text_field($_POST['role']);
-    $type_filter = sanitize_text_field($_POST['member_type']);
+    $offset = isset($_POST['offset']) ? intval($_POST['offset']) : 0;
+    $search = isset($_POST['search']) ? sanitize_text_field($_POST['search']) : '';
+    $city = isset($_POST['city']) ? sanitize_text_field($_POST['city']) : '';
+    $role = isset($_POST['role']) ? sanitize_text_field($_POST['role']) : '';
+    $type_filter = isset($_POST['member_type']) ? sanitize_text_field($_POST['member_type']) : '';
 
     $posts_per_page = 12;
 
@@ -3331,10 +3331,10 @@ add_action('wp_ajax_nopriv_load_more_members', 'load_more_members_ajax');
  * AJAX обработчик для фильтрации участников
  */
 function filter_members_ajax() {
-    $search = sanitize_text_field($_POST['search']);
-    $city = sanitize_text_field($_POST['city']);
-    $role = sanitize_text_field($_POST['role']);
-    $type_filter = sanitize_text_field($_POST['member_type']);
+    $search = isset($_POST['search']) ? sanitize_text_field($_POST['search']) : '';
+    $city = isset($_POST['city']) ? sanitize_text_field($_POST['city']) : '';
+    $role = isset($_POST['role']) ? sanitize_text_field($_POST['role']) : '';
+    $type_filter = isset($_POST['member_type']) ? sanitize_text_field($_POST['member_type']) : '';
 
     $posts_per_page = 12;
 

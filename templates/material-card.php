@@ -213,29 +213,31 @@ if ($date) {
 
 <?php
 // Функция для встраивания видео (Rutube, VK Video, YouTube)
-function get_video_embed_html($url) {
-    if (empty($url)) {
+if (!function_exists('get_video_embed_html')) {
+    function get_video_embed_html($url) {
+        if (empty($url)) {
+            return false;
+        }
+
+        // Rutube
+        if (preg_match('/rutube\.ru\/video\/([a-zA-Z0-9_-]+)/', $url, $matches)) {
+            $video_id = $matches[1];
+            return '<iframe width="100%" height="100%" src="https://rutube.ru/play/embed/' . esc_attr($video_id) . '" frameBorder="0" allow="clipboard-write; autoplay" webkitAllowFullScreen mozallowfullscreen allowFullScreen></iframe>';
+        }
+
+        // VK Video
+        if (preg_match('/vk\.com\/video(-?\d+_\d+)/', $url, $matches)) {
+            $video_id = $matches[1];
+            return '<iframe src="https://vk.com/video_ext.php?oid=' . esc_attr($video_id) . '" width="100%" height="100%" allow="autoplay; encrypted-media; fullscreen; picture-in-picture;" frameborder="0" allowfullscreen></iframe>';
+        }
+
+        // YouTube
+        if (preg_match('/(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]+)/', $url, $matches)) {
+            $video_id = $matches[1];
+            return '<iframe width="100%" height="100%" src="https://www.youtube.com/embed/' . esc_attr($video_id) . '" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>';
+        }
+
         return false;
     }
-
-    // Rutube
-    if (preg_match('/rutube\.ru\/video\/([a-zA-Z0-9_-]+)/', $url, $matches)) {
-        $video_id = $matches[1];
-        return '<iframe width="100%" height="100%" src="https://rutube.ru/play/embed/' . esc_attr($video_id) . '" frameBorder="0" allow="clipboard-write; autoplay" webkitAllowFullScreen mozallowfullscreen allowFullScreen></iframe>';
-    }
-
-    // VK Video
-    if (preg_match('/vk\.com\/video(-?\d+_\d+)/', $url, $matches)) {
-        $video_id = $matches[1];
-        return '<iframe src="https://vk.com/video_ext.php?oid=' . esc_attr($video_id) . '" width="100%" height="100%" allow="autoplay; encrypted-media; fullscreen; picture-in-picture;" frameborder="0" allowfullscreen></iframe>';
-    }
-
-    // YouTube
-    if (preg_match('/(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]+)/', $url, $matches)) {
-        $video_id = $matches[1];
-        return '<iframe width="100%" height="100%" src="https://www.youtube.com/embed/' . esc_attr($video_id) . '" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>';
-    }
-
-    return false;
 }
 ?>
