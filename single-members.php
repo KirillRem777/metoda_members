@@ -405,7 +405,13 @@ while (have_posts()) : the_post();
                             <?php endif; ?>
                         </div>
 
-                        <?php if (get_current_user_id() != get_the_author_meta('ID')): ?>
+                        <?php
+                        // Проверяем, не является ли это профилем текущего пользователя
+                        $current_user_member_id = Member_User_Link::get_current_user_member_id();
+                        $is_own_profile = ($current_user_member_id && $current_user_member_id == $member_id);
+
+                        if (!$is_own_profile):
+                        ?>
                         <button onclick="openMessageModal(<?php echo $member_id; ?>, '<?php echo esc_js(get_the_title()); ?>')" class="w-full metoda-primary-bg text-white text-center py-3 px-4 rounded-lg hover:opacity-90 transition-opacity font-medium">
                             <i class="fa-solid fa-paper-plane mr-2"></i>
                             Отправить сообщение
@@ -576,6 +582,14 @@ while (have_posts()) : the_post();
 
     // === ЛИЧНЫЕ СООБЩЕНИЯ ===
     function openMessageModal(recipientId, recipientName) {
+        // Проверяем авторизацию
+        <?php if (!is_user_logged_in()): ?>
+        if (confirm('Для отправки сообщений необходимо войти в систему. Перейти на страницу входа?')) {
+            window.location.href = '<?php echo wp_login_url(get_permalink()); ?>';
+        }
+        return;
+        <?php endif; ?>
+
         document.getElementById('message_recipient_id').value = recipientId;
         document.getElementById('message_recipient_name').textContent = recipientName;
         document.getElementById('send-message-modal').classList.remove('hidden');
