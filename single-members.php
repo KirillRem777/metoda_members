@@ -1,531 +1,770 @@
 <?php
 /**
- * Template Name: Single Member Template
+ * Template Name: New Member Profile Template
  * Template Post Type: members
- * 
- * Шаблон для отображения персональной страницы участника
- * Поместите этот файл в папку вашей темы: /wp-content/themes/your-theme/single-members.php
+ *
+ * Современный шаблон профиля участника на базе Tailwind CSS
  */
 
 get_header();
 
 while (have_posts()) : the_post();
     $member_id = get_the_ID();
-    
+
     // Получаем все метаданные
     $position = get_post_meta($member_id, 'member_position', true);
     $company = get_post_meta($member_id, 'member_company', true);
+    $city = get_post_meta($member_id, 'member_city', true);
     $email = get_post_meta($member_id, 'member_email', true);
     $phone = get_post_meta($member_id, 'member_phone', true);
-    $bio = get_post_meta($member_id, 'member_bio', true);
-    $specialization = get_post_meta($member_id, 'member_specialization', true);
-    $experience = get_post_meta($member_id, 'member_experience', true);
-    $interests = get_post_meta($member_id, 'member_interests', true);
     $linkedin = get_post_meta($member_id, 'member_linkedin', true);
     $website = get_post_meta($member_id, 'member_website', true);
-    
+
+    // Новые поля
+    $specialization_experience = get_post_meta($member_id, 'member_specialization_experience', true);
+    $professional_interests = get_post_meta($member_id, 'member_professional_interests', true);
+    $expectations = get_post_meta($member_id, 'member_expectations', true);
+    $bio = get_post_meta($member_id, 'member_bio', true);
+
+    // Получаем материалы (repeater поля)
+    $testimonials_data = get_post_meta($member_id, 'member_testimonials_data', true);
+    $gratitudes_data = get_post_meta($member_id, 'member_gratitudes_data', true);
+    $interviews_data = get_post_meta($member_id, 'member_interviews_data', true);
+    $videos_data = get_post_meta($member_id, 'member_videos_data', true);
+    $reviews_data = get_post_meta($member_id, 'member_reviews_data', true);
+    $developments_data = get_post_meta($member_id, 'member_developments_data', true);
+
+    $testimonials_data = $testimonials_data ? json_decode($testimonials_data, true) : array();
+    $gratitudes_data = $gratitudes_data ? json_decode($gratitudes_data, true) : array();
+    $interviews_data = $interviews_data ? json_decode($interviews_data, true) : array();
+    $videos_data = $videos_data ? json_decode($videos_data, true) : array();
+    $reviews_data = $reviews_data ? json_decode($reviews_data, true) : array();
+    $developments_data = $developments_data ? json_decode($developments_data, true) : array();
+
+    // Подсчитываем общее количество материалов
+    $total_materials = count($testimonials_data) + count($gratitudes_data) + count($interviews_data) +
+                       count($videos_data) + count($reviews_data) + count($developments_data);
+
     // Получаем таксономии
-    $types = wp_get_post_terms($member_id, 'member_type');
     $roles = wp_get_post_terms($member_id, 'member_role');
     $locations = wp_get_post_terms($member_id, 'member_location');
+    $member_types = wp_get_post_terms($member_id, 'member_type'); // Эксперт или Участник
+
+    // Получаем галерею фотографий из мета-поля
+    $gallery_ids_string = get_post_meta($member_id, 'member_gallery', true);
+    $gallery_ids = !empty($gallery_ids_string) ? explode(',', $gallery_ids_string) : array();
+
+    // Также получаем все прикрепленные изображения
+    $attached_images = get_attached_media('image', $member_id);
+    if (!empty($attached_images)) {
+        foreach ($attached_images as $image) {
+            // Добавляем только те изображения, которых еще нет в галерее
+            if (!in_array($image->ID, $gallery_ids)) {
+                $gallery_ids[] = $image->ID;
+            }
+        }
+    }
+
+    // Убираем миниатюру поста из галереи
+    $thumbnail_id = get_post_thumbnail_id($member_id);
+    if ($thumbnail_id) {
+        $gallery_ids = array_diff($gallery_ids, array($thumbnail_id));
+    }
+
+    // Обработка буллетов для специализации
+    $specialization_items = array();
+    if ($specialization_experience) {
+        // Разделяем по символу | (данные из CSV) или по \n (legacy)
+        $delimiter = (strpos($specialization_experience, '|') !== false) ? '|' : "\n";
+        $lines = explode($delimiter, $specialization_experience);
+
+        foreach ($lines as $line) {
+            $line = trim($line);
+
+            if (!empty($line)) {
+                // Убираем символ буллета если он есть
+                $first_char = mb_substr($line, 0, 1);
+                if (in_array($first_char, ['•', '●', '○', '·', '▪', '▫', '■', '□', '◆', '◇', '-', '*', '»', '›'])) {
+                    $line = mb_substr($line, 1);
+                    $line = ltrim($line);
+                }
+
+                if (!empty($line)) {
+                    $specialization_items[] = $line;
+                }
+            }
+        }
+    }
+
+    // Обработка буллетов для интересов
+    $interest_items = array();
+    if ($professional_interests) {
+        // Разделяем по символу | (данные из CSV) или по \n (legacy)
+        $delimiter = (strpos($professional_interests, '|') !== false) ? '|' : "\n";
+        $lines = explode($delimiter, $professional_interests);
+
+        foreach ($lines as $line) {
+            $line = trim($line);
+            if (!empty($line)) {
+                // Убираем символ буллета если он есть
+                $first_char = mb_substr($line, 0, 1);
+                if (in_array($first_char, ['•', '●', '○', '·', '▪', '▫', '■', '□', '◆', '◇', '-', '*', '»', '›'])) {
+                    $line = mb_substr($line, 1);
+                    $line = ltrim($line);
+                }
+
+                if (!empty($line)) {
+                    $interest_items[] = $line;
+                }
+            }
+        }
+    }
+
+    // Цвета "Метода" - синий и красный
+    $primary_color = '#2e466f'; // Темно-синий
+    $accent_color = '#ef4e4c';  // Красный
 ?>
 
-<div class="member-single-wrapper">
-    <div class="member-hero">
-        <div class="container">
-            <div class="member-hero-content">
-                <div class="member-hero-photo">
-                    <?php if (has_post_thumbnail()) : ?>
-                        <?php the_post_thumbnail('large'); ?>
-                    <?php else : ?>
-                        <div class="member-avatar-large">
-                            <?php echo mb_substr(get_the_title(), 0, 1); ?>
-                        </div>
-                    <?php endif; ?>
-                </div>
-                
-                <div class="member-hero-info">
-                    <h1 class="member-title"><?php the_title(); ?></h1>
-                    
-                    <?php if ($position) : ?>
-                        <div class="member-position-large"><?php echo esc_html($position); ?></div>
-                    <?php endif; ?>
-                    
-                    <?php if ($company) : ?>
-                        <div class="member-company-large"><?php echo esc_html($company); ?></div>
-                    <?php endif; ?>
-                    
-                    <div class="member-badges">
-                        <?php foreach ($types as $type) : ?>
-                            <span class="badge badge-type"><?php echo esc_html($type->name); ?></span>
-                        <?php endforeach; ?>
-                        
-                        <?php foreach ($roles as $role) : ?>
-                            <span class="badge badge-role"><?php echo esc_html($role->name); ?></span>
-                        <?php endforeach; ?>
-                    </div>
-                    
-                    <?php if ($locations) : ?>
-                        <div class="member-location">
-                            <svg class="icon-location" width="16" height="16" fill="currentColor">
-                                <path d="M8 0C4.687 0 2 2.687 2 6c0 3.854 5.328 9.49 5.547 9.73a.75.75 0 0 0 .906 0C8.672 15.49 14 9.854 14 6c0-3.313-2.687-6-6-6zm0 8.5a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5z"/>
-                            </svg>
-                            <?php 
-                            $location_names = array();
-                            foreach ($locations as $location) {
-                                $location_names[] = $location->name;
-                            }
-                            echo esc_html(implode(', ', $location_names));
-                            ?>
-                        </div>
-                    <?php endif; ?>
-                    
-                    <div class="member-contacts">
-                        <?php if ($email) : ?>
-                            <a href="mailto:<?php echo esc_attr($email); ?>" class="contact-link">
-                                <svg class="icon" width="20" height="20" fill="currentColor">
-                                    <path d="M2 4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V4zm2 0v.217l6 3.429 6-3.429V4H4zm12 2.017L10.7 9.31a1.5 1.5 0 0 1-1.4 0L4 6.017V16h12V6.017z"/>
-                                </svg>
-                                Email
-                            </a>
-                        <?php endif; ?>
-                        
-                        <?php if ($phone) : ?>
-                            <a href="tel:<?php echo esc_attr($phone); ?>" class="contact-link">
-                                <svg class="icon" width="20" height="20" fill="currentColor">
-                                    <path d="M3.654 1.328a.678.678 0 0 0-1.015-.063L1.605 2.3c-.483.484-.661 1.169-.45 1.77a17.568 17.568 0 0 0 4.168 6.608 17.569 17.569 0 0 0 6.608 4.168c.601.211 1.286.033 1.77-.45l1.034-1.034a.678.678 0 0 0-.063-1.015l-2.307-1.794a.678.678 0 0 0-.58-.122l-2.19.547a1.745 1.745 0 0 1-1.657-.459L5.482 8.062a1.745 1.745 0 0 1-.46-1.657l.548-2.19a.678.678 0 0 0-.122-.58L3.654 1.328z"/>
-                                </svg>
-                                Позвонить
-                            </a>
-                        <?php endif; ?>
-                        
-                        <?php if ($linkedin) : ?>
-                            <a href="<?php echo esc_url($linkedin); ?>" target="_blank" class="contact-link">
-                                <svg class="icon" width="20" height="20" fill="currentColor">
-                                    <path d="M16 0H4a4 4 0 0 0-4 4v12a4 4 0 0 0 4 4h12a4 4 0 0 0 4-4V4a4 4 0 0 0-4-4zM7 15H5V8h2v7zm-1-8.2A1.2 1.2 0 1 1 6 4.4a1.2 1.2 0 0 1 0 2.4zM15 15h-2v-3.5c0-2.5-3-2.3-3 0V15H8V8h2v1.1c1-1.9 5-2 5 1.8V15z"/>
-                                </svg>
-                                LinkedIn
-                            </a>
-                        <?php endif; ?>
-                        
-                        <?php if ($website) : ?>
-                            <a href="<?php echo esc_url($website); ?>" target="_blank" class="contact-link">
-                                <svg class="icon" width="20" height="20" fill="currentColor">
-                                    <path d="M10 0C4.477 0 0 4.477 0 10s4.477 10 10 10 10-4.477 10-10S15.523 0 10 0zm6.93 6h-2.95a15.65 15.65 0 0 0-1.38-3.56A8.03 8.03 0 0 1 16.93 6zM10 2.04c.83 1.2 1.48 2.53 1.91 3.96H8.09c.43-1.43 1.08-2.76 1.91-3.96zM2.26 12C2.1 11.36 2 10.69 2 10s.1-1.36.26-2h3.38c-.08.66-.14 1.32-.14 2s.06 1.34.14 2H2.26zm.82 2h2.95c.32 1.25.78 2.45 1.38 3.56A7.987 7.987 0 0 1 3.08 14zm2.95-8H3.08a7.987 7.987 0 0 1 4.33-3.56A15.65 15.65 0 0 0 6.03 6zM10 17.96c-.83-1.2-1.48-2.53-1.91-3.96h3.82c-.43 1.43-1.08 2.76-1.91 3.96zM12.34 12H7.66c-.09-.66-.16-1.32-.16-2s.07-1.35.16-2h4.68c.09.65.16 1.32.16 2s-.07 1.34-.16 2zm.25 5.56c.6-1.11 1.06-2.31 1.38-3.56h2.95a8.03 8.03 0 0 1-4.33 3.56zM14.36 12c.08-.66.14-1.32.14-2s-.06-1.34-.14-2h3.38c.16.64.26 1.31.26 2s-.1 1.36-.26 2h-3.38z"/>
-                                </svg>
-                                Вебсайт
-                            </a>
-                        <?php endif; ?>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <div class="member-content">
-        <div class="container">
-            <div class="member-main">
-                <?php if ($experience || $specialization) : ?>
-                <div class="info-section">
-                    <h2>Профессиональный опыт</h2>
-                    
-                    <?php if ($experience) : ?>
-                        <div class="info-item">
-                            <h3>Стаж работы</h3>
-                            <p><?php echo esc_html($experience); ?></p>
-                        </div>
-                    <?php endif; ?>
-                    
-                    <?php if ($specialization) : ?>
-                        <div class="info-item">
-                            <h3>Специализация</h3>
-                            <p><?php echo nl2br(esc_html($specialization)); ?></p>
-                        </div>
-                    <?php endif; ?>
-                </div>
-                <?php endif; ?>
-                
-                <?php if ($interests) : ?>
-                <div class="info-section">
-                    <h2>Профессиональные интересы</h2>
-                    <p><?php echo nl2br(esc_html($interests)); ?></p>
-                </div>
-                <?php endif; ?>
-                
-                <?php if (get_the_content()) : ?>
-                <div class="info-section">
-                    <h2>Подробная информация</h2>
-                    <div class="content-formatted">
-                        <?php the_content(); ?>
-                    </div>
-                </div>
-                <?php endif; ?>
-                
-                <?php if ($bio) : ?>
-                <div class="info-section">
-                    <h2>О себе</h2>
-                    <div class="bio-content">
-                        <?php echo nl2br(esc_html($bio)); ?>
-                    </div>
-                </div>
-                <?php endif; ?>
-            </div>
-            
-            <div class="member-sidebar">
-                <div class="sidebar-widget">
-                    <h3>Другие участники</h3>
-                    <?php
-                    $related_args = array(
-                        'post_type' => 'members',
-                        'posts_per_page' => 5,
-                        'post__not_in' => array($member_id),
-                        'orderby' => 'rand',
-                    );
-                    
-                    // Если есть роли, ищем похожих
-                    if ($roles) {
-                        $role_slugs = wp_list_pluck($roles, 'slug');
-                        $related_args['tax_query'] = array(
-                            array(
-                                'taxonomy' => 'member_role',
-                                'field' => 'slug',
-                                'terms' => $role_slugs,
-                            ),
-                        );
+<!DOCTYPE html>
+<html <?php language_attributes(); ?>>
+<head>
+    <meta charset="<?php bloginfo('charset'); ?>">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><?php the_title(); ?> - <?php bloginfo('name'); ?></title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js" crossorigin="anonymous"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        ::-webkit-scrollbar { display: none; }
+        * { font-family: 'Montserrat', sans-serif; }
+
+        .metoda-primary { color: <?php echo $primary_color; ?>; }
+        .metoda-primary-bg { background-color: <?php echo $primary_color; ?>; }
+        .metoda-accent { color: <?php echo $accent_color; ?>; }
+        .metoda-accent-bg { background-color: <?php echo $accent_color; ?>; }
+
+        .member-content h1, .member-content h2, .member-content h3,
+        .member-content h4, .member-content h5, .member-content h6 {
+            margin-top: 1.5em;
+            margin-bottom: 0.75em;
+            font-weight: 600;
+        }
+
+        .member-content p { margin-bottom: 1em; line-height: 1.7; }
+        .member-content ul, .member-content ol {
+            margin-left: 1.5em;
+            margin-bottom: 1em;
+        }
+        .member-content ul { list-style-type: disc; }
+        .member-content ol { list-style-type: decimal; }
+        .member-content li { margin-bottom: 0.5em; }
+        .member-content strong { font-weight: 600; }
+        .member-content em { font-style: italic; }
+        .member-content br { display: block; content: ""; margin-top: 0.5em; }
+    </style>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '<?php echo $primary_color; ?>',
+                        accent: '<?php echo $accent_color; ?>',
+                        secondary: '#64748b'
                     }
-                    
-                    $related_query = new WP_Query($related_args);
-                    
-                    if ($related_query->have_posts()) : ?>
-                        <div class="related-members">
-                            <?php while ($related_query->have_posts()) : $related_query->the_post(); ?>
-                                <div class="related-member">
-                                    <a href="<?php the_permalink(); ?>">
-                                        <div class="related-member-photo">
-                                            <?php if (has_post_thumbnail()) : ?>
-                                                <?php the_post_thumbnail('thumbnail'); ?>
-                                            <?php else : ?>
-                                                <div class="avatar-small">
-                                                    <?php echo mb_substr(get_the_title(), 0, 1); ?>
-                                                </div>
-                                            <?php endif; ?>
-                                        </div>
-                                        <div class="related-member-info">
-                                            <h4><?php the_title(); ?></h4>
-                                            <?php 
-                                            $rel_position = get_post_meta(get_the_ID(), 'member_position', true);
-                                            if ($rel_position) : ?>
-                                                <p><?php echo esc_html($rel_position); ?></p>
-                                            <?php endif; ?>
-                                        </div>
-                                    </a>
-                                </div>
-                            <?php endwhile; ?>
-                        </div>
-                    <?php endif;
-                    wp_reset_postdata();
-                    ?>
+                }
+            }
+        }
+    </script>
+    <?php wp_head(); ?>
+</head>
+<body class="bg-gray-50">
+
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-6 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-4">
+                    <a href="<?php echo get_post_type_archive_link('members'); ?>" class="text-gray-600 hover:text-primary transition-colors">
+                        <i class="fa-solid fa-arrow-left text-lg"></i>
+                    </a>
+                    <h1 class="text-xl font-semibold text-gray-900">Профиль участника</h1>
+                </div>
+                <div class="flex items-center space-x-3">
+                    <?php if (get_current_user_id() != get_the_author_meta('ID')): ?>
+                    <button onclick="openMessageModal(<?php echo $member_id; ?>, '<?php echo esc_js(get_the_title()); ?>')" class="metoda-primary-bg text-white px-4 py-2 rounded-lg hover:opacity-90 transition-opacity">
+                        <i class="fa-solid fa-paper-plane mr-2"></i>
+                        Написать сообщение
+                    </button>
+                    <?php endif; ?>
+                    <?php if ($email): ?>
+                    <a href="mailto:<?php echo esc_attr($email); ?>" class="border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors">
+                        <i class="fa-solid fa-envelope mr-2"></i>
+                        Email
+                    </a>
+                    <?php endif; ?>
+                    <button onclick="window.print()" class="text-gray-600 hover:text-primary transition-colors">
+                        <i class="fa-solid fa-print text-lg"></i>
+                    </button>
                 </div>
             </div>
         </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-6 py-8">
+
+        <!-- Hero Section -->
+        <section class="bg-white rounded-xl shadow-sm border p-4 md:p-8 mb-8">
+            <div class="flex items-start space-x-0 md:space-x-8 space-y-6 md:space-y-0 flex-col md:flex-row">
+                <!-- Photo -->
+                <div class="flex-shrink-0 mx-auto md:mx-0">
+                    <div class="w-32 h-32 md:w-48 md:h-48 rounded-2xl overflow-hidden bg-gray-100">
+                        <?php if (has_post_thumbnail()): ?>
+                            <?php the_post_thumbnail('medium', array('class' => 'w-full h-full object-cover')); ?>
+                        <?php else: ?>
+                            <div class="w-full h-full flex items-center justify-center text-6xl font-bold text-gray-300">
+                                <?php echo mb_substr(get_the_title(), 0, 1); ?>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                </div>
+
+                <!-- Info -->
+                <div class="flex-1 text-center md:text-left">
+                    <div class="mb-4">
+                        <div class="flex flex-wrap gap-2 mb-3 justify-center md:justify-start">
+                            <?php if ($member_types && !is_wp_error($member_types)): ?>
+                                <?php foreach ($member_types as $type): ?>
+                                    <span class="inline-block metoda-accent-bg text-white px-3 py-1 rounded-full text-sm font-medium">
+                                        <?php echo esc_html($type->name); ?>
+                                    </span>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
+
+                            <?php if ($roles && !is_wp_error($roles)): ?>
+                                <?php foreach ($roles as $role): ?>
+                                    <span class="inline-block metoda-primary-bg text-white px-3 py-1 rounded-full text-sm font-medium">
+                                        <?php echo esc_html($role->name); ?>
+                                    </span>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
+                        </div>
+
+                        <h1 class="text-2xl md:text-4xl font-bold text-gray-900 mb-2"><?php the_title(); ?></h1>
+
+                        <?php if ($position): ?>
+                            <h2 class="text-base md:text-lg font-medium text-gray-600 mb-3"><?php echo esc_html($position); ?></h2>
+                        <?php endif; ?>
+                    </div>
+
+                    <div class="space-y-3">
+                        <?php if ($company): ?>
+                        <div class="flex items-center text-gray-600 justify-center md:justify-start">
+                            <i class="fa-solid fa-building metoda-primary mr-3"></i>
+                            <span class="font-medium"><?php echo esc_html($company); ?></span>
+                        </div>
+                        <?php endif; ?>
+
+                        <?php if ($city): ?>
+                        <div class="flex items-center text-gray-600 justify-center md:justify-start">
+                            <i class="fa-solid fa-location-dot metoda-primary mr-3"></i>
+                            <span><?php echo esc_html($city); ?></span>
+                        </div>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Two Column Layout -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+            <!-- Left Column (Main Content) -->
+            <div class="lg:col-span-2 space-y-8">
+
+                <!-- Professional Information -->
+                <section class="bg-white rounded-xl shadow-sm border p-4 md:p-8">
+                    <h3 class="text-xl md:text-2xl font-bold text-gray-900 mb-6">Профессиональная информация</h3>
+
+                    <div class="space-y-8">
+
+                        <!-- Specialization and Experience -->
+                        <?php if (!empty($specialization_items)): ?>
+                        <div>
+                            <h4 class="text-lg font-semibold text-gray-800 mb-4">Специализация и стаж</h4>
+                            <ul class="space-y-3">
+                                <?php foreach ($specialization_items as $item): ?>
+                                <li class="flex items-start">
+                                    <div class="w-2 h-2 metoda-primary-bg rounded-full mt-2 mr-3 flex-shrink-0"></div>
+                                    <span class="text-gray-700"><?php echo esc_html($item); ?></span>
+                                </li>
+                                <?php endforeach; ?>
+                            </ul>
+                        </div>
+                        <?php endif; ?>
+
+                        <!-- Professional Interests -->
+                        <?php if (!empty($interest_items)): ?>
+                        <div>
+                            <h4 class="text-lg font-semibold text-gray-800 mb-4">Сфера профессиональных интересов</h4>
+                            <ul class="space-y-3">
+                                <?php foreach ($interest_items as $item): ?>
+                                <li class="flex items-start">
+                                    <div class="w-2 h-2 metoda-accent-bg rounded-full mt-2 mr-3 flex-shrink-0"></div>
+                                    <span class="text-gray-700"><?php echo esc_html($item); ?></span>
+                                </li>
+                                <?php endforeach; ?>
+                            </ul>
+                        </div>
+                        <?php endif; ?>
+                    </div>
+                </section>
+
+                <!-- About Me -->
+                <?php if ($bio): ?>
+                <div class="bg-white rounded-xl shadow-sm border p-4 md:p-8">
+                    <h3 class="text-xl md:text-2xl font-bold text-gray-900 mb-6">О себе</h3>
+                    <div class="member-content prose prose-gray max-w-none text-gray-700">
+                        <?php echo wpautop($bio); ?>
+                    </div>
+                </div>
+                <?php endif; ?>
+
+                <!-- Collaboration Expectations -->
+                <?php if ($expectations): ?>
+                <div class="bg-white rounded-xl shadow-sm border p-4 md:p-8">
+                    <h3 class="text-xl md:text-2xl font-bold text-gray-900 mb-6">Ожидания от сотрудничества</h3>
+                    <div class="member-content prose prose-gray max-w-none text-gray-700">
+                        <?php echo wpautop($expectations); ?>
+                    </div>
+                </div>
+                <?php endif; ?>
+
+                <!-- Photo Gallery -->
+                <?php if (!empty($gallery_ids) && count($gallery_ids) > 0): ?>
+                <div class="bg-white rounded-xl shadow-sm border p-4 md:p-8">
+                    <h3 class="text-xl md:text-2xl font-bold text-gray-900 mb-6">
+                        <i class="fa-solid fa-images metoda-primary mr-2"></i>
+                        Фотогалерея
+                        <span class="text-sm font-normal text-gray-500 ml-2">(<?php echo count($gallery_ids); ?>)</span>
+                    </h3>
+                    <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+                        <?php
+                        $index = 0;
+                        foreach ($gallery_ids as $attachment_id):
+                            $attachment_id = intval(trim($attachment_id));
+                            if (!$attachment_id) continue;
+                            $image_url = wp_get_attachment_image_url($attachment_id, 'medium');
+                            $image_full = wp_get_attachment_image_url($attachment_id, 'full');
+                            if (!$image_url) continue;
+                        ?>
+                        <a href="<?php echo esc_url($image_full); ?>"
+                           class="gallery-item group relative overflow-hidden rounded-lg aspect-square bg-gray-100 hover:opacity-90 transition-opacity cursor-pointer"
+                           data-image-index="<?php echo $index; ?>"
+                           data-lightbox="member-gallery">
+                            <img src="<?php echo esc_url($image_url); ?>"
+                                 alt="<?php the_title(); ?>"
+                                 class="w-full h-full object-cover object-top">
+                            <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all flex items-center justify-center">
+                                <i class="fa-solid fa-search-plus text-white text-2xl opacity-0 group-hover:opacity-100 transition-opacity"></i>
+                            </div>
+                        </a>
+                        <?php $index++; endforeach; ?>
+                    </div>
+                </div>
+                <?php endif; ?>
+
+                <!-- Portfolio & Achievements Section -->
+                <?php if ($total_materials > 0): ?>
+                    <?php include(METODA_PLUGIN_DIR . 'templates/materials-section.php'); ?>
+                <?php endif; ?>
+            </div>
+
+            <!-- Right Column (Sidebar) -->
+            <aside class="lg:col-span-1">
+                <div class="sticky top-24 space-y-6">
+
+                    <!-- Contact Card -->
+                    <?php if ($email || $phone || $linkedin || $website): ?>
+                    <div class="bg-white rounded-xl shadow-sm border p-6">
+                        <h4 class="text-lg font-semibold text-gray-900 mb-4">Контактная информация</h4>
+                        <div class="space-y-3">
+                            <?php if ($email): ?>
+                            <a href="mailto:<?php echo esc_attr($email); ?>" class="flex items-center text-gray-600 hover:text-primary transition-colors">
+                                <i class="fa-solid fa-envelope metoda-primary mr-3"></i>
+                                <span class="text-sm break-all"><?php echo esc_html($email); ?></span>
+                            </a>
+                            <?php endif; ?>
+
+                            <?php if ($phone): ?>
+                            <a href="tel:<?php echo esc_attr($phone); ?>" class="flex items-center text-gray-600 hover:text-primary transition-colors">
+                                <i class="fa-solid fa-phone metoda-primary mr-3"></i>
+                                <span class="text-sm"><?php echo esc_html($phone); ?></span>
+                            </a>
+                            <?php endif; ?>
+
+                            <?php if ($linkedin): ?>
+                            <a href="<?php echo esc_url($linkedin); ?>" target="_blank" rel="noopener" class="flex items-center text-gray-600 hover:text-primary transition-colors">
+                                <i class="fa-brands fa-linkedin metoda-primary mr-3"></i>
+                                <span class="text-sm">LinkedIn</span>
+                            </a>
+                            <?php endif; ?>
+
+                            <?php if ($website): ?>
+                            <a href="<?php echo esc_url($website); ?>" target="_blank" rel="noopener" class="flex items-center text-gray-600 hover:text-primary transition-colors">
+                                <i class="fa-solid fa-globe metoda-primary mr-3"></i>
+                                <span class="text-sm">Вебсайт</span>
+                            </a>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                    <?php endif; ?>
+
+                    <!-- Actions Card -->
+                    <div class="bg-white rounded-xl shadow-sm border p-6">
+                        <div class="space-y-3">
+                            <?php if ($email): ?>
+                            <a href="mailto:<?php echo esc_attr($email); ?>" class="block w-full metoda-primary-bg text-white text-center py-3 px-4 rounded-lg hover:opacity-90 transition-opacity font-medium">
+                                <i class="fa-solid fa-envelope mr-2"></i>
+                                Отправить сообщение
+                            </a>
+                            <?php endif; ?>
+
+                            <a href="<?php echo get_post_type_archive_link('members'); ?>" class="block w-full border border-gray-300 text-gray-700 text-center py-3 px-4 rounded-lg hover:bg-gray-50 transition-colors font-medium">
+                                <i class="fa-solid fa-arrow-left mr-2"></i>
+                                К списку участников
+                            </a>
+
+                            <button onclick="window.print()" class="w-full border border-gray-300 text-gray-700 py-3 px-4 rounded-lg hover:bg-gray-50 transition-colors font-medium">
+                                <i class="fa-solid fa-print mr-2"></i>
+                                Распечатать
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+        </div>
+    </main>
+
+    <?php wp_footer(); ?>
+
+    <!-- Enhanced Lightbox for Gallery with Navigation -->
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const galleryItems = document.querySelectorAll('.gallery-item');
+        if (galleryItems.length === 0) return;
+
+        let currentIndex = 0;
+        const images = Array.from(galleryItems).map(item => item.href);
+
+        // Create lightbox overlay with navigation
+        const overlay = document.createElement('div');
+        overlay.className = 'fixed inset-0 bg-black bg-opacity-95 z-50 hidden items-center justify-center p-4';
+        overlay.innerHTML = `
+            <button class="close-btn absolute top-4 right-4 text-white text-4xl hover:text-gray-300 transition-colors z-10">&times;</button>
+            <button class="prev-btn absolute left-4 top-1/2 -translate-y-1/2 text-white text-5xl hover:text-gray-300 transition-colors z-10 bg-black bg-opacity-50 w-14 h-14 rounded-full flex items-center justify-center">
+                <i class="fa-solid fa-chevron-left"></i>
+            </button>
+            <button class="next-btn absolute right-4 top-1/2 -translate-y-1/2 text-white text-5xl hover:text-gray-300 transition-colors z-10 bg-black bg-opacity-50 w-14 h-14 rounded-full flex items-center justify-center">
+                <i class="fa-solid fa-chevron-right"></i>
+            </button>
+            <div class="counter absolute top-4 left-4 text-white text-lg bg-black bg-opacity-50 px-4 py-2 rounded-lg"></div>
+            <img src="" alt="" class="max-w-full max-h-full object-contain" style="object-position: top center;">
+        `;
+        document.body.appendChild(overlay);
+
+        const overlayImg = overlay.querySelector('img');
+        const closeBtn = overlay.querySelector('.close-btn');
+        const prevBtn = overlay.querySelector('.prev-btn');
+        const nextBtn = overlay.querySelector('.next-btn');
+        const counter = overlay.querySelector('.counter');
+
+        function showImage(index) {
+            currentIndex = index;
+            overlayImg.src = images[currentIndex];
+            counter.textContent = `${currentIndex + 1} / ${images.length}`;
+
+            // Show/hide navigation buttons
+            prevBtn.style.display = currentIndex > 0 ? 'flex' : 'none';
+            nextBtn.style.display = currentIndex < images.length - 1 ? 'flex' : 'none';
+        }
+
+        function openLightbox(index) {
+            showImage(index);
+            overlay.classList.remove('hidden');
+            overlay.classList.add('flex');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeLightbox() {
+            overlay.classList.add('hidden');
+            overlay.classList.remove('flex');
+            document.body.style.overflow = 'auto';
+        }
+
+        function nextImage() {
+            if (currentIndex < images.length - 1) {
+                showImage(currentIndex + 1);
+            }
+        }
+
+        function prevImage() {
+            if (currentIndex > 0) {
+                showImage(currentIndex - 1);
+            }
+        }
+
+        // Open lightbox on gallery item click
+        galleryItems.forEach((item, index) => {
+            item.addEventListener('click', function(e) {
+                e.preventDefault();
+                openLightbox(index);
+            });
+        });
+
+        // Close button
+        closeBtn.addEventListener('click', closeLightbox);
+
+        // Navigation buttons
+        prevBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            prevImage();
+        });
+
+        nextBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            nextImage();
+        });
+
+        // Close on overlay click (but not on image or buttons)
+        overlay.addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeLightbox();
+            }
+        });
+
+        // Keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (overlay.classList.contains('hidden')) return;
+
+            if (e.key === 'Escape') {
+                closeLightbox();
+            } else if (e.key === 'ArrowLeft') {
+                prevImage();
+            } else if (e.key === 'ArrowRight') {
+                nextImage();
+            }
+        });
+    });
+
+    // === МОДАЛЬНЫЕ ОКНА ДЛЯ МАТЕРИАЛОВ ===
+    function openMaterialModal(modalId) {
+        const modal = document.getElementById(modalId);
+        if (modal) {
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            document.body.style.overflow = 'hidden';
+        }
+    }
+
+    function closeMaterialModal(modalId) {
+        const modal = document.getElementById(modalId);
+        if (modal) {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            document.body.style.overflow = 'auto';
+        }
+    }
+
+    // Закрытие по Escape
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            const openModals = document.querySelectorAll('.material-modal.flex');
+            openModals.forEach(modal => {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+                document.body.style.overflow = 'auto';
+            });
+        }
+    });
+
+    // === ЛИЧНЫЕ СООБЩЕНИЯ ===
+    function openMessageModal(recipientId, recipientName) {
+        document.getElementById('message_recipient_id').value = recipientId;
+        document.getElementById('message_recipient_name').textContent = recipientName;
+        document.getElementById('send-message-modal').classList.remove('hidden');
+        document.getElementById('send-message-modal').classList.add('flex');
+        document.body.style.overflow = 'hidden';
+
+        // Clear form
+        document.getElementById('message_subject').value = '';
+        if (window.messageQuill) {
+            window.messageQuill.setContents([]);
+        }
+    }
+
+    function closeMessageModal() {
+        document.getElementById('send-message-modal').classList.add('hidden');
+        document.getElementById('send-message-modal').classList.remove('flex');
+        document.body.style.overflow = 'auto';
+    }
+    </script>
+
+    <!-- Send Message Modal -->
+    <div id="send-message-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50" style="display: none;">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div class="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 rounded-t-2xl flex items-center justify-between">
+                <div>
+                    <h3 class="text-xl font-bold text-gray-900">Новое сообщение</h3>
+                    <p class="text-sm text-gray-500 mt-1">Для: <span id="message_recipient_name" class="font-semibold"></span></p>
+                </div>
+                <button type="button" onclick="closeMessageModal()" class="text-gray-400 hover:text-gray-600 text-2xl leading-none">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <form id="send-message-form" class="p-6">
+                <input type="hidden" name="recipient_id" id="message_recipient_id">
+
+                <!-- Honeypot (антиспам) -->
+                <div style="position: absolute; left: -5000px;">
+                    <input type="text" name="website" id="message_website" tabindex="-1" autocomplete="off">
+                </div>
+
+                <div class="space-y-4">
+                    <?php if (!is_user_logged_in()): ?>
+                    <!-- Ваше имя (для незалогиненных) -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Ваше имя *</label>
+                        <input type="text" name="sender_name" id="message_sender_name" required maxlength="100" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none" placeholder="Как вас зовут?">
+                    </div>
+
+                    <!-- Email для ответа (для незалогиненных) -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Email для ответа *</label>
+                        <input type="email" name="sender_email" id="message_sender_email" required class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none" placeholder="your@email.com">
+                        <p class="text-xs text-gray-500 mt-1">Участник сможет ответить вам на этот email</p>
+                    </div>
+                    <?php endif; ?>
+
+                    <!-- Тема -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Тема сообщения *</label>
+                        <input type="text" name="subject" id="message_subject" required maxlength="200" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none" placeholder="О чем вы хотите написать?">
+                    </div>
+
+                    <!-- Текст сообщения -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Сообщение *</label>
+                        <div class="quill-editor-wrapper">
+                            <div id="message-editor" class="quill-editor"></div>
+                        </div>
+                        <textarea name="content" id="message_content_hidden" style="display: none;"></textarea>
+                        <p class="text-xs text-gray-500 mt-2">✨ Используйте панель инструментов для форматирования</p>
+                    </div>
+
+                    <!-- Кнопки -->
+                    <div class="flex gap-3 pt-4">
+                        <button type="submit" class="flex-1 px-6 py-3 text-white rounded-lg font-medium hover:opacity-90 transition-opacity metoda-primary-bg">
+                            <i class="fas fa-paper-plane mr-2"></i>
+                            <span class="btn-text">Отправить сообщение</span>
+                            <span class="btn-loader hidden">
+                                <i class="fas fa-spinner fa-spin"></i> Отправка...
+                            </span>
+                        </button>
+                        <button type="button" onclick="closeMessageModal()" class="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 transition-colors">
+                            Отмена
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
     </div>
-</div>
 
-<style>
-.member-single-wrapper {
-    background: #f5f5f5;
-    min-height: 100vh;
-}
+    <!-- Quill.js для сообщений -->
+    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+    <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
+    <script>
+    // Initialize Quill editor for messages
+    window.messageQuill = new Quill('#message-editor', {
+        theme: 'snow',
+        placeholder: 'Напишите ваше сообщение...',
+        modules: {
+            toolbar: [
+                [{ 'header': [2, 3, false] }],
+                ['bold', 'italic', 'underline'],
+                [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                ['blockquote', 'link'],
+                ['clean']
+            ]
+        }
+    });
 
-.member-hero {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    padding: 80px 0;
-    color: white;
-}
+    // Handle form submission
+    document.getElementById('send-message-form').addEventListener('submit', function(e) {
+        e.preventDefault();
 
-.container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 0 20px;
-}
+        // Check honeypot
+        if (document.getElementById('message_website').value !== '') {
+            alert('Обнаружена подозрительная активность');
+            return;
+        }
 
-.member-hero-content {
-    display: flex;
-    align-items: center;
-    gap: 60px;
-}
+        // Get content from Quill
+        var content = window.messageQuill.root.innerHTML;
+        document.getElementById('message_content_hidden').value = content;
 
-.member-hero-photo {
-    flex-shrink: 0;
-}
+        var formData = new FormData(this);
+        formData.append('action', 'send_member_message');
+        formData.append('nonce', '<?php echo wp_create_nonce("send_member_message"); ?>');
 
-.member-hero-photo img {
-    width: 250px;
-    height: 250px;
-    border-radius: 50%;
-    border: 5px solid rgba(255, 255, 255, 0.2);
-    object-fit: cover;
-}
+        var $form = jQuery(this);
+        var $btn = $form.find('button[type="submit"]');
 
-.member-avatar-large {
-    width: 250px;
-    height: 250px;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.2);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 100px;
-    font-weight: bold;
-    border: 5px solid rgba(255, 255, 255, 0.2);
-}
+        jQuery.ajax({
+            url: '<?php echo admin_url("admin-ajax.php"); ?>',
+            type: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            beforeSend: function() {
+                $btn.prop('disabled', true);
+                $btn.find('.btn-text').hide();
+                $btn.find('.btn-loader').removeClass('hidden').show();
+            },
+            success: function(response) {
+                if (response.success) {
+                    // Success notification
+                    var notification = jQuery('<div class="fixed top-4 right-4 bg-green-500 text-white px-6 py-4 rounded-lg shadow-lg z-50 flex items-center gap-3">' +
+                        '<i class="fas fa-check-circle text-xl"></i>' +
+                        '<span>Сообщение отправлено!</span>' +
+                    '</div>');
+                    jQuery('body').append(notification);
 
-.member-hero-info {
-    flex-grow: 1;
-}
+                    setTimeout(function() {
+                        notification.fadeOut(function() {
+                            jQuery(this).remove();
+                        });
+                        closeMessageModal();
+                    }, 2000);
+                } else {
+                    alert('Ошибка: ' + response.data.message);
+                }
+            },
+            error: function() {
+                alert('Произошла ошибка при отправке');
+            },
+            complete: function() {
+                $btn.prop('disabled', false);
+                $btn.find('.btn-text').show();
+                $btn.find('.btn-loader').hide();
+            }
+        });
+    });
+    </script>
+</body>
+</html>
 
-.member-title {
-    font-size: 48px;
-    margin: 0 0 15px 0;
-}
-
-.member-position-large {
-    font-size: 24px;
-    opacity: 0.95;
-    margin-bottom: 10px;
-}
-
-.member-company-large {
-    font-size: 18px;
-    opacity: 0.85;
-    margin-bottom: 20px;
-}
-
-.member-badges {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    margin-bottom: 20px;
-}
-
-.badge {
-    padding: 6px 16px;
-    border-radius: 20px;
-    font-size: 13px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.badge-type {
-    background: rgba(255, 255, 255, 0.25);
-}
-
-.badge-role {
-    background: rgba(255, 255, 255, 0.15);
-}
-
-.member-location {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 16px;
-    opacity: 0.9;
-    margin-bottom: 25px;
-}
-
-.icon-location {
-    fill: currentColor;
-}
-
-.member-contacts {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 15px;
-}
-
-.contact-link {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 10px 20px;
-    background: rgba(255, 255, 255, 0.2);
-    border-radius: 25px;
-    color: white;
-    text-decoration: none;
-    transition: background 0.3s;
-}
-
-.contact-link:hover {
-    background: rgba(255, 255, 255, 0.3);
-}
-
-.icon {
-    fill: currentColor;
-}
-
-.member-content {
-    padding: 60px 0;
-}
-
-.member-content .container {
-    display: grid;
-    grid-template-columns: 1fr 350px;
-    gap: 60px;
-}
-
-.info-section {
-    background: white;
-    padding: 40px;
-    border-radius: 12px;
-    margin-bottom: 30px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-}
-
-.info-section h2 {
-    font-size: 28px;
-    margin: 0 0 25px 0;
-    color: #333;
-    border-bottom: 2px solid #f0f0f0;
-    padding-bottom: 15px;
-}
-
-.info-item {
-    margin-bottom: 25px;
-}
-
-.info-item h3 {
-    font-size: 16px;
-    font-weight: 600;
-    color: #666;
-    margin: 0 0 10px 0;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.info-item p {
-    font-size: 16px;
-    line-height: 1.6;
-    color: #444;
-    margin: 0;
-}
-
-.content-formatted {
-    font-size: 16px;
-    line-height: 1.8;
-    color: #444;
-}
-
-.bio-content {
-    font-size: 16px;
-    line-height: 1.8;
-    color: #444;
-    font-style: italic;
-}
-
-.sidebar-widget {
-    background: white;
-    padding: 30px;
-    border-radius: 12px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-    position: sticky;
-    top: 30px;
-}
-
-.sidebar-widget h3 {
-    font-size: 20px;
-    margin: 0 0 20px 0;
-    color: #333;
-}
-
-.related-members {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-}
-
-.related-member a {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-    text-decoration: none;
-    color: inherit;
-    transition: transform 0.2s;
-}
-
-.related-member a:hover {
-    transform: translateX(5px);
-}
-
-.related-member-photo img {
-    width: 60px;
-    height: 60px;
-    border-radius: 50%;
-    object-fit: cover;
-}
-
-.avatar-small {
-    width: 60px;
-    height: 60px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    font-size: 24px;
-    font-weight: bold;
-}
-
-.related-member-info h4 {
-    font-size: 16px;
-    margin: 0 0 5px 0;
-    color: #333;
-}
-
-.related-member-info p {
-    font-size: 13px;
-    color: #666;
-    margin: 0;
-}
-
-@media (max-width: 992px) {
-    .member-hero-content {
-        flex-direction: column;
-        text-align: center;
-    }
-    
-    .member-content .container {
-        grid-template-columns: 1fr;
-    }
-    
-    .sidebar-widget {
-        position: relative;
-        top: 0;
-    }
-}
-
-@media (max-width: 768px) {
-    .member-title {
-        font-size: 32px;
-    }
-    
-    .member-position-large {
-        font-size: 18px;
-    }
-    
-    .member-hero-photo img,
-    .member-avatar-large {
-        width: 180px;
-        height: 180px;
-    }
-    
-    .info-section {
-        padding: 25px;
-    }
-}
-</style>
-
-<?php endwhile; ?>
-
-<?php get_footer(); ?>
+<?php
+endwhile;
+?>
