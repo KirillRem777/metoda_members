@@ -436,7 +436,7 @@ while (have_posts()) : the_post();
 
     <!-- Enhanced Lightbox for Gallery with Navigation -->
     <script>
-    document.addEventListener('DOMContentLoaded', function() {
+    (function() {
         const galleryItems = document.querySelectorAll('.gallery-item');
         if (galleryItems.length === 0) return;
 
@@ -541,7 +541,7 @@ while (have_posts()) : the_post();
                 nextImage();
             }
         });
-    });
+    })();
 
     // === МОДАЛЬНЫЕ ОКНА ДЛЯ МАТЕРИАЛОВ ===
     function openMaterialModal(modalId) {
