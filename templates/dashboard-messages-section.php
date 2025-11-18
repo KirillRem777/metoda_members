@@ -101,12 +101,21 @@ $all_members = get_posts(array(
                             <?php foreach ($inbox_messages as $message):
                                 $sender_id = get_post_meta($message->ID, 'sender_member_id', true);
                                 $is_read = get_post_meta($message->ID, 'is_read', true);
+
+                                // Для незалогиненных отправителей
+                                if (empty($sender_id)) {
+                                    $sender_name = get_post_meta($message->ID, 'sender_name', true);
+                                    $sender_email = get_post_meta($message->ID, 'sender_email', true);
+                                    $sender_display = $sender_name . ' (' . $sender_email . ')';
+                                } else {
+                                    $sender_display = get_the_title($sender_id);
+                                }
                             ?>
                             <div class="message-item p-4 border rounded-lg hover:border-gray-300 transition-all cursor-pointer <?php echo !$is_read ? 'bg-blue-50 border-blue-200' : 'bg-white border-gray-200'; ?>" data-message-id="<?php echo $message->ID; ?>">
                                 <div class="flex items-start gap-4">
                                     <div class="flex-1">
                                         <div class="flex items-center gap-2 mb-1">
-                                            <span class="font-semibold text-gray-900"><?php echo get_the_title($sender_id); ?></span>
+                                            <span class="font-semibold text-gray-900"><?php echo esc_html($sender_display); ?></span>
                                             <?php if (!$is_read): ?>
                                             <span class="px-2 py-0.5 bg-blue-500 text-white text-xs rounded-full">Новое</span>
                                             <?php endif; ?>

@@ -3714,19 +3714,38 @@ function ajax_send_member_message() {
     // Проверка nonce
     check_ajax_referer('send_member_message', 'nonce');
 
-    if (!is_user_logged_in()) {
-        wp_send_json_error(array('message' => 'Необходимо войти в систему'));
-    }
-
     // Honeypot check (антиспам)
     if (!empty($_POST['website'])) {
         wp_send_json_error(array('message' => 'Обнаружена подозрительная активность'));
     }
 
-    $sender_user_id = get_current_user_id();
+    $is_logged_in = is_user_logged_in();
     $recipient_member_id = intval($_POST['recipient_id']);
     $subject = sanitize_text_field($_POST['subject']);
     $content = wp_kses_post($_POST['content']);
+
+    // Данные отправителя
+    if ($is_logged_in) {
+        $sender_user_id = get_current_user_id();
+        $sender_member_id = Member_User_Link::get_current_user_member_id();
+        $sender_name = get_the_title($sender_member_id);
+        $sender_email = wp_get_current_user()->user_email;
+    } else {
+        // Для незалогиненных - получаем из формы
+        $sender_user_id = 0;
+        $sender_member_id = 0;
+        $sender_name = sanitize_text_field($_POST['sender_name']);
+        $sender_email = sanitize_email($_POST['sender_email']);
+
+        // Валидация для незалогиненных
+        if (empty($sender_name) || empty($sender_email)) {
+            wp_send_json_error(array('message' => 'Укажите ваше имя и email'));
+        }
+
+        if (!is_email($sender_email)) {
+            wp_send_json_error(array('message' => 'Укажите корректный email'));
+        }
+    }
 
     // Валидация
     if (empty($subject) || empty($content)) {
@@ -3737,39 +3756,88 @@ function ajax_send_member_message() {
         wp_send_json_error(array('message' => 'Получатель не указан'));
     }
 
-    // Проверка: нельзя отправить сообщение самому себе
-    $sender_member_id = Member_User_Link::get_current_user_member_id();
-    if ($sender_member_id == $recipient_member_id) {
+    // Проверка: нельзя отправить сообщение самому себе (только для залогиненных)
+    if ($is_logged_in && $sender_member_id == $recipient_member_id) {
         wp_send_json_error(array('message' => 'Нельзя отправить сообщение самому себе'));
     }
 
     // === АНТИСПАМ ЗАЩИТА ===
 
-    // 1. Rate limiting: не более 10 сообщений в день
-    $today_start = strtotime('today');
-    $messages_today = get_posts(array(
-        'post_type' => 'member_message',
-        'author' => $sender_user_id,
-        'date_query' => array(
-            array(
-                'after' => date('Y-m-d 00:00:00', $today_start),
+    if ($is_logged_in) {
+        // 1. Rate limiting для залогиненных: не более 10 сообщений в день
+        $today_start = strtotime('today');
+        $messages_today = get_posts(array(
+            'post_type' => 'member_message',
+            'author' => $sender_user_id,
+            'date_query' => array(
+                array(
+                    'after' => date('Y-m-d 00:00:00', $today_start),
+                ),
             ),
-        ),
-        'posts_per_page' => -1,
-        'fields' => 'ids'
-    ));
+            'posts_per_page' => -1,
+            'fields' => 'ids'
+        ));
 
-    if (count($messages_today) >= 10) {
-        wp_send_json_error(array('message' => 'Вы достигли лимита сообщений на сегодня (10 в день)'));
-    }
+        if (count($messages_today) >= 10) {
+            wp_send_json_error(array('message' => 'Вы достигли лимита сообщений на сегодня (10 в день)'));
+        }
 
-    // 2. Cooldown: минимум 2 минуты между сообщениями
-    $last_message_time = get_user_meta($sender_user_id, 'last_message_sent_time', true);
-    if ($last_message_time) {
-        $time_diff = time() - intval($last_message_time);
-        if ($time_diff < 120) { // 120 секунд = 2 минуты
-            $wait_time = 120 - $time_diff;
-            wp_send_json_error(array('message' => 'Пожалуйста, подождите ' . $wait_time . ' секунд перед отправкой следующего сообщения'));
+        // 2. Cooldown: минимум 2 минуты между сообщениями
+        $last_message_time = get_user_meta($sender_user_id, 'last_message_sent_time', true);
+        if ($last_message_time) {
+            $time_diff = time() - intval($last_message_time);
+            if ($time_diff < 120) { // 120 секунд = 2 минуты
+                $wait_time = 120 - $time_diff;
+                wp_send_json_error(array('message' => 'Пожалуйста, подождите ' . $wait_time . ' секунд перед отправкой следующего сообщения'));
+            }
+        }
+    } else {
+        // Антиспам для незалогиненных - по IP и email
+        $sender_ip = $_SERVER['REMOTE_ADDR'];
+
+        // 1. Rate limiting по IP: не более 5 сообщений в день
+        $messages_from_ip = get_posts(array(
+            'post_type' => 'member_message',
+            'meta_query' => array(
+                array(
+                    'key' => 'sender_ip',
+                    'value' => $sender_ip,
+                ),
+            ),
+            'date_query' => array(
+                array(
+                    'after' => date('Y-m-d 00:00:00', strtotime('today')),
+                ),
+            ),
+            'posts_per_page' => -1,
+            'fields' => 'ids'
+        ));
+
+        if (count($messages_from_ip) >= 5) {
+            wp_send_json_error(array('message' => 'Превышен лимит сообщений на сегодня'));
+        }
+
+        // 2. Cooldown по IP: минимум 5 минут между сообщениями
+        $last_message_from_ip = get_posts(array(
+            'post_type' => 'member_message',
+            'meta_query' => array(
+                array(
+                    'key' => 'sender_ip',
+                    'value' => $sender_ip,
+                ),
+            ),
+            'posts_per_page' => 1,
+            'orderby' => 'date',
+            'order' => 'DESC'
+        ));
+
+        if (!empty($last_message_from_ip)) {
+            $last_time = strtotime($last_message_from_ip[0]->post_date);
+            $time_diff = time() - $last_time;
+            if ($time_diff < 300) { // 300 секунд = 5 минут
+                $wait_time = ceil((300 - $time_diff) / 60);
+                wp_send_json_error(array('message' => 'Пожалуйста, подождите ' . $wait_time . ' мин. перед отправкой следующего сообщения'));
+            }
         }
     }
 
@@ -3794,29 +3862,46 @@ function ajax_send_member_message() {
     update_post_meta($message_id, 'is_read', 0);
     update_post_meta($message_id, 'sent_at', current_time('mysql'));
 
-    // Обновляем время последней отправки
-    update_user_meta($sender_user_id, 'last_message_sent_time', time());
+    // Для незалогиненных - сохраняем дополнительные данные
+    if (!$is_logged_in) {
+        update_post_meta($message_id, 'sender_name', $sender_name);
+        update_post_meta($message_id, 'sender_email', $sender_email);
+        update_post_meta($message_id, 'sender_ip', $_SERVER['REMOTE_ADDR']);
+    }
 
-    // Отправляем email уведомление (если настроено)
+    // Обновляем время последней отправки
+    if ($is_logged_in) {
+        update_user_meta($sender_user_id, 'last_message_sent_time', time());
+    }
+
+    // Отправляем email уведомление получателю
     $recipient_user = get_user_by('ID', get_post_field('post_author', $recipient_member_id));
     if ($recipient_user) {
-        $notify_email = get_user_meta($recipient_user->ID, 'message_notify_email', true);
-        if ($notify_email == '1' || empty($notify_email)) { // По умолчанию включено
-            $sender_name = get_the_title($sender_member_id);
-            $recipient_name = get_the_title($recipient_member_id);
+        $recipient_name = get_the_title($recipient_member_id);
 
-            $email_subject = '[Метода] Новое сообщение от ' . $sender_name;
-            $email_body = "Здравствуйте, {$recipient_name}!\n\n";
-            $email_body .= "Вам пришло новое личное сообщение от {$sender_name}.\n\n";
-            $email_body .= "Тема: {$subject}\n\n";
-            $email_body .= "Чтобы прочитать сообщение, войдите в личный кабинет:\n";
-            $email_body .= get_permalink(get_option('metoda_dashboard_page_id')) . "\n\n";
-            $email_body .= "---\n";
-            $email_body .= "Вы получили это письмо, так как включены уведомления о новых сообщениях.\n";
-            $email_body .= "Отключить уведомления можно в настройках личного кабинета.";
+        $email_subject = '[Метода] Новое сообщение от ' . $sender_name;
+        $email_body = "Здравствуйте, {$recipient_name}!\n\n";
+        $email_body .= "Вам пришло новое личное сообщение от {$sender_name}";
 
-            wp_mail($recipient_user->user_email, $email_subject, $email_body);
+        if (!$is_logged_in) {
+            $email_body .= " ({$sender_email})";
         }
+
+        $email_body .= ".\n\nТема: {$subject}\n\n";
+
+        if ($is_logged_in) {
+            $email_body .= "Чтобы прочитать сообщение и ответить, войдите в личный кабинет:\n";
+            $email_body .= get_permalink(get_option('metoda_dashboard_page_id')) . "\n\n";
+        } else {
+            $email_body .= "Для ответа напишите на: {$sender_email}\n\n";
+            $email_body .= "Или прочитайте сообщение в личном кабинете:\n";
+            $email_body .= get_permalink(get_option('metoda_dashboard_page_id')) . "\n\n";
+        }
+
+        $email_body .= "---\n";
+        $email_body .= "Это сообщение отправлено через форму на сайте Метода.";
+
+        wp_mail($recipient_user->user_email, $email_subject, $email_body);
     }
 
     wp_send_json_success(array(
@@ -3825,6 +3910,7 @@ function ajax_send_member_message() {
     ));
 }
 add_action('wp_ajax_send_member_message', 'ajax_send_member_message');
+add_action('wp_ajax_nopriv_send_member_message', 'ajax_send_member_message'); // Для незалогиненных
 
 /**
  * AJAX обработчик для просмотра сообщения
@@ -3861,7 +3947,15 @@ function ajax_view_member_message() {
     // Формируем мета информацию
     $meta = '';
     if ($current_member_id == $recipient_id) {
-        $meta .= '<strong>От:</strong> ' . get_the_title($sender_id) . '<br>';
+        // Показываем отправителя
+        if (empty($sender_id)) {
+            // Сообщение от незалогиненного пользователя
+            $sender_name = get_post_meta($message_id, 'sender_name', true);
+            $sender_email = get_post_meta($message_id, 'sender_email', true);
+            $meta .= '<strong>От:</strong> ' . esc_html($sender_name) . ' (' . esc_html($sender_email) . ')<br>';
+        } else {
+            $meta .= '<strong>От:</strong> ' . get_the_title($sender_id) . '<br>';
+        }
     } else {
         $meta .= '<strong>Кому:</strong> ' . get_the_title($recipient_id) . '<br>';
     }

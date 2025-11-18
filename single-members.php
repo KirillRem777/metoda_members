@@ -190,7 +190,7 @@ while (have_posts()) : the_post();
                     <h1 class="text-xl font-semibold text-gray-900">Профиль участника</h1>
                 </div>
                 <div class="flex items-center space-x-3">
-                    <?php if (is_user_logged_in() && get_current_user_id() != get_the_author_meta('ID')): ?>
+                    <?php if (get_current_user_id() != get_the_author_meta('ID')): ?>
                     <button onclick="openMessageModal(<?php echo $member_id; ?>, '<?php echo esc_js(get_the_title()); ?>')" class="metoda-primary-bg text-white px-4 py-2 rounded-lg hover:opacity-90 transition-opacity">
                         <i class="fa-solid fa-paper-plane mr-2"></i>
                         Написать сообщение
@@ -632,6 +632,21 @@ while (have_posts()) : the_post();
                 </div>
 
                 <div class="space-y-4">
+                    <?php if (!is_user_logged_in()): ?>
+                    <!-- Ваше имя (для незалогиненных) -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Ваше имя *</label>
+                        <input type="text" name="sender_name" id="message_sender_name" required maxlength="100" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none" placeholder="Как вас зовут?">
+                    </div>
+
+                    <!-- Email для ответа (для незалогиненных) -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Email для ответа *</label>
+                        <input type="email" name="sender_email" id="message_sender_email" required class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none" placeholder="your@email.com">
+                        <p class="text-xs text-gray-500 mt-1">Участник сможет ответить вам на этот email</p>
+                    </div>
+                    <?php endif; ?>
+
                     <!-- Тема -->
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Тема сообщения *</label>
