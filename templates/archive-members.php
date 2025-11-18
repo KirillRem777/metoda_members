@@ -226,6 +226,12 @@ $roles = get_terms(array(
             border: none !important;
         }
 
+        /* Стили для активных кнопок фильтра */
+        .filter-radio:checked + div {
+            background-color: <?php echo $primary_color; ?> !important;
+            color: white !important;
+        }
+
         /* Селекты - увеличиваем padding справа для стрелки */
         select {
             padding-right: 2.5rem !important;
@@ -326,20 +332,20 @@ $roles = get_terms(array(
                         <label class="block text-sm font-medium text-gray-700 mb-3">Тип</label>
                         <div class="flex gap-2">
                             <label class="flex-1 filter-radio-label">
-                                <input type="radio" name="member_type" value="" <?php checked($type_filter, ''); ?> class="sr-only peer filter-radio">
-                                <div class="px-2 py-2 text-center rounded-lg font-medium text-xs cursor-pointer transition-all peer-checked:metoda-primary-bg peer-checked:text-white text-gray-600 bg-gray-100 hover:bg-gray-200">
+                                <input type="radio" name="member_type" value="" <?php checked($type_filter, ''); ?> class="sr-only filter-radio">
+                                <div class="px-2 py-2 text-center rounded-lg font-medium text-xs cursor-pointer transition-all text-gray-600 bg-gray-100 hover:bg-gray-200">
                                     Все
                                 </div>
                             </label>
                             <label class="flex-1 filter-radio-label">
-                                <input type="radio" name="member_type" value="uchastnik" <?php checked($type_filter, 'uchastnik'); ?> class="sr-only peer filter-radio">
-                                <div class="px-2 py-2 text-center rounded-lg font-medium text-xs cursor-pointer transition-all peer-checked:metoda-primary-bg peer-checked:text-white text-gray-600 bg-gray-100 hover:bg-gray-200">
+                                <input type="radio" name="member_type" value="uchastnik" <?php checked($type_filter, 'uchastnik'); ?> class="sr-only filter-radio">
+                                <div class="px-2 py-2 text-center rounded-lg font-medium text-xs cursor-pointer transition-all text-gray-600 bg-gray-100 hover:bg-gray-200">
                                     Участники
                                 </div>
                             </label>
                             <label class="flex-1 filter-radio-label">
-                                <input type="radio" name="member_type" value="ekspert" <?php checked($type_filter, 'ekspert'); ?> class="sr-only peer filter-radio">
-                                <div class="px-2 py-2 text-center rounded-lg font-medium text-xs cursor-pointer transition-all peer-checked:metoda-primary-bg peer-checked:text-white text-gray-600 bg-gray-100 hover:bg-gray-200">
+                                <input type="radio" name="member_type" value="ekspert" <?php checked($type_filter, 'ekspert'); ?> class="sr-only filter-radio">
+                                <div class="px-2 py-2 text-center rounded-lg font-medium text-xs cursor-pointer transition-all text-gray-600 bg-gray-100 hover:bg-gray-200">
                                     Эксперты
                                 </div>
                             </label>
