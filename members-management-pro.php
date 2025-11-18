@@ -512,19 +512,20 @@ function members_directory_shortcode($atts) {
     .filter-btn {
         padding: 8px 20px;
         background: #fff;
-        border: 2px solid #e0e0e0;
+        border: 1px solid #e0e0e0;
         border-radius: 25px;
         cursor: pointer;
         transition: all 0.3s;
         font-size: 14px;
-        color: #666;
+        color: #999;
+        white-space: nowrap;
     }
-    
+
     .filter-btn:hover {
         border-color: #007cba;
         color: #007cba;
     }
-    
+
     .filter-btn.active {
         background: #007cba;
         border-color: #007cba;
@@ -534,11 +535,16 @@ function members_directory_shortcode($atts) {
     .filter-select {
         width: 100%;
         max-width: 300px;
-        padding: 10px 15px;
+        padding: 10px 40px 10px 15px;
         border: 2px solid #e0e0e0;
         border-radius: 8px;
         font-size: 14px;
         outline: none;
+        appearance: none;
+        background-image: url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"%3e%3cpolyline points="6 9 12 15 18 9"%3e%3c/polyline%3e%3c/svg%3e');
+        background-repeat: no-repeat;
+        background-position: right 12px center;
+        background-size: 20px;
     }
     
     .members-grid {
@@ -621,18 +627,25 @@ function members_directory_shortcode($atts) {
         font-size: 14px;
         color: #666;
         font-weight: 500;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
     }
-    
+
     .member-company {
         margin: 0 0 15px 0;
         font-size: 13px;
         color: #999;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
     }
     
     .member-tags {
         display: flex;
         flex-wrap: wrap;
         gap: 8px;
+        justify-content: flex-start;
+        margin-left: 0;
+        padding-left: 0;
     }
     
     .tag {
@@ -654,15 +667,25 @@ function members_directory_shortcode($atts) {
         color: #7b1fa2;
     }
     
+    /* Предотвращаем малиновый цвет на кнопках "Показать еще" и других */
+    .members-directory-wrapper button:not(.filter-btn):active,
+    .members-directory-wrapper button:not(.filter-btn):focus,
+    .members-directory-wrapper .load-more:active,
+    .members-directory-wrapper .load-more:focus {
+        background-color: #007cba !important;
+        border-color: #007cba !important;
+        color: #fff !important;
+    }
+
     @media (max-width: 768px) {
         .members-grid {
             grid-template-columns: 1fr;
         }
-        
+
         .filter-buttons {
             flex-direction: column;
         }
-        
+
         .filter-btn {
             width: 100%;
         }

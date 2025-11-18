@@ -81,6 +81,14 @@ while (have_posts()) : the_post();
                     <?php endif; ?>
                     
                     <div class="member-contacts">
+                        <button id="send-message-btn" class="contact-link send-message-btn">
+                            <svg class="icon" width="20" height="20" fill="currentColor">
+                                <path d="M0 4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H4.414a1 1 0 0 0-.707.293L1.414 16.707A1 1 0 0 1 0 16V4zm2-1a1 1 0 0 0-1 1v10.586l2.293-2.293A2 2 0 0 1 4.414 12H14a1 1 0 0 0 1-1V4a1 1 0 0 0-1-1H2z"/>
+                                <path d="M3 5.5a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9a.5.5 0 0 1-.5-.5zM3 8a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9A.5.5 0 0 1 3 8zm0 2.5a.5.5 0 0 1 .5-.5h6a.5.5 0 0 1 0 1h-6a.5.5 0 0 1-.5-.5z"/>
+                            </svg>
+                            Отправить сообщение
+                        </button>
+
                         <?php if ($email) : ?>
                             <a href="mailto:<?php echo esc_attr($email); ?>" class="contact-link">
                                 <svg class="icon" width="20" height="20" fill="currentColor">
@@ -89,7 +97,7 @@ while (have_posts()) : the_post();
                                 Email
                             </a>
                         <?php endif; ?>
-                        
+
                         <?php if ($phone) : ?>
                             <a href="tel:<?php echo esc_attr($phone); ?>" class="contact-link">
                                 <svg class="icon" width="20" height="20" fill="currentColor">
@@ -98,7 +106,7 @@ while (have_posts()) : the_post();
                                 Позвонить
                             </a>
                         <?php endif; ?>
-                        
+
                         <?php if ($linkedin) : ?>
                             <a href="<?php echo esc_url($linkedin); ?>" target="_blank" class="contact-link">
                                 <svg class="icon" width="20" height="20" fill="currentColor">
@@ -107,7 +115,7 @@ while (have_posts()) : the_post();
                                 LinkedIn
                             </a>
                         <?php endif; ?>
-                        
+
                         <?php if ($website) : ?>
                             <a href="<?php echo esc_url($website); ?>" target="_blank" class="contact-link">
                                 <svg class="icon" width="20" height="20" fill="currentColor">
@@ -360,6 +368,17 @@ while (have_posts()) : the_post();
     background: rgba(255, 255, 255, 0.3);
 }
 
+.send-message-btn {
+    border: none;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: inherit;
+}
+
+.send-message-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
 .icon {
     fill: currentColor;
 }
@@ -414,13 +433,14 @@ while (have_posts()) : the_post();
     font-size: 16px;
     line-height: 1.8;
     color: #444;
+    font-weight: 400;
 }
 
 .bio-content {
     font-size: 16px;
     line-height: 1.8;
     color: #444;
-    font-style: italic;
+    font-weight: 400;
 }
 
 .sidebar-widget {
@@ -509,22 +529,146 @@ while (have_posts()) : the_post();
     .member-title {
         font-size: 32px;
     }
-    
+
     .member-position-large {
         font-size: 18px;
     }
-    
+
     .member-hero-photo img,
     .member-avatar-large {
         width: 180px;
         height: 180px;
     }
-    
+
     .info-section {
         padding: 25px;
     }
 }
+
+/* Стили для раздела материалов */
+.materials-section {
+    background: white;
+    padding: 40px;
+    border-radius: 12px;
+    margin-bottom: 30px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+}
+
+.materials-tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 30px;
+    border-bottom: 2px solid #f0f0f0;
+    flex-wrap: wrap;
+}
+
+.materials-tab {
+    padding: 12px 24px;
+    background: transparent;
+    border: none;
+    border-bottom: 3px solid transparent;
+    cursor: pointer;
+    font-size: 16px;
+    color: #666;
+    transition: all 0.3s;
+    font-weight: 500;
+}
+
+.materials-tab:hover {
+    color: #007cba;
+}
+
+.materials-tab.active {
+    color: #007cba;
+    border-bottom-color: #007cba;
+}
+
+.materials-content {
+    display: none;
+}
+
+.materials-content.active {
+    display: block;
+}
+
+.material-item {
+    padding: 20px;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.material-item:hover {
+    border-color: #007cba;
+    box-shadow: 0 2px 10px rgba(0, 123, 186, 0.1);
+}
+
+.material-item h4 {
+    margin: 0 0 10px 0;
+    color: #333;
+    font-size: 18px;
+}
+
+.material-item p {
+    margin: 0 0 10px 0;
+    color: #666;
+    font-size: 14px;
+}
+
+.material-item .read-more {
+    color: #007cba;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.material-item .read-more:hover {
+    text-decoration: underline;
+}
 </style>
+
+<script>
+jQuery(document).ready(function($) {
+    // Обработка кнопки "Отправить сообщение"
+    $('#send-message-btn').on('click', function() {
+        <?php if ($email) : ?>
+            window.location.href = 'mailto:<?php echo esc_js($email); ?>?subject=Сообщение с сайта МЕТОДА';
+        <?php else : ?>
+            alert('К сожалению, контактная информация недоступна');
+        <?php endif; ?>
+    });
+
+    // Переключение табов в разделе материалов
+    $('.materials-tab').on('click', function() {
+        var tabId = $(this).data('tab');
+
+        // Убираем активный класс со всех табов и контента
+        $('.materials-tab').removeClass('active');
+        $('.materials-content').removeClass('active');
+
+        // Добавляем активный класс к выбранному табу и контенту
+        $(this).addClass('active');
+        $('#' + tabId).addClass('active');
+    });
+
+    // Обработка клика на материал
+    $('.material-item').on('click', function(e) {
+        if (!$(e.target).hasClass('read-more')) {
+            var link = $(this).find('.read-more').attr('href');
+            if (link) {
+                window.location.href = link;
+            }
+        }
+    });
+
+    // Обработка клика на "подробнее"
+    $('.read-more').on('click', function(e) {
+        e.stopPropagation();
+    });
+});
+</script>
 
 <?php endwhile; ?>
 
