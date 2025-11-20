@@ -17,8 +17,9 @@ class Member_Archive {
     public function __construct() {
         add_shortcode('members_archive', array($this, 'render_archive'));
         add_action('wp_enqueue_scripts', array($this, 'enqueue_assets'));
-        add_action('wp_ajax_filter_members', array($this, 'ajax_filter_members'));
-        add_action('wp_ajax_nopriv_filter_members', array($this, 'ajax_filter_members'));
+        // AJAX фильтрация перенесена в members-management-pro.php (filter_members_ajax)
+        // add_action('wp_ajax_filter_members', array($this, 'ajax_filter_members'));
+        // add_action('wp_ajax_nopriv_filter_members', array($this, 'ajax_filter_members'));
     }
 
     /**
