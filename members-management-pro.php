@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Metoda Community MGMT
  * Description: Полнофункциональная система управления участниками и экспертами сообщества. Включает: регистрацию с валидацией, систему кодов доступа для импортированных участников, личные кабинеты с онбордингом, управление материалами с WYSIWYG-редактором, форум в стиле Reddit с категориями и лайками, настраиваемые email-шаблоны, CSV-импорт, кроппер фото, систему ролей и прав доступа, поиск и фильтрацию участников.
- * Version: 3.5.0
+ * Version: 3.5.1
  * Author: Kirill Rem
  * Text Domain: metoda-community-mgmt
  * Domain Path: /languages
@@ -4322,3 +4322,44 @@ function metoda_render_message_columns($column, $post_id) {
     }
 }
 add_action('manage_member_message_posts_custom_column', 'metoda_render_message_columns', 10, 2);
+
+/**
+ * Автосоздание страницы личного кабинета при загрузке админки
+ */
+function metoda_ensure_dashboard_page() {
+    // Проверяем только в админке
+    if (!is_admin()) {
+        return;
+    }
+
+    // Проверяем раз в день (чтобы не нагружать)
+    $last_check = get_option('metoda_dashboard_page_check');
+    if ($last_check && (time() - $last_check) < DAY_IN_SECONDS) {
+        return;
+    }
+
+    // Обновляем время проверки
+    update_option('metoda_dashboard_page_check', time());
+
+    // Проверяем, существует ли страница
+    $page = get_page_by_path('member-dashboard');
+
+    if (!$page) {
+        // Создаем страницу
+        $page_id = wp_insert_post(array(
+            'post_title' => 'Личный кабинет',
+            'post_name' => 'member-dashboard',
+            'post_content' => '[member_dashboard]',
+            'post_status' => 'publish',
+            'post_type' => 'page',
+            'post_author' => 1,
+            'comment_status' => 'closed',
+            'ping_status' => 'closed'
+        ));
+
+        if ($page_id && !is_wp_error($page_id)) {
+            error_log('Metoda: Создана страница личного кабинета (ID: ' . $page_id . ')');
+        }
+    }
+}
+add_action('admin_init', 'metoda_ensure_dashboard_page');
