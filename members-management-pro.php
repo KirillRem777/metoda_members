@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Metoda Community MGMT
  * Description: Полнофункциональная система управления участниками и экспертами сообщества. Включает: регистрацию с валидацией, систему кодов доступа для импортированных участников, личные кабинеты с онбордингом, управление материалами с WYSIWYG-редактором, форум в стиле Reddit с категориями и лайками, настраиваемые email-шаблоны, CSV-импорт, кроппер фото, систему ролей и прав доступа, поиск и фильтрацию участников.
- * Version: 3.4.2
+ * Version: 3.4.3
  * Author: Kirill Rem
  * Text Domain: metoda-community-mgmt
  * Domain Path: /languages
@@ -4247,3 +4247,52 @@ function metoda_forum_redirect_handler() {
         echo '<div class="wrap"><h1>Форум недоступен</h1><p>Страница форума не настроена.</p></div>';
     }
 }
+
+/**
+ * Добавление колонок в список сообщений в админке
+ */
+function metoda_add_message_columns($columns) {
+    $new_columns = array();
+    foreach ($columns as $key => $value) {
+        if ($key === 'title') {
+            $new_columns['sender'] = 'От кого';
+            $new_columns['recipient'] = 'Кому';
+        }
+        $new_columns[$key] = $value;
+    }
+    return $new_columns;
+}
+add_filter('manage_member_message_posts_columns', 'metoda_add_message_columns');
+
+/**
+ * Вывод данных в колонках сообщений
+ */
+function metoda_render_message_columns($column, $post_id) {
+    if ($column === 'sender') {
+        $sender_id = get_post_meta($post_id, 'sender_member_id', true);
+        if ($sender_id) {
+            echo '<strong>' . esc_html(get_the_title($sender_id)) . '</strong>';
+        } else {
+            $sender_name = get_post_meta($post_id, 'sender_name', true);
+            $sender_email = get_post_meta($post_id, 'sender_email', true);
+            if ($sender_name) {
+                echo '<strong>' . esc_html($sender_name) . '</strong><br>';
+                echo '<small style="color: #999;">' . esc_html($sender_email) . '</small>';
+            } else {
+                echo '<span style="color: #999;">Неизвестно</span>';
+            }
+        }
+    }
+    
+    if ($column === 'recipient') {
+        $recipient_id = get_post_meta($post_id, 'recipient_member_id', true);
+        if ($recipient_id) {
+            $dashboard_url = add_query_arg('member_id', $recipient_id, home_url('/member-dashboard/'));
+            echo '<strong><a href="' . esc_url(get_permalink($recipient_id)) . '" target="_blank">' . esc_html(get_the_title($recipient_id)) . '</a></strong>';
+            echo '<br><small><a href="' . esc_url($dashboard_url) . '" target="_blank" style="color: #0073aa;">→ Личный кабинет</a></small>';
+        } else {
+            echo '<span style="color: #999;">Неизвестно</span>';
+        }
+    }
+}
+add_action('manage_member_message_posts_custom_column', 'metoda_render_message_columns', 10, 2);
