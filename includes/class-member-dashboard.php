@@ -94,7 +94,22 @@ class Member_Dashboard {
 
         // Если админ указал member_id - пропускаем проверку своего member_id
         if ($is_admin && $viewing_member_id) {
-            // Админ просматривает чужой кабинет - загружаем шаблон
+            // Админ просматривает чужой кабинет
+
+            // Проверяем существование member post
+            $member_post = get_post($viewing_member_id);
+            if (!$member_post || $member_post->post_type !== 'members') {
+                return '<div style="padding: 40px; text-align: center; background: #f8d7da; border: 1px solid #f5c6cb; border-radius: 8px; margin: 20px;">
+                    <h3 style="color: #721c24;">❌ Участник не найден</h3>
+                    <p style="color: #721c24;">Участник с ID ' . $viewing_member_id . ' не существует.</p>
+                    <p><a href="' . admin_url('admin.php?page=metoda-activity-log') . '" style="color: #0066cc;">Вернуться к логам</a></p>
+                </div>';
+            }
+
+            // ВАЖНО: Устанавливаем переменные ДО загрузки шаблона!
+            $member_id = $viewing_member_id;
+            $is_viewing_other = true;
+
             ob_start();
             include plugin_dir_path(dirname(__FILE__)) . 'templates/member-dashboard.php';
             return ob_get_clean();
@@ -115,6 +130,9 @@ class Member_Dashboard {
             }
             return $this->render_no_profile_message();
         }
+
+        // Устанавливаем для обычного пользователя
+        $is_viewing_other = false;
 
         ob_start();
         include plugin_dir_path(dirname(__FILE__)) . 'templates/member-dashboard.php';

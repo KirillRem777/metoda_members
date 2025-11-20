@@ -2,42 +2,21 @@
 /**
  * Template: Member Dashboard
  * Личный кабинет участника с современным дизайном
+ *
+ * ВАЖНО: $member_id, $is_viewing_other уже установлены в render_dashboard()
  */
 
 if (!defined('ABSPATH')) {
     exit;
 }
 
-// Проверка прав администратора для просмотра чужих кабинетов
-$is_admin = current_user_can('administrator');
-$viewing_member_id = isset($_GET['member_id']) ? intval($_GET['member_id']) : null;
-
-// Если администратор указал member_id, показываем этот кабинет
-if ($is_admin && $viewing_member_id) {
-    $member_id = $viewing_member_id;
-    $is_viewing_other = true;
-
-    // Проверяем, существует ли этот member post
-    $member_post = get_post($member_id);
-    if (!$member_post || $member_post->post_type !== 'members') {
-        wp_die('Участник с ID ' . $member_id . ' не найден. <a href="' . admin_url('admin.php?page=metoda-activity-log') . '">Вернуться к логам</a>');
-    }
-} else {
-    // Обычный пользователь - свой кабинет
-    $member_id = Member_User_Link::get_current_user_member_id();
-    $is_viewing_other = false;
-
-    // Если это НЕ админ и нет своего member_id
-    if (!$member_id && !$is_admin) {
-        wp_die('У вас нет доступа к личному кабинету. Обратитесь к администратору. <a href="' . home_url() . '">Вернуться на главную</a>');
-    }
-
-    // Если это админ без своего member_id и без параметра member_id
-    if (!$member_id && $is_admin) {
-        wp_die('Укажите ID участника в URL (?member_id=XXX) для просмотра кабинета. <a href="' . admin_url('admin.php?page=metoda-activity-log') . '">Перейти к логам</a>');
-    }
+// Переменная $member_id уже должна быть установлена из render_dashboard()
+// Если ее нет - что-то пошло не так
+if (!isset($member_id)) {
+    wp_die('Ошибка: member_id не установлен. <a href="' . home_url() . '">Вернуться на главную</a>');
 }
 
+// Получаем данные участника
 $member_data = Member_Dashboard::get_member_data($member_id);
 $member_stats = Member_Dashboard::get_member_stats($member_id);
 $current_user = wp_get_current_user();
