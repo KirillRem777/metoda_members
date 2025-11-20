@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Metoda Community MGMT
  * Description: Полнофункциональная система управления участниками и экспертами сообщества. Включает: регистрацию с валидацией, систему кодов доступа для импортированных участников, личные кабинеты с онбордингом, управление материалами с WYSIWYG-редактором, форум в стиле Reddit с категориями и лайками, настраиваемые email-шаблоны, CSV-импорт, кроппер фото, систему ролей и прав доступа, поиск и фильтрацию участников.
- * Version: 3.4.1
+ * Version: 3.4.2
  * Author: Kirill Rem
  * Text Domain: metoda-community-mgmt
  * Domain Path: /languages
@@ -2285,8 +2285,9 @@ function ajax_filter_members() {
         'max_pages' => $query->max_num_pages
     ));
 }
-add_action('wp_ajax_filter_members', 'ajax_filter_members');
-add_action('wp_ajax_nopriv_filter_members', 'ajax_filter_members');
+// Закомментировано - используется filter_members_ajax() вместо этого
+// add_action('wp_ajax_filter_members', 'ajax_filter_members');
+// add_action('wp_ajax_nopriv_filter_members', 'ajax_filter_members');
 
 // ==========================================
 // Виджет статистики в админке
@@ -4040,7 +4041,7 @@ function metoda_render_activity_log_page() {
                 <?php
                 while ($members_query->have_posts()) {
                     $members_query->the_post();
-                    $dashboard_url = add_query_arg('member_id', get_the_ID(), home_url('/lichnyj-kabinet/'));
+                    $dashboard_url = add_query_arg('member_id', get_the_ID(), home_url('/member-dashboard/'));
                     echo '<option value="' . esc_url($dashboard_url) . '">' . esc_html(get_the_title()) . '</option>';
                 }
                 wp_reset_postdata();
@@ -4062,9 +4063,9 @@ function metoda_render_activity_log_page() {
                             </tr>
                         </thead>
                         <tbody>
-                            <?php while ($messages_query->have_posts()): $messages_query->the_post(); 
-                                $sender_id = get_post_meta(get_the_ID(), 'sender_id', true);
-                                $recipient_id = get_post_meta(get_the_ID(), 'recipient_id', true);
+                            <?php while ($messages_query->have_posts()): $messages_query->the_post();
+                                $sender_id = get_post_meta(get_the_ID(), 'sender_member_id', true);
+                                $recipient_id = get_post_meta(get_the_ID(), 'recipient_member_id', true);
                                 $sender_name = $sender_id ? get_the_title($sender_id) : get_post_meta(get_the_ID(), 'sender_name', true);
                                 $recipient_name = $recipient_id ? get_the_title($recipient_id) : 'Неизвестно';
                             ?>
@@ -4167,7 +4168,7 @@ add_filter('manage_members_posts_columns', 'metoda_add_dashboard_column');
  */
 function metoda_render_dashboard_column($column, $post_id) {
     if ($column === 'dashboard_access') {
-        $dashboard_url = add_query_arg('member_id', $post_id, home_url('/lichnyj-kabinet/'));
+        $dashboard_url = add_query_arg('member_id', $post_id, home_url('/member-dashboard/'));
         echo '<a href="' . esc_url($dashboard_url) . '" class="button button-small" target="_blank" title="Открыть личный кабинет этого участника">';
         echo '<span class="dashicons dashicons-visibility" style="margin-top: 3px;"></span> Просмотр ЛК';
         echo '</a>';
@@ -4233,8 +4234,15 @@ add_action('admin_menu', 'metoda_add_forum_admin_menu');
 function metoda_forum_redirect_handler() {
     $forum_url = get_post_type_archive_link('forum_topic');
     if ($forum_url) {
-        wp_redirect($forum_url);
-        exit;
+        ?>
+        <script type="text/javascript">
+            window.location.href = '<?php echo esc_url($forum_url); ?>';
+        </script>
+        <div class="wrap">
+            <h1>Перенаправление на форум...</h1>
+            <p>Если вы не были перенаправлены, <a href="<?php echo esc_url($forum_url); ?>">нажмите здесь</a>.</p>
+        </div>
+        <?php
     } else {
         echo '<div class="wrap"><h1>Форум недоступен</h1><p>Страница форума не настроена.</p></div>';
     }
