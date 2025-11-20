@@ -128,10 +128,36 @@ class Member_Manager {
             'paged' => $page,
             'orderby' => 'title',
             'order' => 'ASC',
+            'post_status' => array('publish', 'pending', 'draft'), // Показываем все статусы
         );
 
         if (!empty($search)) {
             $args['s'] = $search;
+        }
+
+        // Фильтры
+        $type = isset($_GET['type']) ? sanitize_text_field($_GET['type']) : '';
+        $city = isset($_GET['city']) ? sanitize_text_field($_GET['city']) : '';
+        $status = isset($_GET['status']) ? sanitize_text_field($_GET['status']) : '';
+
+        if (!empty($type)) {
+            $args['tax_query'][] = array(
+                'taxonomy' => 'member_type',
+                'field' => 'slug',
+                'terms' => $type,
+            );
+        }
+
+        if (!empty($city)) {
+            $args['meta_query'][] = array(
+                'key' => 'member_city',
+                'value' => $city,
+                'compare' => '=',
+            );
+        }
+
+        if (!empty($status)) {
+            $args['post_status'] = $status;
         }
 
         $query = new WP_Query($args);
@@ -142,15 +168,28 @@ class Member_Manager {
                 $query->the_post();
                 $member_id = get_the_ID();
 
+                // Получаем тип участника
+                $member_types = wp_get_post_terms($member_id, 'member_type', array('fields' => 'names'));
+                $member_type = !empty($member_types) ? $member_types[0] : '';
+
+                // URL личного кабинета
+                $dashboard_url = get_permalink(get_page_by_path('member-dashboard'));
+                $dashboard_link = add_query_arg('member_id', $member_id, $dashboard_url);
+
                 $members[] = array(
                     'id' => $member_id,
                     'title' => get_the_title(),
                     'position' => get_post_meta($member_id, 'member_position', true),
                     'company' => get_post_meta($member_id, 'member_company', true),
+                    'city' => get_post_meta($member_id, 'member_city', true),
                     'email' => get_post_meta($member_id, 'member_email', true),
                     'phone' => get_post_meta($member_id, 'member_phone', true),
                     'thumbnail' => get_the_post_thumbnail_url($member_id, 'thumbnail'),
                     'permalink' => get_permalink($member_id),
+                    'dashboard_url' => $dashboard_link,
+                    'member_type' => $member_type,
+                    'post_status' => get_post_status(),
+                    'post_date' => get_the_date('Y-m-d H:i:s'),
                 );
             }
         }

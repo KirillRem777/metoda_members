@@ -104,7 +104,7 @@
                 '<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">' + date + '</td>' +
                 '<td class="px-6 py-4 whitespace-nowrap">' + statusBadge + '</td>' +
                 '<td class="px-6 py-4 whitespace-nowrap text-sm space-x-2">' +
-                    '<button class="text-admin-blue hover:text-blue-700 font-medium edit-member" data-id="' + member.id + '">Edit</button>' +
+                    '<a href="' + member.dashboard_url + '" class="text-admin-blue hover:text-blue-700 font-medium">Edit</a>' +
                     '<button class="text-red-600 hover:text-red-700 font-medium delete-member" data-id="' + member.id + '" data-name="' + member.title + '">Delete</button>' +
                 '</td>' +
             '</tr>';
@@ -193,13 +193,6 @@
 
     // Инициализация действий над участниками
     function initMemberActions() {
-        // Редактирование
-        $('.edit-member').off('click').on('click', function() {
-            const memberId = $(this).data('id');
-            console.log('Edit member:', memberId);
-            loadMemberData(memberId);
-        });
-
         // Удаление
         $('.delete-member').off('click').on('click', function() {
             const memberId = $(this).data('id');

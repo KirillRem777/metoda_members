@@ -388,7 +388,11 @@ $roles = get_terms(array(
                     <button id="apply-filters" type="button" class="w-full metoda-primary-bg text-white py-2.5 rounded-lg hover:opacity-90 font-medium transition-all mb-2" style="border: none !important; outline: none !important;">
                         Применить фильтры
                     </button>
-                    <a href="<?php echo get_post_type_archive_link('members'); ?>" class="block w-full text-center bg-gray-100 text-gray-700 py-2.5 rounded-lg hover:bg-gray-200 font-medium transition-all" style="border: none !important; text-decoration: none;">
+                    <?php
+                    // Показываем кнопку "Очистить фильтр" только если есть активные фильтры
+                    $has_active_filters = !empty($search) || !empty($city_filter) || !empty($role_filter) || !empty($type_filter);
+                    ?>
+                    <a href="<?php echo get_post_type_archive_link('members'); ?>" class="block w-full text-center bg-gray-100 text-gray-700 py-2.5 rounded-lg hover:bg-gray-200 font-medium transition-all <?php echo !$has_active_filters ? 'hidden' : ''; ?>" id="clear-filters-btn" style="border: none !important; text-decoration: none;">
                         <i class="fas fa-times mr-2"></i>Очистить фильтр
                     </a>
                 </div>
