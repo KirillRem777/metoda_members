@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Metoda Community MGMT
  * Description: Полнофункциональная система управления участниками и экспертами сообщества. Включает: регистрацию с валидацией, систему кодов доступа для импортированных участников, личные кабинеты с онбордингом, управление материалами с WYSIWYG-редактором, форум в стиле Reddit с категориями и лайками, настраиваемые email-шаблоны, CSV-импорт, кроппер фото, систему ролей и прав доступа, поиск и фильтрацию участников.
- * Version: 3.4.0
+ * Version: 3.4.1
  * Author: Kirill Rem
  * Text Domain: metoda-community-mgmt
  * Domain Path: /languages
@@ -4174,3 +4174,68 @@ function metoda_render_dashboard_column($column, $post_id) {
     }
 }
 add_action('manage_members_posts_custom_column', 'metoda_render_dashboard_column', 10, 2);
+
+/**
+ * Ограничение доступа к форуму только для залогиненных пользователей
+ */
+function metoda_restrict_forum_access() {
+    // Проверяем, открыт ли single форум или архив форума
+    if (is_singular('forum_topic') || is_post_type_archive('forum_topic')) {
+        if (!is_user_logged_in()) {
+            // Перенаправляем на страницу входа
+            auth_redirect();
+        }
+    }
+}
+add_action('template_redirect', 'metoda_restrict_forum_access');
+
+/**
+ * Добавление ссылки на форум в админ-бар
+ */
+function metoda_add_forum_to_admin_bar($wp_admin_bar) {
+    if (!is_user_logged_in()) {
+        return;
+    }
+
+    $forum_url = get_post_type_archive_link('forum_topic');
+    if ($forum_url) {
+        $wp_admin_bar->add_node(array(
+            'id' => 'metoda-forum',
+            'title' => '<span class="ab-icon dashicons dashicons-format-chat"></span> Форум',
+            'href' => $forum_url,
+            'meta' => array(
+                'target' => '_blank'
+            )
+        ));
+    }
+}
+add_action('admin_bar_menu', 'metoda_add_forum_to_admin_bar', 100);
+
+/**
+ * Добавление пункта "Форум" в админ меню
+ */
+function metoda_add_forum_admin_menu() {
+    add_menu_page(
+        'Форум сообщества',
+        'Форум',
+        'read',
+        'metoda-forum-redirect',
+        'metoda_forum_redirect_handler',
+        'dashicons-format-chat',
+        31
+    );
+}
+add_action('admin_menu', 'metoda_add_forum_admin_menu');
+
+/**
+ * Редирект на форум из админки
+ */
+function metoda_forum_redirect_handler() {
+    $forum_url = get_post_type_archive_link('forum_topic');
+    if ($forum_url) {
+        wp_redirect($forum_url);
+        exit;
+    } else {
+        echo '<div class="wrap"><h1>Форум недоступен</h1><p>Страница форума не настроена.</p></div>';
+    }
+}
