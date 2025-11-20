@@ -657,7 +657,7 @@ while (have_posts()) : the_post();
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Сообщение *</label>
                         <div class="quill-editor-wrapper">
-                            <div id="message-editor" class="quill-editor"></div>
+                            <div id="message-editor" class="quill-editor" style="min-height: 250px;"></div>
                         </div>
                         <textarea name="content" id="message_content_hidden" style="display: none;"></textarea>
                         <p class="text-xs text-gray-500 mt-2">✨ Используйте панель инструментов для форматирования</p>

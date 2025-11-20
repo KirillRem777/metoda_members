@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Metoda Community MGMT
  * Description: Полнофункциональная система управления участниками и экспертами сообщества. Включает: регистрацию с валидацией, систему кодов доступа для импортированных участников, личные кабинеты с онбордингом, управление материалами с WYSIWYG-редактором, форум в стиле Reddit с категориями и лайками, настраиваемые email-шаблоны, CSV-импорт, кроппер фото, систему ролей и прав доступа, поиск и фильтрацию участников.
- * Version: 3.3.1
+ * Version: 3.4.0
  * Author: Kirill Rem
  * Text Domain: metoda-community-mgmt
  * Domain Path: /languages
@@ -3968,3 +3968,209 @@ function ajax_view_member_message() {
     ));
 }
 add_action('wp_ajax_view_member_message', 'ajax_view_member_message');
+
+/**
+ * Добавление страницы логов активности в админку
+ */
+function metoda_add_activity_log_menu() {
+    add_menu_page(
+        'Логи активности',
+        'Активность',
+        'manage_options',
+        'metoda-activity-log',
+        'metoda_render_activity_log_page',
+        'dashicons-visibility',
+        30
+    );
+}
+add_action('admin_menu', 'metoda_add_activity_log_menu');
+
+/**
+ * Рендер страницы логов активности
+ */
+function metoda_render_activity_log_page() {
+    if (!current_user_can('manage_options')) {
+        wp_die('У вас нет прав для просмотра этой страницы');
+    }
+
+    // Получаем последние сообщения
+    $messages_args = array(
+        'post_type' => 'member_message',
+        'posts_per_page' => 10,
+        'orderby' => 'date',
+        'order' => 'DESC',
+        'post_status' => array('publish', 'private')
+    );
+    $messages_query = new WP_Query($messages_args);
+
+    // Получаем последние посты форума
+    $forum_args = array(
+        'post_type' => 'forum_topic',
+        'posts_per_page' => 10,
+        'orderby' => 'date',
+        'order' => 'DESC'
+    );
+    $forum_query = new WP_Query($forum_args);
+
+    // Получаем всех участников для быстрого доступа
+    $members_args = array(
+        'post_type' => 'members',
+        'posts_per_page' => -1,
+        'orderby' => 'title',
+        'order' => 'ASC'
+    );
+    $members_query = new WP_Query($members_args);
+
+    ?>
+    <div class="wrap">
+        <h1 class="wp-heading-inline">
+            <span class="dashicons dashicons-visibility" style="font-size: 30px; width: 30px; height: 30px;"></span>
+            Логи активности участников
+        </h1>
+        <p class="description">Мониторинг активности пользователей: сообщения, посты на форуме и доступ к личным кабинетам</p>
+        
+        <hr class="wp-header-end">
+
+        <!-- Быстрый доступ к кабинетам -->
+        <div class="card" style="margin-top: 20px;">
+            <h2>🚀 Быстрый доступ к личным кабинетам</h2>
+            <p>Выберите участника для просмотра его личного кабинета:</p>
+            <select id="member-select" style="width: 400px; max-width: 100%;" onchange="if(this.value) window.open(this.value, '_blank')">
+                <option value="">-- Выберите участника --</option>
+                <?php
+                while ($members_query->have_posts()) {
+                    $members_query->the_post();
+                    $dashboard_url = add_query_arg('member_id', get_the_ID(), home_url('/lichnyj-kabinet/'));
+                    echo '<option value="' . esc_url($dashboard_url) . '">' . esc_html(get_the_title()) . '</option>';
+                }
+                wp_reset_postdata();
+                ?>
+            </select>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px;">
+            <!-- Последние сообщения -->
+            <div class="card">
+                <h2>💬 Последние сообщения (<?php echo $messages_query->found_posts; ?>)</h2>
+                <?php if ($messages_query->have_posts()): ?>
+                    <table class="wp-list-table widefat fixed striped">
+                        <thead>
+                            <tr>
+                                <th>Дата</th>
+                                <th>От кого → Кому</th>
+                                <th>Тема</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php while ($messages_query->have_posts()): $messages_query->the_post(); 
+                                $sender_id = get_post_meta(get_the_ID(), 'sender_id', true);
+                                $recipient_id = get_post_meta(get_the_ID(), 'recipient_id', true);
+                                $sender_name = $sender_id ? get_the_title($sender_id) : get_post_meta(get_the_ID(), 'sender_name', true);
+                                $recipient_name = $recipient_id ? get_the_title($recipient_id) : 'Неизвестно';
+                            ?>
+                                <tr>
+                                    <td><?php echo get_the_date('d.m.Y H:i'); ?></td>
+                                    <td>
+                                        <strong><?php echo esc_html($sender_name); ?></strong>
+                                        →
+                                        <strong><?php echo esc_html($recipient_name); ?></strong>
+                                    </td>
+                                    <td><?php the_title(); ?></td>
+                                </tr>
+                            <?php endwhile; ?>
+                        </tbody>
+                    </table>
+                <?php else: ?>
+                    <p>Сообщений пока нет</p>
+                <?php endif; wp_reset_postdata(); ?>
+            </div>
+
+            <!-- Последние посты форума -->
+            <div class="card">
+                <h2>📝 Последние посты на форуме (<?php echo $forum_query->found_posts; ?>)</h2>
+                <?php if ($forum_query->have_posts()): ?>
+                    <table class="wp-list-table widefat fixed striped">
+                        <thead>
+                            <tr>
+                                <th>Дата</th>
+                                <th>Автор</th>
+                                <th>Тема</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php while ($forum_query->have_posts()): $forum_query->the_post(); 
+                                $author_member_id = get_post_meta(get_the_ID(), 'author_member_id', true);
+                                $author_name = $author_member_id ? get_the_title($author_member_id) : get_the_author();
+                            ?>
+                                <tr>
+                                    <td><?php echo get_the_date('d.m.Y H:i'); ?></td>
+                                    <td><strong><?php echo esc_html($author_name); ?></strong></td>
+                                    <td>
+                                        <a href="<?php the_permalink(); ?>" target="_blank">
+                                            <?php the_title(); ?>
+                                        </a>
+                                    </td>
+                                </tr>
+                            <?php endwhile; ?>
+                        </tbody>
+                    </table>
+                <?php else: ?>
+                    <p>Постов на форуме пока нет</p>
+                <?php endif; wp_reset_postdata(); ?>
+            </div>
+        </div>
+
+        <style>
+            .card {
+                background: white;
+                padding: 20px;
+                border: 1px solid #ccd0d4;
+                box-shadow: 0 1px 1px rgba(0,0,0,.04);
+            }
+            .card h2 {
+                margin-top: 0;
+                font-size: 18px;
+                font-weight: 600;
+            }
+            .card table {
+                margin-top: 15px;
+            }
+            .card table th {
+                font-weight: 600;
+                background: #f6f7f7;
+            }
+            .card table td {
+                vertical-align: middle;
+            }
+            #member-select {
+                padding: 8px;
+                font-size: 14px;
+                border: 1px solid #8c8f94;
+                border-radius: 4px;
+            }
+        </style>
+    </div>
+    <?php
+}
+
+/**
+ * Добавление колонки "Личный кабинет" в список участников
+ */
+function metoda_add_dashboard_column($columns) {
+    $columns['dashboard_access'] = '<span class="dashicons dashicons-admin-home"></span> Личный кабинет';
+    return $columns;
+}
+add_filter('manage_members_posts_columns', 'metoda_add_dashboard_column');
+
+/**
+ * Вывод кнопки доступа к ЛК в колонке
+ */
+function metoda_render_dashboard_column($column, $post_id) {
+    if ($column === 'dashboard_access') {
+        $dashboard_url = add_query_arg('member_id', $post_id, home_url('/lichnyj-kabinet/'));
+        echo '<a href="' . esc_url($dashboard_url) . '" class="button button-small" target="_blank" title="Открыть личный кабинет этого участника">';
+        echo '<span class="dashicons dashicons-visibility" style="margin-top: 3px;"></span> Просмотр ЛК';
+        echo '</a>';
+    }
+}
+add_action('manage_members_posts_custom_column', 'metoda_render_dashboard_column', 10, 2);

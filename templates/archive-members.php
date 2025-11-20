@@ -523,17 +523,22 @@ $roles = get_terms(array(
             // Показываем индикатор загрузки
             $grid.css('opacity', '0.5');
 
+            const filterData = {
+                action: 'filter_members',
+                search: $('#search-input').val(),
+                city: $('#city-filter').val(),
+                role: $('#role-filter').val(),
+                member_type: $('input[name="member_type"]:checked').val()
+            };
+
+            console.log('Sending filter request:', filterData);
+
             $.ajax({
                 url: '<?php echo admin_url('admin-ajax.php'); ?>',
                 type: 'POST',
-                data: {
-                    action: 'filter_members',
-                    search: $('#search-input').val(),
-                    city: $('#city-filter').val(),
-                    role: $('#role-filter').val(),
-                    member_type: $('input[name="member_type"]:checked').val()
-                },
+                data: filterData,
                 success: function(response) {
+                    console.log('Filter response:', response);
                     if (response.success) {
                         // Заменяем содержимое
                         $grid.html(response.data.html);
@@ -557,8 +562,13 @@ $roles = get_terms(array(
                     }
                 },
                 error: function(xhr, status, error) {
-                    console.error('AJAX error:', status, error);
-                    $grid.html('<div class="text-center text-red-600 p-8">Ошибка соединения с сервером</div>');
+                    console.error('AJAX error details:', {
+                        status: status,
+                        error: error,
+                        responseText: xhr.responseText,
+                        statusCode: xhr.status
+                    });
+                    $grid.html('<div class="text-center text-red-600 p-8">Ошибка соединения с сервером. Проверьте консоль браузера.</div>');
                     $grid.css('opacity', '1');
                 },
                 complete: function() {

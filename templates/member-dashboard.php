@@ -8,7 +8,20 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-$member_id = Member_User_Link::get_current_user_member_id();
+// Проверка прав администратора для просмотра чужих кабинетов
+$is_admin = current_user_can('administrator');
+$viewing_member_id = isset($_GET['member_id']) ? intval($_GET['member_id']) : null;
+
+// Если администратор указал member_id, показываем этот кабинет
+if ($is_admin && $viewing_member_id) {
+    $member_id = $viewing_member_id;
+    $is_viewing_other = true;
+} else {
+    // Обычный пользователь - свой кабинет
+    $member_id = Member_User_Link::get_current_user_member_id();
+    $is_viewing_other = false;
+}
+
 $member_data = Member_Dashboard::get_member_data($member_id);
 $member_stats = Member_Dashboard::get_member_stats($member_id);
 $current_user = wp_get_current_user();
@@ -54,6 +67,23 @@ $accent_color = '#ff6600';
     <?php wp_head(); ?>
 </head>
 <body class="bg-gray-50">
+
+<?php if ($is_viewing_other): ?>
+<div class="bg-yellow-50 border-b-2 border-yellow-400 px-6 py-3">
+    <div class="flex items-center justify-between max-w-7xl mx-auto">
+        <div class="flex items-center gap-3">
+            <i class="fas fa-eye text-yellow-600 text-lg"></i>
+            <div>
+                <p class="text-sm font-semibold text-yellow-900">Режим просмотра администратора</p>
+                <p class="text-xs text-yellow-700">Вы просматриваете кабинет участника: <strong><?php echo esc_html($member_data['full_name'] ?? 'ID ' . $member_id); ?></strong></p>
+            </div>
+        </div>
+        <a href="<?php echo admin_url('admin.php?page=metoda-activity-log'); ?>" class="text-xs text-yellow-700 hover:text-yellow-900 font-medium">
+            <i class="fas fa-arrow-left mr-1"></i> Вернуться к логам
+        </a>
+    </div>
+</div>
+<?php endif; ?>
 
 <div id="member-dashboard" class="flex h-screen overflow-hidden">
 
