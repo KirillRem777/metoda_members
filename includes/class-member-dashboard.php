@@ -181,10 +181,24 @@ class Member_Dashboard {
             wp_send_json_error(array('message' => 'Необходимо авторизоваться'));
         }
 
-        $member_id = Member_User_Link::get_current_user_member_id();
+        // Проверяем, редактирует ли админ чужой профиль
+        $is_admin = current_user_can('administrator');
+        $editing_member_id = isset($_POST['member_id']) ? intval($_POST['member_id']) : null;
 
-        if (!$member_id || !Member_User_Link::can_user_edit_member($member_id)) {
-            wp_send_json_error(array('message' => 'Нет прав на редактирование'));
+        if ($is_admin && $editing_member_id) {
+            // Админ редактирует чужой профиль - проверяем существование
+            $member_post = get_post($editing_member_id);
+            if (!$member_post || $member_post->post_type !== 'members') {
+                wp_send_json_error(array('message' => 'Участник не найден'));
+            }
+            $member_id = $editing_member_id;
+        } else {
+            // Обычный пользователь редактирует свой профиль
+            $member_id = Member_User_Link::get_current_user_member_id();
+
+            if (!$member_id || !Member_User_Link::can_user_edit_member($member_id)) {
+                wp_send_json_error(array('message' => 'Нет прав на редактирование'));
+            }
         }
 
         // Get and sanitize form data
@@ -230,10 +244,24 @@ class Member_Dashboard {
             wp_send_json_error(array('message' => 'Необходимо авторизоваться'));
         }
 
-        $member_id = Member_User_Link::get_current_user_member_id();
+        // Проверяем, редактирует ли админ чужой профиль
+        $is_admin = current_user_can('administrator');
+        $editing_member_id = isset($_POST['member_id']) ? intval($_POST['member_id']) : null;
 
-        if (!$member_id || !Member_User_Link::can_user_edit_member($member_id)) {
-            wp_send_json_error(array('message' => 'Нет прав на редактирование'));
+        if ($is_admin && $editing_member_id) {
+            // Админ редактирует чужой профиль - проверяем существование
+            $member_post = get_post($editing_member_id);
+            if (!$member_post || $member_post->post_type !== 'members') {
+                wp_send_json_error(array('message' => 'Участник не найден'));
+            }
+            $member_id = $editing_member_id;
+        } else {
+            // Обычный пользователь редактирует свой профиль
+            $member_id = Member_User_Link::get_current_user_member_id();
+
+            if (!$member_id || !Member_User_Link::can_user_edit_member($member_id)) {
+                wp_send_json_error(array('message' => 'Нет прав на редактирование'));
+            }
         }
 
         if (!isset($_POST['gallery_ids'])) {

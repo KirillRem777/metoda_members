@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Metoda Community MGMT
  * Description: Полнофункциональная система управления участниками и экспертами сообщества. Включает: регистрацию с валидацией, систему кодов доступа для импортированных участников, личные кабинеты с онбордингом, управление материалами с WYSIWYG-редактором, форум в стиле Reddit с категориями и лайками, настраиваемые email-шаблоны, CSV-импорт, кроппер фото, систему ролей и прав доступа, поиск и фильтрацию участников.
- * Version: 3.6.0
+ * Version: 3.6.1
  * Author: Kirill Rem
  * Text Domain: metoda-community-mgmt
  * Domain Path: /languages
@@ -3029,9 +3029,21 @@ function member_add_material_link_ajax() {
         wp_send_json_error(array('message' => 'Необходима авторизация'));
     }
 
-    $member_id = Member_User_Link::get_current_user_member_id();
-    if (!$member_id) {
-        wp_send_json_error(array('message' => 'Участник не найден'));
+    // Проверяем, редактирует ли админ чужой профиль
+    $is_admin = current_user_can('administrator');
+    $editing_member_id = isset($_POST['member_id']) ? intval($_POST['member_id']) : null;
+
+    if ($is_admin && $editing_member_id) {
+        $member_post = get_post($editing_member_id);
+        if (!$member_post || $member_post->post_type !== 'members') {
+            wp_send_json_error(array('message' => 'Участник не найден'));
+        }
+        $member_id = $editing_member_id;
+    } else {
+        $member_id = Member_User_Link::get_current_user_member_id();
+        if (!$member_id) {
+            wp_send_json_error(array('message' => 'Участник не найден'));
+        }
     }
 
     $category = sanitize_text_field($_POST['category']);
@@ -3077,9 +3089,21 @@ function member_add_material_file_ajax() {
         wp_send_json_error(array('message' => 'Необходима авторизация'));
     }
 
-    $member_id = Member_User_Link::get_current_user_member_id();
-    if (!$member_id) {
-        wp_send_json_error(array('message' => 'Участник не найден'));
+    // Проверяем, редактирует ли админ чужой профиль
+    $is_admin = current_user_can('administrator');
+    $editing_member_id = isset($_POST['member_id']) ? intval($_POST['member_id']) : null;
+
+    if ($is_admin && $editing_member_id) {
+        $member_post = get_post($editing_member_id);
+        if (!$member_post || $member_post->post_type !== 'members') {
+            wp_send_json_error(array('message' => 'Участник не найден'));
+        }
+        $member_id = $editing_member_id;
+    } else {
+        $member_id = Member_User_Link::get_current_user_member_id();
+        if (!$member_id) {
+            wp_send_json_error(array('message' => 'Участник не найден'));
+        }
     }
 
     // Проверяем, был ли загружен файл
@@ -3493,7 +3517,27 @@ function ajax_add_portfolio_material() {
     // Проверка nonce
     check_ajax_referer('member_dashboard_nonce', 'nonce');
 
-    $member_id = Member_User_Link::get_current_user_member_id();
+    if (!is_user_logged_in()) {
+        wp_send_json_error(array('message' => 'Необходима авторизация'));
+    }
+
+    // Проверяем, редактирует ли админ чужой профиль
+    $is_admin = current_user_can('administrator');
+    $editing_member_id = isset($_POST['member_id']) ? intval($_POST['member_id']) : null;
+
+    if ($is_admin && $editing_member_id) {
+        $member_post = get_post($editing_member_id);
+        if (!$member_post || $member_post->post_type !== 'members') {
+            wp_send_json_error(array('message' => 'Участник не найден'));
+        }
+        $member_id = $editing_member_id;
+    } else {
+        $member_id = Member_User_Link::get_current_user_member_id();
+        if (!$member_id) {
+            wp_send_json_error(array('message' => 'Участник не найден'));
+        }
+    }
+
     if (!$member_id) {
         wp_send_json_error(array('message' => 'Участник не найден'));
     }

@@ -148,7 +148,8 @@
                 data: {
                     action: 'member_update_gallery',
                     nonce: memberDashboard.nonce,
-                    gallery_ids: galleryIds
+                    gallery_ids: galleryIds,
+                    member_id: $('input[name="member_id"]').val() // Для админов, редактирующих чужие профили
                 },
                 success: function(response) {
                     if (response.success) {

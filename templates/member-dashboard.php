@@ -207,6 +207,8 @@ $accent_color = '#ff6600';
 
                     <!-- Profile Form -->
                     <form id="profile-form" class="bg-white rounded-xl shadow-sm border border-gray-200">
+                        <!-- Hidden field для передачи member_id в AJAX (для админов, редактирующих чужие профили) -->
+                        <input type="hidden" name="member_id" value="<?php echo esc_attr($member_id); ?>">
 
                         <!-- Basic Info -->
                         <div id="basic-info" class="p-8 border-b border-gray-200">

@@ -202,10 +202,22 @@ class Member_File_Manager {
             wp_send_json_error(array('message' => 'Необходимо авторизоваться'));
         }
 
-        $member_id = Member_User_Link::get_current_user_member_id();
+        // Проверяем, редактирует ли админ чужой профиль
+        $is_admin = current_user_can('administrator');
+        $editing_member_id = isset($_POST['member_id']) ? intval($_POST['member_id']) : null;
 
-        if (!$member_id || !Member_User_Link::can_user_edit_member($member_id)) {
-            wp_send_json_error(array('message' => 'Нет прав на редактирование'));
+        if ($is_admin && $editing_member_id) {
+            $member_post = get_post($editing_member_id);
+            if (!$member_post || $member_post->post_type !== 'members') {
+                wp_send_json_error(array('message' => 'Участник не найден'));
+            }
+            $member_id = $editing_member_id;
+        } else {
+            $member_id = Member_User_Link::get_current_user_member_id();
+
+            if (!$member_id || !Member_User_Link::can_user_edit_member($member_id)) {
+                wp_send_json_error(array('message' => 'Нет прав на редактирование'));
+            }
         }
 
         $category = isset($_POST['category']) ? sanitize_text_field($_POST['category']) : '';
@@ -234,10 +246,22 @@ class Member_File_Manager {
             wp_send_json_error(array('message' => 'Необходимо авторизоваться'));
         }
 
-        $member_id = Member_User_Link::get_current_user_member_id();
+        // Проверяем, смотрит ли админ чужой профиль
+        $is_admin = current_user_can('administrator');
+        $viewing_member_id = isset($_GET['member_id']) ? intval($_GET['member_id']) : null;
 
-        if (!$member_id) {
-            wp_send_json_error(array('message' => 'Профиль не найден'));
+        if ($is_admin && $viewing_member_id) {
+            $member_post = get_post($viewing_member_id);
+            if (!$member_post || $member_post->post_type !== 'members') {
+                wp_send_json_error(array('message' => 'Участник не найден'));
+            }
+            $member_id = $viewing_member_id;
+        } else {
+            $member_id = Member_User_Link::get_current_user_member_id();
+
+            if (!$member_id) {
+                wp_send_json_error(array('message' => 'Профиль не найден'));
+            }
         }
 
         $category = isset($_GET['category']) ? sanitize_text_field($_GET['category']) : '';
