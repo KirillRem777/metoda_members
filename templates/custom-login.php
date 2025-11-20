@@ -150,6 +150,29 @@ $accent_color = '#ff6600';
                     </div>
                 </div>
 
+                <!-- Access Code Field (for imported members) -->
+                <div id="access-code-field">
+                    <label for="access_code" class="block text-sm font-semibold text-gray-700 mb-2">
+                        Код доступа <span class="text-xs font-normal text-gray-500">(если вы получили код)</span>
+                    </label>
+                    <div class="relative">
+                        <input
+                            type="text"
+                            id="access_code"
+                            name="access_code"
+                            class="w-full px-4 py-3 pl-12 border border-gray-300 rounded-xl focus:ring-2 focus:border-transparent transition-all text-base uppercase"
+                            placeholder="Введите код доступа (необязательно)"
+                            style="outline: none; --tw-ring-color: <?php echo $primary_color; ?>;"
+                            maxlength="20"
+                        >
+                        <i class="fas fa-key absolute left-4 top-4 text-gray-400"></i>
+                    </div>
+                    <p class="mt-2 text-xs text-gray-500">
+                        <i class="fas fa-info-circle mr-1"></i>
+                        Если у вас уже есть профиль в системе, вы можете войти с помощью кода доступа, который был вам отправлен.
+                    </p>
+                </div>
+
                 <!-- Remember Me and Forgot Password -->
                 <div class="flex items-center justify-between">
                     <label class="flex items-center">

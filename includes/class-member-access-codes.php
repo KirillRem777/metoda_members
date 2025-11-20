@@ -22,6 +22,9 @@ class Member_Access_Codes {
         add_action('wp_ajax_export_access_codes', array($this, 'ajax_export_codes'));
         add_action('wp_ajax_validate_access_code', array($this, 'ajax_validate_code'));
         add_action('wp_ajax_nopriv_validate_access_code', array($this, 'ajax_validate_code'));
+
+        // Hook для аутентификации через код доступа
+        add_filter('authenticate', array($this, 'authenticate_with_access_code'), 30, 3);
     }
 
     /**
@@ -504,6 +507,104 @@ class Member_Access_Codes {
             'member_name' => $member->post_title,
             'member_id' => $member->ID
         ));
+    }
+
+    /**
+     * Authenticate user with access code
+     * Allows users to login using their access code instead of password
+     */
+    public function authenticate_with_access_code($user, $username, $password) {
+        // Проверяем есть ли код доступа в запросе
+        if (empty($_POST['access_code'])) {
+            return $user;
+        }
+
+        $access_code = sanitize_text_field($_POST['access_code']);
+
+        // Ищем участника по коду доступа
+        $args = array(
+            'post_type' => 'members',
+            'post_status' => array('publish', 'pending', 'draft'),
+            'meta_query' => array(
+                array(
+                    'key' => '_access_code',
+                    'value' => $access_code,
+                    'compare' => '='
+                )
+            ),
+            'posts_per_page' => 1
+        );
+
+        $query = new WP_Query($args);
+
+        if (!$query->have_posts()) {
+            // Код не найден
+            return new WP_Error('invalid_access_code', '<strong>Ошибка:</strong> Неверный код доступа.');
+        }
+
+        $member_post = $query->posts[0];
+        $member_email = get_post_meta($member_post->ID, 'member_email', true);
+
+        // Проверяем, есть ли связанный пользователь
+        $linked_user_id = get_post_meta($member_post->ID, '_linked_user_id', true);
+
+        if ($linked_user_id) {
+            // Пользователь уже создан - входим
+            $user_obj = get_user_by('ID', $linked_user_id);
+
+            if ($user_obj) {
+                return $user_obj;
+            }
+        }
+
+        // Пользователь еще не создан - создаем нового
+        if (empty($member_email)) {
+            return new WP_Error('no_email', '<strong>Ошибка:</strong> У участника не указан email. Обратитесь к администратору.');
+        }
+
+        // Проверяем, не существует ли уже пользователь с таким email
+        $existing_user = get_user_by('email', $member_email);
+        if ($existing_user) {
+            // Линкуем существующего пользователя
+            update_post_meta($member_post->ID, '_linked_user_id', $existing_user->ID);
+            return $existing_user;
+        }
+
+        // Создаем нового пользователя
+        $random_password = wp_generate_password(12, true, true);
+        $user_data = array(
+            'user_login' => $member_email,
+            'user_email' => $member_email,
+            'user_pass' => $random_password,
+            'display_name' => $member_post->post_title,
+            'role' => 'member'
+        );
+
+        $new_user_id = wp_insert_user($user_data);
+
+        if (is_wp_error($new_user_id)) {
+            return new WP_Error('user_creation_failed', '<strong>Ошибка:</strong> Не удалось создать пользователя. ' . $new_user_id->get_error_message());
+        }
+
+        // Линкуем пользователя с профилем
+        update_post_meta($member_post->ID, '_linked_user_id', $new_user_id);
+
+        // Отправляем email с новым паролем
+        $to = $member_email;
+        $subject = 'Ваш аккаунт создан - ' . get_bloginfo('name');
+        $message = sprintf(
+            "Здравствуйте, %s!\n\nВаш аккаунт был успешно создан.\n\nEmail: %s\nВременный пароль: %s\n\nРекомендуем изменить пароль после входа.\n\nЛичный кабинет: %s",
+            $member_post->post_title,
+            $member_email,
+            $random_password,
+            home_url('/member-dashboard/')
+        );
+
+        wp_mail($to, $subject, $message);
+
+        // Возвращаем нового пользователя
+        $new_user = get_user_by('ID', $new_user_id);
+        return $new_user;
     }
 }
 
