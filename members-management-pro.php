@@ -4324,42 +4324,114 @@ function metoda_render_message_columns($column, $post_id) {
 add_action('manage_member_message_posts_custom_column', 'metoda_render_message_columns', 10, 2);
 
 /**
- * Автосоздание страницы личного кабинета при загрузке админки
+ * Автосоздание всех важных страниц при загрузке админки
  */
-function metoda_ensure_dashboard_page() {
+function metoda_ensure_important_pages() {
     // Проверяем только в админке
     if (!is_admin()) {
         return;
     }
 
     // Проверяем раз в день (чтобы не нагружать)
-    $last_check = get_option('metoda_dashboard_page_check');
+    $last_check = get_option('metoda_pages_check');
     if ($last_check && (time() - $last_check) < DAY_IN_SECONDS) {
         return;
     }
 
     // Обновляем время проверки
-    update_option('metoda_dashboard_page_check', time());
+    update_option('metoda_pages_check', time());
 
-    // Проверяем, существует ли страница
-    $page = get_page_by_path('member-dashboard');
+    // Список важных страниц
+    $important_pages = array(
+        array(
+            'slug' => 'member-dashboard',
+            'title' => 'Личный кабинет',
+            'shortcode' => '[member_dashboard]',
+            'description' => 'Личный кабинет участника'
+        ),
+        array(
+            'slug' => 'custom-login',
+            'title' => 'Вход',
+            'shortcode' => '[custom_login]',
+            'description' => 'Страница входа в систему'
+        ),
+        array(
+            'slug' => 'registration',
+            'title' => 'Регистрация',
+            'shortcode' => '[member_registration]',
+            'description' => 'Страница регистрации участника'
+        ),
+        array(
+            'slug' => 'member-onboarding',
+            'title' => 'Онбординг',
+            'shortcode' => '[member_onboarding]',
+            'description' => 'Страница онбординга для новых участников'
+        ),
+        array(
+            'slug' => 'manager-panel',
+            'title' => 'Панель менеджера',
+            'shortcode' => '[member_manager]',
+            'description' => 'Панель управления для менеджеров'
+        ),
+        array(
+            'slug' => 'forgot-password',
+            'title' => 'Восстановление пароля',
+            'shortcode' => '[forgot_password]',
+            'description' => 'Страница восстановления пароля'
+        )
+    );
 
-    if (!$page) {
-        // Создаем страницу
-        $page_id = wp_insert_post(array(
-            'post_title' => 'Личный кабинет',
-            'post_name' => 'member-dashboard',
-            'post_content' => '[member_dashboard]',
-            'post_status' => 'publish',
-            'post_type' => 'page',
-            'post_author' => 1,
-            'comment_status' => 'closed',
-            'ping_status' => 'closed'
-        ));
+    $created_pages = array();
 
-        if ($page_id && !is_wp_error($page_id)) {
-            error_log('Metoda: Создана страница личного кабинета (ID: ' . $page_id . ')');
+    foreach ($important_pages as $page_config) {
+        // Проверяем, существует ли страница
+        $page = get_page_by_path($page_config['slug']);
+
+        if (!$page) {
+            // Создаем страницу
+            $page_id = wp_insert_post(array(
+                'post_title' => $page_config['title'],
+                'post_name' => $page_config['slug'],
+                'post_content' => $page_config['shortcode'],
+                'post_status' => 'publish',
+                'post_type' => 'page',
+                'post_author' => 1,
+                'comment_status' => 'closed',
+                'ping_status' => 'closed'
+            ));
+
+            if ($page_id && !is_wp_error($page_id)) {
+                $created_pages[] = $page_config['title'] . ' (/' . $page_config['slug'] . '/)';
+                error_log('Metoda: Создана страница "' . $page_config['title'] . '" (ID: ' . $page_id . ')');
+            }
         }
     }
+
+    // Если были созданы страницы, показываем уведомление админу
+    if (!empty($created_pages)) {
+        set_transient('metoda_pages_created_notice', $created_pages, 300);
+    }
 }
-add_action('admin_init', 'metoda_ensure_dashboard_page');
+add_action('admin_init', 'metoda_ensure_important_pages');
+
+/**
+ * Показываем уведомление о созданных страницах
+ */
+function metoda_show_pages_created_notice() {
+    $created_pages = get_transient('metoda_pages_created_notice');
+    if ($created_pages) {
+        ?>
+        <div class="notice notice-success is-dismissible">
+            <p><strong>Metoda Community:</strong> Автоматически созданы следующие страницы:</p>
+            <ul style="list-style: disc; padding-left: 20px;">
+                <?php foreach ($created_pages as $page): ?>
+                    <li><?php echo esc_html($page); ?></li>
+                <?php endforeach; ?>
+            </ul>
+            <p>Вы можете найти их в разделе <a href="<?php echo admin_url('edit.php?post_type=page'); ?>">Страницы</a>.</p>
+        </div>
+        <?php
+        delete_transient('metoda_pages_created_notice');
+    }
+}
+add_action('admin_notices', 'metoda_show_pages_created_notice');
