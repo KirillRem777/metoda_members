@@ -56,7 +56,17 @@ $accent_color = '#ff6600';
             }
         }
     </script>
-    <?php wp_head(); ?>
+    <?php
+    // Загружаем скрипты менеджера
+    wp_enqueue_style('member-manager', plugin_dir_url(dirname(__FILE__)) . '../assets/css/member-manager.css', array(), '1.0.0');
+    wp_enqueue_script('member-manager', plugin_dir_url(dirname(__FILE__)) . '../assets/js/member-manager.js', array('jquery'), '1.0.0', true);
+    wp_localize_script('member-manager', 'memberManager', array(
+        'ajaxUrl' => admin_url('admin-ajax.php'),
+        'nonce' => wp_create_nonce('member_manager_nonce'),
+    ));
+    wp_enqueue_media();
+    wp_head();
+    ?>
 </head>
 <body class="bg-gray-50">
 
