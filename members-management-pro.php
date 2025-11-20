@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Metoda Community MGMT
  * Description: Полнофункциональная система управления участниками и экспертами сообщества. Включает: регистрацию с валидацией, систему кодов доступа для импортированных участников, личные кабинеты с онбордингом, управление материалами с WYSIWYG-редактором, форум в стиле Reddit с категориями и лайками, настраиваемые email-шаблоны, CSV-импорт, кроппер фото, систему ролей и прав доступа, поиск и фильтрацию участников.
- * Version: 3.4.3
+ * Version: 3.4.4
  * Author: Kirill Rem
  * Text Domain: metoda-community-mgmt
  * Domain Path: /languages
@@ -3332,6 +3332,9 @@ add_action('wp_ajax_nopriv_load_more_members', 'load_more_members_ajax');
  * AJAX обработчик для фильтрации участников
  */
 function filter_members_ajax() {
+    // Для отладки - логируем что функция вызвана
+    error_log('filter_members_ajax called');
+
     $search = isset($_POST['search']) ? sanitize_text_field($_POST['search']) : '';
     $city = isset($_POST['city']) ? sanitize_text_field($_POST['city']) : '';
     $role = isset($_POST['role']) ? sanitize_text_field($_POST['role']) : '';
@@ -3469,12 +3472,16 @@ function filter_members_ajax() {
     wp_reset_postdata();
     $html = ob_get_clean();
 
+    error_log('Sending JSON response: shown=' . count($paged_members) . ', total=' . $total_found);
+
     wp_send_json_success(array(
         'html' => $html,
         'shown' => count($paged_members),
         'total' => $total_found,
         'has_more' => $total_found > count($paged_members)
     ));
+
+    exit; // Принудительно завершаем выполнение
 }
 add_action('wp_ajax_filter_members', 'filter_members_ajax');
 add_action('wp_ajax_nopriv_filter_members', 'filter_members_ajax');
@@ -4066,7 +4073,20 @@ function metoda_render_activity_log_page() {
                             <?php while ($messages_query->have_posts()): $messages_query->the_post();
                                 $sender_id = get_post_meta(get_the_ID(), 'sender_member_id', true);
                                 $recipient_id = get_post_meta(get_the_ID(), 'recipient_member_id', true);
-                                $sender_name = $sender_id ? get_the_title($sender_id) : get_post_meta(get_the_ID(), 'sender_name', true);
+
+                                // Определяем имя отправителя
+                                if ($sender_id) {
+                                    $sender_name = get_the_title($sender_id);
+                                } else {
+                                    // Проверяем, не администратор ли это
+                                    $post_author_id = get_post_field('post_author', get_the_ID());
+                                    if ($post_author_id && user_can($post_author_id, 'administrator')) {
+                                        $sender_name = '👑 Администратор';
+                                    } else {
+                                        $sender_name = get_post_meta(get_the_ID(), 'sender_name', true) ?: 'Неизвестно';
+                                    }
+                                }
+
                                 $recipient_name = $recipient_id ? get_the_title($recipient_id) : 'Неизвестно';
                             ?>
                                 <tr>
@@ -4273,13 +4293,19 @@ function metoda_render_message_columns($column, $post_id) {
         if ($sender_id) {
             echo '<strong>' . esc_html(get_the_title($sender_id)) . '</strong>';
         } else {
-            $sender_name = get_post_meta($post_id, 'sender_name', true);
-            $sender_email = get_post_meta($post_id, 'sender_email', true);
-            if ($sender_name) {
-                echo '<strong>' . esc_html($sender_name) . '</strong><br>';
-                echo '<small style="color: #999;">' . esc_html($sender_email) . '</small>';
+            // Проверяем, не администратор ли это
+            $post_author_id = get_post_field('post_author', $post_id);
+            if ($post_author_id && user_can($post_author_id, 'administrator')) {
+                echo '<strong>👑 Администратор</strong>';
             } else {
-                echo '<span style="color: #999;">Неизвестно</span>';
+                $sender_name = get_post_meta($post_id, 'sender_name', true);
+                $sender_email = get_post_meta($post_id, 'sender_email', true);
+                if ($sender_name) {
+                    echo '<strong>' . esc_html($sender_name) . '</strong><br>';
+                    echo '<small style="color: #999;">' . esc_html($sender_email) . '</small>';
+                } else {
+                    echo '<span style="color: #999;">Неизвестно</span>';
+                }
             }
         }
     }

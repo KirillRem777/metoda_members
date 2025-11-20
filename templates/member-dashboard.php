@@ -22,6 +22,11 @@ if ($is_admin && $viewing_member_id) {
     $is_viewing_other = false;
 }
 
+// Если member_id не найден, показываем ошибку
+if (!$member_id) {
+    wp_die('У вас нет доступа к этой странице. <a href="' . home_url() . '">Вернуться на главную</a>');
+}
+
 $member_data = Member_Dashboard::get_member_data($member_id);
 $member_stats = Member_Dashboard::get_member_stats($member_id);
 $current_user = wp_get_current_user();
