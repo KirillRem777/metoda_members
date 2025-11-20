@@ -16,15 +16,26 @@ $viewing_member_id = isset($_GET['member_id']) ? intval($_GET['member_id']) : nu
 if ($is_admin && $viewing_member_id) {
     $member_id = $viewing_member_id;
     $is_viewing_other = true;
+
+    // Проверяем, существует ли этот member post
+    $member_post = get_post($member_id);
+    if (!$member_post || $member_post->post_type !== 'members') {
+        wp_die('Участник с ID ' . $member_id . ' не найден. <a href="' . admin_url('admin.php?page=metoda-activity-log') . '">Вернуться к логам</a>');
+    }
 } else {
     // Обычный пользователь - свой кабинет
     $member_id = Member_User_Link::get_current_user_member_id();
     $is_viewing_other = false;
-}
 
-// Если member_id не найден, показываем ошибку
-if (!$member_id) {
-    wp_die('У вас нет доступа к этой странице. <a href="' . home_url() . '">Вернуться на главную</a>');
+    // Если это НЕ админ и нет своего member_id
+    if (!$member_id && !$is_admin) {
+        wp_die('У вас нет доступа к личному кабинету. Обратитесь к администратору. <a href="' . home_url() . '">Вернуться на главную</a>');
+    }
+
+    // Если это админ без своего member_id и без параметра member_id
+    if (!$member_id && $is_admin) {
+        wp_die('Укажите ID участника в URL (?member_id=XXX) для просмотра кабинета. <a href="' . admin_url('admin.php?page=metoda-activity-log') . '">Перейти к логам</a>');
+    }
 }
 
 $member_data = Member_Dashboard::get_member_data($member_id);

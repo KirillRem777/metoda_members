@@ -88,9 +88,31 @@ class Member_Dashboard {
             return $this->render_login_message();
         }
 
+        // Проверяем, админ ли смотрит чужой кабинет
+        $is_admin = current_user_can('administrator');
+        $viewing_member_id = isset($_GET['member_id']) ? intval($_GET['member_id']) : null;
+
+        // Если админ указал member_id - пропускаем проверку своего member_id
+        if ($is_admin && $viewing_member_id) {
+            // Админ просматривает чужой кабинет - загружаем шаблон
+            ob_start();
+            include plugin_dir_path(dirname(__FILE__)) . 'templates/member-dashboard.php';
+            return ob_get_clean();
+        }
+
+        // Для обычных пользователей проверяем наличие своего member_id
         $member_id = Member_User_Link::get_current_user_member_id();
 
         if (!$member_id) {
+            // Если это админ без своего member_id и без параметра member_id
+            if ($is_admin) {
+                return '<div style="padding: 40px; text-align: center; background: #fff3cd; border: 1px solid #ffc107; border-radius: 8px; margin: 20px;">
+                    <h3 style="color: #856404; margin-bottom: 10px;">⚠️ Режим администратора</h3>
+                    <p style="color: #856404;">Укажите ID участника в URL для просмотра кабинета:</p>
+                    <code style="background: #fff; padding: 5px 10px; border-radius: 4px; display: inline-block; margin-top: 10px;">?member_id=XXX</code>
+                    <p style="margin-top: 15px;"><a href="' . admin_url('admin.php?page=metoda-activity-log') . '" style="color: #0066cc;">Перейти к логам активности</a></p>
+                </div>';
+            }
             return $this->render_no_profile_message();
         }
 
