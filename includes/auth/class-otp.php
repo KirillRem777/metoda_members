@@ -3,10 +3,11 @@
  * OTP Authentication
  *
  * Wrapper for Member_OTP class with additional utilities
- * Provides one-time password authentication via email
+ * Provides one-time password authentication via email or Telegram
  *
  * @package Metoda
  * @since 5.0.0
+ * @updated 5.1.0 - Added Telegram support with fallback to email
  */
 
 if (!defined('ABSPATH')) {
@@ -23,9 +24,22 @@ class Metoda_Otp {
     private $legacy_otp = null;
 
     /**
+     * Telegram instance
+     *
+     * @var \Metoda\Auth\Telegram|null
+     */
+    private $telegram = null;
+
+    /**
      * OTP expiry time in seconds (10 minutes)
      */
     const EXPIRY_TIME = 600;
+
+    /**
+     * Delivery methods
+     */
+    const METHOD_EMAIL = 'email';
+    const METHOD_TELEGRAM = 'telegram';
 
     /**
      * Constructor
@@ -34,6 +48,11 @@ class Metoda_Otp {
         // Initialize legacy OTP class
         if (class_exists('Member_OTP')) {
             $this->legacy_otp = new Member_OTP();
+        }
+
+        // Initialize Telegram if available
+        if (class_exists('Metoda\\Auth\\Telegram')) {
+            $this->telegram = \Metoda\Auth\Telegram::instance();
         }
     }
 
@@ -160,5 +179,118 @@ class Metoda_Otp {
      */
     public static function has_pending_otp($user_id) {
         return self::get_remaining_time($user_id) > 0;
+    }
+
+    /**
+     * Send OTP with smart delivery: Telegram first, then Email fallback
+     *
+     * @param int $user_id User ID
+     * @param string $otp OTP code
+     * @return array Result with 'success', 'method', 'message' keys
+     */
+    public function send_with_fallback($user_id, $otp) {
+        // Try Telegram first if available and linked
+        if ($this->telegram && \Metoda\Auth\Telegram::is_linked($user_id)) {
+            $result = $this->telegram->send_otp($user_id, $otp);
+
+            if ($result === true) {
+                return array(
+                    'success' => true,
+                    'method'  => self::METHOD_TELEGRAM,
+                    'message' => __('Code sent to Telegram', 'metoda-community-mgmt'),
+                );
+            }
+
+            // Log Telegram failure for debugging
+            if (is_wp_error($result) && defined('WP_DEBUG') && WP_DEBUG) {
+                error_log('[Metoda OTP] Telegram failed, falling back to email: ' . $result->get_error_message());
+            }
+        }
+
+        // Fallback to email
+        $email_sent = $this->send($user_id, $otp);
+
+        return array(
+            'success' => $email_sent,
+            'method'  => self::METHOD_EMAIL,
+            'message' => $email_sent
+                ? __('Code sent to email', 'metoda-community-mgmt')
+                : __('Failed to send code', 'metoda-community-mgmt'),
+        );
+    }
+
+    /**
+     * Generate and send OTP with smart delivery
+     *
+     * @param int $user_id User ID
+     * @return array Result with 'success', 'method', 'message' keys
+     */
+    public function send_new_code_smart($user_id) {
+        $otp = $this->generate($user_id);
+
+        if (!$otp) {
+            return array(
+                'success' => false,
+                'method'  => null,
+                'message' => __('Failed to generate code', 'metoda-community-mgmt'),
+            );
+        }
+
+        return $this->send_with_fallback($user_id, $otp);
+    }
+
+    /**
+     * Check if Telegram delivery is available for user
+     *
+     * @param int $user_id User ID
+     * @return bool
+     */
+    public function is_telegram_available($user_id) {
+        if (!$this->telegram || !$this->telegram->is_configured()) {
+            return false;
+        }
+
+        return \Metoda\Auth\Telegram::is_linked($user_id);
+    }
+
+    /**
+     * Get preferred delivery method for user
+     *
+     * @param int $user_id User ID
+     * @return string 'telegram' or 'email'
+     */
+    public function get_delivery_method($user_id) {
+        // If Telegram is linked, prefer it
+        if ($this->is_telegram_available($user_id)) {
+            return self::METHOD_TELEGRAM;
+        }
+
+        return self::METHOD_EMAIL;
+    }
+
+    /**
+     * Get delivery method info for UI display
+     *
+     * @param int $user_id User ID
+     * @return array Method info with 'method', 'label', 'destination' keys
+     */
+    public function get_delivery_info($user_id) {
+        if ($this->is_telegram_available($user_id)) {
+            $username = \Metoda\Auth\Telegram::get_username($user_id);
+            return array(
+                'method'      => self::METHOD_TELEGRAM,
+                'label'       => __('Telegram', 'metoda-community-mgmt'),
+                'destination' => $username ? "@{$username}" : 'Telegram',
+                'icon'        => 'telegram',
+            );
+        }
+
+        $user = get_user_by('ID', $user_id);
+        return array(
+            'method'      => self::METHOD_EMAIL,
+            'label'       => __('Email', 'metoda-community-mgmt'),
+            'destination' => $user ? $user->user_email : '',
+            'icon'        => 'email',
+        );
     }
 }

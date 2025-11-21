@@ -60,6 +60,11 @@ class Metoda_Plugin {
         if (class_exists('Metoda\\API\\REST_Controller')) {
             $this->components['rest_api'] = new \Metoda\API\REST_Controller();
         }
+
+        // Telegram Integration
+        if (class_exists('Metoda\\Auth\\Telegram')) {
+            $this->components['telegram'] = \Metoda\Auth\Telegram::instance();
+        }
     }
 
     /**

@@ -76,6 +76,9 @@ class Metoda_Uninstaller {
             'metoda_preserve_data_on_uninstall',
             'metoda_delete_posts_on_uninstall',
             'metoda_activity_log',
+            // Telegram settings
+            'metoda_telegram_bot_token',
+            'metoda_telegram_bot_username',
         );
 
         foreach ($options as $option) {
@@ -107,6 +110,10 @@ class Metoda_Uninstaller {
             '_member_first_login',
             '_member_password_changed',
             '_member_onboarding_completed',
+            // Telegram meta
+            'telegram_chat_id',
+            'telegram_username',
+            'telegram_linked_at',
         );
 
         foreach ($meta_keys as $key) {

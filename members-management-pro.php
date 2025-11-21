@@ -74,6 +74,9 @@ require_once METODA_PATH . 'includes/security/class-rate-limiter.php';
 // REST API Controller
 require_once METODA_PATH . 'includes/api/class-rest-controller.php';
 
+// Telegram Integration
+require_once METODA_PATH . 'includes/auth/class-telegram.php';
+
 // Main plugin class
 require_once METODA_PATH . 'includes/core/class-plugin.php';
 
