@@ -56,6 +56,7 @@ new Member_Archive();
 new Member_Forum();
 new Member_Onboarding();
 new Member_Template_Loader();
+new Member_Access_Codes();
 
 /**
  * SECURITY v3.7.3: Единая функция проверки прав на редактирование member_id
