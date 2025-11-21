@@ -36,7 +36,28 @@ $accent_color = '#ff6600';
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js" crossorigin="anonymous"></script>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        ::-webkit-scrollbar { display: none; }
+        /* Custom scrollbar for better UX */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+            transition: background 0.2s;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+        /* Firefox scrollbar */
+        * {
+            scrollbar-width: thin;
+            scrollbar-color: #cbd5e1 #f1f5f9;
+        }
         * { font-family: 'Montserrat', sans-serif; }
         .wysiwyg-toolbar { display: flex; gap: 0.5rem; padding: 0.75rem; background: #f8fafc; border-bottom: 1px solid #e2e8f0; border-radius: 0.5rem 0.5rem 0 0; }
         .wysiwyg-toolbar button { padding: 0.5rem 0.75rem; background: white; border: 1px solid #e2e8f0; border-radius: 0.375rem; cursor: pointer; transition: all 0.2s; }
@@ -80,7 +101,7 @@ $accent_color = '#ff6600';
 </div>
 <?php endif; ?>
 
-<div id="member-dashboard" class="flex h-screen overflow-hidden">
+<div id="member-dashboard" class="flex <?php echo $is_viewing_other ? 'h-[calc(100vh-56px)]' : 'h-screen'; ?> overflow-hidden">
 
     <!-- Sidebar -->
     <aside id="sidebar" class="w-64 bg-white border-r border-gray-200 flex flex-col">
@@ -169,7 +190,7 @@ $accent_color = '#ff6600';
             <div id="profile-content" class="p-8">
                 <div class="max-w-5xl mx-auto">
                     <!-- Stats Cards -->
-                    <div class="grid grid-cols-3 gap-6 mb-8">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8 <?php echo $is_viewing_other ? 'mt-4' : ''; ?>">
                         <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
                             <div class="flex items-center gap-4">
                                 <div class="w-12 h-12 rounded-lg flex items-center justify-center" style="background-color: rgba(0, 102, 204, 0.1);">
@@ -220,11 +241,11 @@ $accent_color = '#ff6600';
                                 </div>
                                 <div class="form-group">
                                     <label class="block text-sm font-medium text-gray-700 mb-2">Должность</label>
-                                    <input type="text" id="member_position" name="member_position" value="<?php echo esc_attr($member_data['member_position']); ?>" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all">
+                                    <input type="text" id="member_position" name="member_position" value="<?php echo esc_attr($member_data['member_position']); ?>" title="<?php echo esc_attr($member_data['member_position']); ?>" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all">
                                 </div>
                                 <div class="form-group">
                                     <label class="block text-sm font-medium text-gray-700 mb-2">Организация</label>
-                                    <input type="text" id="member_company" name="member_company" value="<?php echo esc_attr($member_data['member_company']); ?>" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all">
+                                    <input type="text" id="member_company" name="member_company" value="<?php echo esc_attr($member_data['member_company']); ?>" title="<?php echo esc_attr($member_data['member_company']); ?>" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all">
                                 </div>
                                 <div class="form-group">
                                     <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
