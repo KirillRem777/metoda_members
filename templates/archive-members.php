@@ -442,6 +442,7 @@ $roles = get_terms(array(
                 type: 'POST',
                 data: {
                     action: 'load_more_members',
+                    nonce: '<?php echo wp_create_nonce('public_members_nonce'); ?>',
                     offset: offset,
                     search: $('#search-input').val(),
                     city: $('#city-filter').val(),
