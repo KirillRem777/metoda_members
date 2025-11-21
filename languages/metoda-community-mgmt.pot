@@ -1,0 +1,85 @@
+# Copyright (C) 2024 Kirill Rem
+# This file is distributed under the GPL v2 or later.
+msgid ""
+msgstr ""
+"Project-Id-Version: Metoda Community MGMT 5.1.0\n"
+"Report-Msgid-Bugs-To: https://github.com/KirillRem777/metoda_members/issues\n"
+"POT-Creation-Date: 2024-01-01T00:00:00+00:00\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+
+#: includes/api/class-rest-controller.php
+msgid "Authentication required."
+msgstr ""
+
+#: includes/api/class-rest-controller.php
+msgid "You do not have permission to access this resource."
+msgstr ""
+
+#: includes/api/class-rest-controller.php
+msgid "Too many login attempts. Please try again later."
+msgstr ""
+
+#: includes/api/class-rest-controller.php
+msgid "Invalid email or password."
+msgstr ""
+
+#: includes/api/class-rest-controller.php
+msgid "Your account is configured for OTP login. Please use email code."
+msgstr ""
+
+#: includes/api/class-rest-controller.php
+msgid "Login successful!"
+msgstr ""
+
+#: includes/api/class-rest-controller.php
+msgid "Too many OTP requests. Please wait before requesting another code."
+msgstr ""
+
+#: includes/api/class-rest-controller.php
+msgid "If this email is registered, you will receive a code shortly."
+msgstr ""
+
+#: includes/api/class-rest-controller.php
+msgid "OTP login is not enabled for this account."
+msgstr ""
+
+#: includes/api/class-rest-controller.php
+msgid "Too many verification attempts. Please request a new code."
+msgstr ""
+
+#: includes/api/class-rest-controller.php
+msgid "Invalid or expired code."
+msgstr ""
+
+#: includes/api/class-rest-controller.php
+msgid "Invalid access code."
+msgstr ""
+
+#: includes/api/class-rest-controller.php
+msgid "This access code has already been used."
+msgstr ""
+
+#: includes/api/class-rest-controller.php
+msgid "Logged out successfully."
+msgstr ""
+
+#: includes/api/class-rest-controller.php
+msgid "Member not found."
+msgstr ""
+
+#: includes/api/class-rest-controller.php
+msgid "No member profile linked to this account."
+msgstr ""
+
+#: includes/api/class-rest-controller.php
+msgid "Profile updated successfully."
+msgstr ""
+
+#: members-management-pro.php
+msgid "Metoda Community MGMT requires PHP %s or higher."
+msgstr ""

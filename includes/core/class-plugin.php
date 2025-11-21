@@ -6,6 +6,7 @@
  *
  * @package Metoda
  * @since 5.0.0
+ * @updated 5.1.0 - Added REST API, i18n, Rate Limiter
  */
 
 if (!defined('ABSPATH')) {
@@ -40,8 +41,25 @@ class Metoda_Plugin {
      * Constructor - initialize all components
      */
     private function __construct() {
+        $this->init_core_services();
         $this->load_dependencies();
         $this->init_components();
+    }
+
+    /**
+     * Initialize core services (loaded before other dependencies)
+     * These are loaded from main plugin file, just instantiate them here
+     */
+    private function init_core_services() {
+        // i18n - Load translations
+        if (class_exists('Metoda\\Core\\I18n')) {
+            $this->components['i18n'] = new \Metoda\Core\I18n();
+        }
+
+        // REST API Controller
+        if (class_exists('Metoda\\API\\REST_Controller')) {
+            $this->components['rest_api'] = new \Metoda\API\REST_Controller();
+        }
     }
 
     /**
