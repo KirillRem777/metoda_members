@@ -257,8 +257,21 @@ class Member_Onboarding {
      * Complete onboarding via AJAX
      */
     public function ajax_complete_onboarding() {
-        check_ajax_referer('member_onboarding_nonce', 'nonce');
+        // Поддерживаем оба nonce: старый и новый
+        $nonce_valid = check_ajax_referer('member_onboarding_nonce', 'nonce', false) ||
+                      check_ajax_referer('member_login_nonce', 'nonce', false);
 
+        if (!$nonce_valid) {
+            wp_send_json_error(array('message' => 'Ошибка безопасности'));
+        }
+
+        // Новый онбординг с Access Code (пользователь может быть не залогинен)
+        if (!is_user_logged_in() && isset($_POST['member_id'])) {
+            $this->ajax_complete_access_code_onboarding();
+            return;
+        }
+
+        // Старый онбординг (смена пароля после первого входа)
         if (!is_user_logged_in()) {
             wp_send_json_error(array('message' => 'Необходимо авторизоваться'));
         }
@@ -282,6 +295,118 @@ class Member_Onboarding {
     }
 
     /**
+     * Complete onboarding for Access Code users (NEW)
+     */
+    private function ajax_complete_access_code_onboarding() {
+        $member_id = intval($_POST['member_id'] ?? 0);
+        $email = sanitize_email($_POST['email'] ?? '');
+        $password = $_POST['password'] ?? '';
+        $password_confirm = $_POST['password_confirm'] ?? '';
+        $login_method = sanitize_text_field($_POST['login_method'] ?? 'password');
+
+        // Валидация member_id
+        if (!$member_id) {
+            wp_send_json_error(array('message' => 'Неверный ID участника'));
+        }
+
+        // Проверяем что member существует
+        $member = get_post($member_id);
+        if (!$member || $member->post_type !== 'members') {
+            wp_send_json_error(array('message' => 'Участник не найден'));
+        }
+
+        // Валидация email
+        if (!is_email($email)) {
+            wp_send_json_error(array('message' => 'Некорректный email'));
+        }
+
+        // Проверка уникальности email
+        if (email_exists($email)) {
+            wp_send_json_error(array('message' => 'Этот email уже используется'));
+        }
+
+        // Валидация пароля
+        if (strlen($password) < 8) {
+            wp_send_json_error(array('message' => 'Пароль должен содержать минимум 8 символов'));
+        }
+
+        if ($password !== $password_confirm) {
+            wp_send_json_error(array('message' => 'Пароли не совпадают'));
+        }
+
+        // Валидация метода входа
+        if (!in_array($login_method, array('password', 'otp'))) {
+            $login_method = 'password';
+        }
+
+        // Создание WordPress пользователя
+        $member_name = get_post_meta($member_id, 'member_name', true);
+        $username = sanitize_user($email); // Используем email как username
+
+        $user_id = wp_create_user($username, $password, $email);
+
+        if (is_wp_error($user_id)) {
+            wp_send_json_error(array('message' => 'Ошибка создания пользователя: ' . $user_id->get_error_message()));
+        }
+
+        // Установка роли
+        $user = new WP_User($user_id);
+        $user->set_role('member');
+
+        // Установка display_name
+        wp_update_user(array(
+            'ID' => $user_id,
+            'display_name' => $member_name,
+            'first_name' => $member_name
+        ));
+
+        // Связка user_id с member_id
+        update_post_meta($member_id, 'user_id', $user_id);
+        update_user_meta($user_id, 'member_id', $member_id);
+
+        // Сохранение метода входа
+        update_user_meta($user_id, 'login_method', $login_method);
+
+        // Отметка что онбординг завершён
+        update_user_meta($user_id, 'onboarding_completed', true);
+        update_user_meta($user_id, 'onboarding_date', current_time('mysql'));
+
+        // Удаление Access Code (одноразовый)
+        delete_post_meta($member_id, '_access_code');
+        delete_post_meta($member_id, '_access_code_used');
+        update_post_meta($member_id, '_access_code_used_date', current_time('mysql'));
+
+        // Авторизация пользователя
+        wp_clear_auth_cookie();
+        wp_set_current_user($user_id);
+        wp_set_auth_cookie($user_id, true);
+
+        // Отправка приветственного email
+        $this->send_welcome_email($user_id, $email, $member_name);
+
+        wp_send_json_success(array(
+            'message' => 'Регистрация завершена! Добро пожаловать!',
+            'redirect' => home_url('/member-dashboard/')
+        ));
+    }
+
+    /**
+     * Отправка приветственного письма после регистрации
+     */
+    private function send_welcome_email($user_id, $email, $name) {
+        $subject = 'Добро пожаловать в ассоциацию Метода!';
+        $message = '<html><body>';
+        $message .= '<h2>Здравствуйте, ' . esc_html($name) . '!</h2>';
+        $message .= '<p>Ваш аккаунт успешно создан.</p>';
+        $message .= '<p><strong>Email:</strong> ' . esc_html($email) . '</p>';
+        $message .= '<p><a href="' . home_url('/member-login/') . '">Войти в личный кабинет</a></p>';
+        $message .= '</body></html>';
+
+        $headers = array('Content-Type: text/html; charset=UTF-8');
+        wp_mail($email, $subject, $message, $headers);
+    }
+
+    /**
      * Get onboarding step for user
      */
     public static function get_user_step($user_id) {
@@ -302,6 +427,3 @@ class Member_Onboarding {
         return $needs_onboarding === '1';
     }
 }
-
-// Initialize the class
-new Member_Onboarding();

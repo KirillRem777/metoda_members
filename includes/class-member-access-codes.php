@@ -525,11 +525,30 @@ class Member_Access_Codes {
         // Сброс счетчика при успехе
         delete_transient($transient_key);
 
+        // Получаем данные участника для персонализированного приветствия
+        $member_name = get_post_meta($member->ID, 'member_name', true) ?: $member->post_title;
+        $member_photo = get_post_meta($member->ID, 'member_photo', true);
+        $member_company = get_post_meta($member->ID, 'member_company', true);
+        $member_position = get_post_meta($member->ID, 'member_position', true);
+
+        // Формируем URL фотографии
+        $photo_url = '';
+        if ($member_photo) {
+            if (is_numeric($member_photo)) {
+                $photo_url = wp_get_attachment_url($member_photo);
+            } else {
+                $photo_url = $member_photo;
+            }
+        }
+
         // Code is valid and available
         wp_send_json_success(array(
-            'message' => 'Код подтвержден! Профиль "' . esc_html($member->post_title) . '" будет активирован при регистрации',
-            'member_name' => $member->post_title,
-            'member_id' => $member->ID
+            'message' => 'Код подтверждён',
+            'member_id' => $member->ID,
+            'member_name' => $member_name,
+            'member_photo' => $photo_url,
+            'member_company' => $member_company,
+            'member_position' => $member_position
         ));
     }
 

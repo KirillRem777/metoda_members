@@ -1,8 +1,8 @@
 <?php
 /**
  * Plugin Name: Metoda Community MGMT
- * Description: Полнофункциональная система управления участниками и экспертами сообщества. Включает: регистрацию с валидацией, систему кодов доступа для импортированных участников, личные кабинеты с онбордингом, управление материалами с WYSIWYG-редактором, форум в стиле Reddit с категориями и лайками, настраиваемые email-шаблоны, CSV-импорт, кроппер фото, систему ролей и прав доступа, поиск и фильтрацию участников.
- * Version: 4.1.0
+ * Description: Полнофункциональная система управления участниками и экспертами сообщества. Включает: регистрацию с валидацией, систему кодов доступа для импортированных участников, личные кабинеты с онбордингом, управление материалами с WYSIWYG-редактором, форум в стиле Reddit с категориями и лайками, настраиваемые email-шаблоны, CSV-импорт, кроппер фото, систему ролей и прав доступа, поиск и фильтрацию участников, OTP-аутентификацию через email.
+ * Version: 4.2.0
  * Author: Kirill Rem
  * Text Domain: metoda-community-mgmt
  * Domain Path: /languages
@@ -34,6 +34,7 @@ require_once plugin_dir_path(__FILE__) . 'includes/class-member-page-templates.p
 require_once plugin_dir_path(__FILE__) . 'includes/class-member-csv-importer.php';
 require_once plugin_dir_path(__FILE__) . 'includes/class-member-email-templates.php';
 require_once plugin_dir_path(__FILE__) . 'includes/class-member-access-codes.php';
+require_once plugin_dir_path(__FILE__) . 'includes/class-member-otp.php';
 require_once plugin_dir_path(__FILE__) . 'includes/class-member-bulk-users.php';
 
 // Классы с AJAX обработчиками (AJAX = admin context)
@@ -57,6 +58,7 @@ new Member_Forum();
 new Member_Onboarding();
 new Member_Template_Loader();
 new Member_Access_Codes();
+new Member_OTP();
 
 /**
  * SECURITY v3.7.3: Единая функция проверки прав на редактирование member_id
