@@ -1806,28 +1806,7 @@ function member_registration_shortcode() {
 }
 add_shortcode('member_registration', 'member_registration_shortcode');
 
-// УДАЛЕНО: Дубль шорткода - используется класс Member_Dashboard (includes/class-member-dashboard.php)
-/*
-/**
- * Шорткод для личного кабинета
- */
-/*
-function member_dashboard_shortcode() {
-    if (!is_user_logged_in()) {
-        return '<p>Пожалуйста, <a href="' . wp_login_url(get_permalink()) . '">войдите</a>, чтобы получить доступ к личному кабинету.</p>';
-    }
-
-    $user = wp_get_current_user();
-    if (!in_array('member', $user->roles) && !in_array('expert', $user->roles)) {
-        return '<p>У вас нет доступа к этой странице.</p>';
-    }
-
-    ob_start();
-    include(plugin_dir_path(__FILE__) . 'templates/member-dashboard.php');
-    return ob_get_clean();
-}
-add_shortcode('member_dashboard', 'member_dashboard_shortcode');
-*/
+// УДАЛЕНО: member_dashboard_shortcode() + add_shortcode() - дубль класса Member_Dashboard
 
 /**
  * Шорткод для панели менеджера
@@ -2741,79 +2720,7 @@ function member_register_ajax() {
 }
 add_action('wp_ajax_nopriv_member_register', 'member_register_ajax');
 
-// УДАЛЕНО: Дубль AJAX handler - используется класс Member_Dashboard (includes/class-member-dashboard.php)
-/*
-/**
- * AJAX обработчик обновления профиля участника
- */
-/*
-function member_update_profile_ajax() {
-    check_ajax_referer('member_dashboard_nonce', 'nonce');
-
-    if (!is_user_logged_in()) {
-        wp_send_json_error(array('message' => 'Необходимо авторизоваться'));
-    }
-
-    $user_id = get_current_user_id();
-    $member_id = get_user_meta($user_id, 'member_id', true);
-
-    if (!$member_id) {
-        wp_send_json_error(array('message' => 'Профиль не найден'));
-    }
-
-    // Обновляем заголовок
-    if (isset($_POST['member_name'])) {
-        wp_update_post(array(
-            'ID' => $member_id,
-            'post_title' => sanitize_text_field($_POST['member_name'])
-        ));
-    }
-
-    // Обновляем метаданные
-    $meta_fields = array(
-        'member_company',
-        'member_position',
-        'member_city',
-        'member_email',
-        'member_phone',
-        'member_linkedin',
-        'member_website'
-    );
-
-    foreach ($meta_fields as $field) {
-        if (isset($_POST[$field])) {
-            update_post_meta($member_id, $field, sanitize_text_field($_POST[$field]));
-        }
-    }
-
-    // Textarea поля
-    $textarea_fields = array(
-        'member_specialization_experience',
-        'member_professional_interests'
-    );
-
-    foreach ($textarea_fields as $field) {
-        if (isset($_POST[$field])) {
-            update_post_meta($member_id, $field, sanitize_textarea_field($_POST[$field]));
-        }
-    }
-
-    // HTML поля
-    $html_fields = array(
-        'member_bio',
-        'member_expectations'
-    );
-
-    foreach ($html_fields as $field) {
-        if (isset($_POST[$field])) {
-            update_post_meta($member_id, $field, wp_kses_post($_POST[$field]));
-        }
-    }
-
-    wp_send_json_success(array('message' => 'Профиль успешно обновлен!'));
-}
-add_action('wp_ajax_member_update_profile', 'member_update_profile_ajax');
-*/
+// УДАЛЕНО: member_update_profile_ajax() + add_action() - дубль класса Member_Dashboard
 
 /**
  * Редирект после логина - отправляем в соответствующие кабинеты
@@ -2983,43 +2890,7 @@ function manager_change_member_status_ajax() {
 }
 add_action('wp_ajax_manager_change_member_status', 'manager_change_member_status_ajax');
 
-// УДАЛЕНО: Дубль AJAX handler - используется класс Member_Manager (includes/class-member-manager.php)
-/*
-/**
- * AJAX обработчик удаления участника (для менеджеров)
- */
-/*
-function manager_delete_member_ajax() {
-    check_ajax_referer('manager_actions_nonce', 'nonce');
-
-    if (!current_user_can('manager') && !current_user_can('administrator')) {
-        wp_send_json_error(array('message' => 'Нет прав доступа'));
-    }
-
-    $member_id = intval($_POST['member_id']);
-
-    // Получаем связанного пользователя
-    $post = get_post($member_id);
-    if ($post && $post->post_author) {
-        $user_id = $post->post_author;
-        // Удаляем пользователя WordPress
-        require_once(ABSPATH . 'wp-admin/includes/user.php');
-        wp_delete_user($user_id);
-    }
-
-    // Удаляем запись участника
-    $result = wp_delete_post($member_id, true);
-
-    if (!$result) {
-        wp_send_json_error(array('message' => 'Ошибка при удалении участника'));
-    }
-
-    wp_send_json_success(array(
-        'message' => 'Участник успешно удален'
-    ));
-}
-add_action('wp_ajax_manager_delete_member', 'manager_delete_member_ajax');
-*/
+// УДАЛЕНО: manager_delete_member_ajax() + add_action() - дубль класса Member_Manager
 
 /**
  * AJAX обработчик для сохранения галереи
@@ -3262,68 +3133,7 @@ function member_add_material_file_ajax() {
 }
 add_action('wp_ajax_member_add_material_file', 'member_add_material_file_ajax');
 
-// УДАЛЕНО: Дубль AJAX handler - используется класс Member_File_Manager (includes/class-member-file-manager.php)
-/*
-/**
- * AJAX обработчик для удаления материала
- */
-/*
-function member_delete_material_ajax() {
-    check_ajax_referer('member_dashboard_nonce', 'nonce');
-
-    if (!is_user_logged_in()) {
-        wp_send_json_error(array('message' => 'Необходима авторизация'));
-    }
-
-    // Проверяем, редактирует ли админ чужой профиль
-    $is_admin = current_user_can('administrator');
-    $editing_member_id = isset($_POST['member_id']) ? intval($_POST['member_id']) : null;
-
-    if ($is_admin && $editing_member_id) {
-        $member_post = get_post($editing_member_id);
-        if (!$member_post || $member_post->post_type !== 'members') {
-            wp_send_json_error(array('message' => 'Участник не найден'));
-        }
-        $member_id = $editing_member_id;
-    } else {
-        $member_id = Member_User_Link::get_current_user_member_id();
-        if (!$member_id) {
-            wp_send_json_error(array('message' => 'Участник не найден'));
-        }
-    }
-
-    $category = sanitize_text_field($_POST['category']);
-    $index = intval($_POST['index']);
-
-    // Получаем текущие материалы
-    $current_materials = get_post_meta($member_id, 'member_' . $category, true);
-
-    if (empty($current_materials)) {
-        wp_send_json_error(array('message' => 'Материалы не найдены'));
-    }
-
-    // Разбиваем на строки
-    $materials_array = explode("\n", $current_materials);
-
-    // Удаляем элемент по индексу
-    if (isset($materials_array[$index])) {
-        unset($materials_array[$index]);
-
-        // Пересобираем строку
-        $updated_materials = implode("\n", array_values($materials_array));
-
-        update_post_meta($member_id, 'member_' . $category, $updated_materials);
-
-        wp_send_json_success(array(
-            'message' => 'Материал успешно удален!',
-            'reload' => true
-        ));
-    } else {
-        wp_send_json_error(array('message' => 'Материал не найден'));
-    }
-}
-add_action('wp_ajax_member_delete_material', 'member_delete_material_ajax');
-*/
+// УДАЛЕНО: member_delete_material_ajax() + add_action() - дубль класса Member_File_Manager
 
 /**
  * AJAX обработчик для загрузки дополнительных участников (Load More)
