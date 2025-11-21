@@ -20,10 +20,6 @@ if (!isset($member_id)) {
 $member_data = Member_Dashboard::get_member_data($member_id);
 $member_stats = Member_Dashboard::get_member_stats($member_id);
 $current_user = wp_get_current_user();
-
-// Цвета Метода
-$primary_color = '#0066cc';
-$accent_color = '#ff6600';
 ?>
 
 <!DOCTYPE html>
@@ -32,9 +28,8 @@ $accent_color = '#ff6600';
     <meta charset="<?php bloginfo('charset'); ?>">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Личный кабинет - <?php bloginfo('name'); ?></title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <?php metoda_enqueue_frontend_styles(); ?>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js" crossorigin="anonymous"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         /* Custom scrollbar for better UX */
         ::-webkit-scrollbar {
@@ -64,22 +59,6 @@ $accent_color = '#ff6600';
         .wysiwyg-toolbar button:hover { background: #f1f5f9; }
         .wysiwyg-content { min-height: 150px; padding: 1rem; border: 1px solid #e2e8f0; border-top: none; border-radius: 0 0 0.5rem 0.5rem; background: white; }
     </style>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        primary: '<?php echo $primary_color; ?>',
-                        accent: '<?php echo $accent_color; ?>',
-                        secondary: '#64748b',
-                        success: '#10b981',
-                        warning: '#f59e0b',
-                        danger: '#ef4444',
-                    }
-                }
-            }
-        }
-    </script>
     <?php wp_head(); ?>
 </head>
 <body class="bg-gray-50">
@@ -107,7 +86,7 @@ $accent_color = '#ff6600';
     <aside id="sidebar" class="w-64 bg-white border-r border-gray-200 flex flex-col">
         <div class="p-6 border-b border-gray-200">
             <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-lg flex items-center justify-center" style="background-color: <?php echo $primary_color; ?>">
+                <div class="w-10 h-10 rounded-lg flex items-center justify-center bg-primary">
                     <i class="fas fa-user text-white text-lg"></i>
                 </div>
                 <div>
@@ -120,7 +99,7 @@ $accent_color = '#ff6600';
         <nav id="main-nav" class="flex-1 p-4">
             <ul class="space-y-1">
                 <li>
-                    <button onclick="showSection('profile')" id="nav-profile" class="nav-item active w-full flex items-center gap-3 px-4 py-3 text-left rounded-lg font-medium transition-all" style="background-color: rgba(0, 102, 204, 0.1); color: <?php echo $primary_color; ?>">
+                    <button onclick="showSection('profile')" id="nav-profile" class="nav-item active w-full flex items-center gap-3 px-4 py-3 text-left rounded-lg font-medium transition-all bg-primary/10 text-primary">
                         <i class="fas fa-user-circle text-lg"></i>
                         <span>Мой профиль</span>
                     </button>
@@ -167,7 +146,7 @@ $accent_color = '#ff6600';
                     <i class="fas fa-eye"></i>
                     <span>Профиль</span>
                 </a>
-                <a href="<?php echo wp_logout_url(home_url()); ?>" class="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium text-white rounded-lg hover:opacity-90 transition-opacity" style="background-color: <?php echo $accent_color; ?>">
+                <a href="<?php echo wp_logout_url(home_url()); ?>" class="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium text-white bg-accent rounded-lg hover:opacity-90 transition-opacity">
                     <i class="fas fa-sign-out-alt"></i>
                     <span>Выход</span>
                 </a>
@@ -193,8 +172,8 @@ $accent_color = '#ff6600';
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8 <?php echo $is_viewing_other ? 'mt-4' : ''; ?>">
                         <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
                             <div class="flex items-center gap-4">
-                                <div class="w-12 h-12 rounded-lg flex items-center justify-center" style="background-color: rgba(0, 102, 204, 0.1);">
-                                    <i class="fas fa-eye" style="color: <?php echo $primary_color; ?>"></i>
+                                <div class="w-12 h-12 rounded-lg flex items-center justify-center bg-primary/10">
+                                    <i class="fas fa-eye text-primary"></i>
                                 </div>
                                 <div>
                                     <p class="text-2xl font-bold text-gray-900"><?php echo esc_html($member_stats['profile_views']); ?></p>
@@ -204,8 +183,8 @@ $accent_color = '#ff6600';
                         </div>
                         <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
                             <div class="flex items-center gap-4">
-                                <div class="w-12 h-12 rounded-lg flex items-center justify-center" style="background-color: rgba(255, 102, 0, 0.1);">
-                                    <i class="fas fa-folder" style="color: <?php echo $accent_color; ?>"></i>
+                                <div class="w-12 h-12 rounded-lg flex items-center justify-center bg-accent/10">
+                                    <i class="fas fa-folder text-accent"></i>
                                 </div>
                                 <div>
                                     <p class="text-2xl font-bold text-gray-900"><?php echo esc_html($member_stats['materials_count']); ?></p>
@@ -311,7 +290,7 @@ $accent_color = '#ff6600';
                         <!-- Save Button -->
                         <div class="p-8">
                             <div class="flex items-center gap-4">
-                                <button type="submit" class="px-6 py-3 text-white rounded-lg font-medium hover:opacity-90 transition-opacity flex items-center gap-2" style="background-color: <?php echo $primary_color; ?>">
+                                <button type="submit" class="px-6 py-3 text-white bg-primary rounded-lg font-medium hover:opacity-90 transition-opacity flex items-center gap-2">
                                     <i class="fas fa-save"></i>
                                     <span class="btn-text">Сохранить изменения</span>
                                     <span class="btn-loader hidden">
@@ -340,7 +319,7 @@ $accent_color = '#ff6600';
                     <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
                         <div class="flex items-center justify-between mb-6">
                             <h3 class="text-lg font-semibold text-gray-900">Мои фотографии</h3>
-                            <button type="button" class="px-4 py-2 text-white rounded-lg font-medium hover:opacity-90 transition-opacity flex items-center gap-2" style="background-color: <?php echo $primary_color; ?>" id="add-gallery-images">
+                            <button type="button" class="px-4 py-2 text-white bg-primary rounded-lg font-medium hover:opacity-90 transition-opacity flex items-center gap-2" id="add-gallery-images">
                                 <i class="fas fa-plus"></i>
                                 <span>Добавить фото</span>
                             </button>
@@ -366,7 +345,7 @@ $accent_color = '#ff6600';
 
                         <input type="hidden" id="gallery_ids" value="<?php echo esc_attr($member_data['member_gallery']); ?>">
 
-                        <button type="button" class="px-6 py-3 text-white rounded-lg font-medium hover:opacity-90 transition-opacity flex items-center gap-2" style="background-color: <?php echo $accent_color; ?>" id="save-gallery">
+                        <button type="button" class="px-6 py-3 text-white bg-accent rounded-lg font-medium hover:opacity-90 transition-opacity flex items-center gap-2" id="save-gallery">
                             <i class="fas fa-save"></i>
                             <span class="btn-text">Сохранить галерею</span>
                             <span class="btn-loader hidden">
@@ -414,10 +393,8 @@ function showSection(sectionName) {
 
     // Add active class to selected nav item
     const activeNav = document.getElementById('nav-' + sectionName);
-    activeNav.classList.add('active');
+    activeNav.classList.add('active', 'bg-primary/10', 'text-primary');
     activeNav.classList.remove('text-gray-600', 'hover:bg-gray-50');
-    activeNav.style.backgroundColor = 'rgba(0, 102, 204, 0.1)';
-    activeNav.style.color = '<?php echo $primary_color; ?>';
 }
 </script>
 

@@ -6,9 +6,6 @@
 
 get_header();
 
-// Фирменные цвета "Метода"
-$primary_color = '#0066cc';
-$accent_color = '#ff6600';
 
 // Получаем все города для фильтра
 global $wpdb;
@@ -42,14 +39,14 @@ $members_query = new WP_Query($args);
     <meta charset="<?php bloginfo('charset'); ?>">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Участники - <?php bloginfo('name'); ?></title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <?php metoda_enqueue_frontend_styles(); ?>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         * { font-family: 'Inter', sans-serif; }
-        .metoda-primary { color: <?php echo $primary_color; ?>; }
-        .metoda-primary-bg { background-color: <?php echo $primary_color; ?>; }
-        .metoda-accent-bg { background-color: <?php echo $accent_color; ?>; }
+        .metoda-primary { color: #0066cc; }
+        .metoda-primary-bg { background-color: #0066cc; }
+        .metoda-accent-bg { background-color: #ff6600; }
 
         /* Мобильный фильтр */
         @media (max-width: 1023px) {
@@ -73,7 +70,7 @@ $members_query = new WP_Query($args);
         /* Лоадер */
         .loader {
             border: 3px solid #f3f3f3;
-            border-top: 3px solid <?php echo $primary_color; ?>;
+            border-top: 3px solid #0066cc;
             border-radius: 50%;
             width: 40px;
             height: 40px;
@@ -86,17 +83,6 @@ $members_query = new WP_Query($args);
         }
     </style>
     <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        primary: '<?php echo $primary_color; ?>',
-                        accent: '<?php echo $accent_color; ?>'
-                    }
-                }
-            }
-        }
-    </script>
     <?php wp_head(); ?>
 </head>
 <body class="bg-gray-50">

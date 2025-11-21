@@ -37,9 +37,6 @@ if (is_user_logged_in()) {
     exit;
 }
 
-// Цвета Метода
-$primary_color = '#0066cc';
-$accent_color = '#ff6600';
 
 // Обработка формы
 $message = '';
@@ -105,28 +102,17 @@ if (isset($_POST['submit_forgot_password'])) {
     <meta charset="<?php bloginfo('charset'); ?>">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Восстановление пароля - <?php bloginfo('name'); ?></title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <?php metoda_enqueue_frontend_styles(); ?>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js" crossorigin="anonymous"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         ::-webkit-scrollbar { display: none; }
         body { font-family: 'Inter', sans-serif; }
         .gradient-bg {
-            background: linear-gradient(135deg, <?php echo $primary_color; ?> 0%, <?php echo $accent_color; ?> 100%);
+            background: linear-gradient(135deg, #0066cc 0%, #ff6600 100%);
         }
     </style>
     <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        primary: '<?php echo $primary_color; ?>',
-                        accent: '<?php echo $accent_color; ?>',
-                    }
-                }
-            }
-        }
-    </script>
     <?php wp_head(); ?>
 </head>
 <body class="bg-gray-50">
@@ -168,7 +154,7 @@ if (isset($_POST['submit_forgot_password'])) {
                             required
                             class="w-full px-4 py-3 pl-12 border border-gray-300 rounded-xl focus:ring-2 focus:border-transparent transition-all text-base"
                             placeholder="your.email@example.com"
-                            style="outline: none; --tw-ring-color: <?php echo $primary_color; ?>;"
+                            style="outline: none; --tw-ring-color: #0066cc;"
                         >
                         <i class="fas fa-envelope absolute left-4 top-4 text-gray-400"></i>
                     </div>
@@ -179,7 +165,7 @@ if (isset($_POST['submit_forgot_password'])) {
                     type="submit"
                     name="submit_forgot_password"
                     class="w-full text-white py-4 px-6 rounded-xl font-semibold text-base hover:opacity-90 transition-all shadow-lg"
-                    style="background: linear-gradient(135deg, <?php echo $primary_color; ?> 0%, <?php echo $accent_color; ?> 100%);"
+                    style="background: linear-gradient(135deg, #0066cc 0%, #ff6600 100%);"
                 >
                     <i class="fas fa-paper-plane mr-2"></i>
                     Отправить инструкции
@@ -192,7 +178,7 @@ if (isset($_POST['submit_forgot_password'])) {
         <div class="mt-6 text-center">
             <p class="text-gray-600 text-sm">
                 Вспомнили пароль?
-                <a href="<?php echo home_url('/custom-login/'); ?>" class="font-semibold hover:underline" style="color: <?php echo $primary_color; ?>;">
+                <a href="<?php echo home_url('/custom-login/'); ?>" class="font-semibold hover:underline" style="color: #0066cc;">
                     Войти
                 </a>
             </p>

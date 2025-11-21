@@ -37,9 +37,6 @@ if (is_user_logged_in()) {
     exit;
 }
 
-// Цвета Метода
-$primary_color = '#0066cc';
-$accent_color = '#ff6600';
 
 // Обработка формы
 $message = '';
@@ -102,14 +99,14 @@ if (empty($reset_key) || empty($user_login)) {
     <meta charset="<?php bloginfo('charset'); ?>">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Установка нового пароля - <?php bloginfo('name'); ?></title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <?php metoda_enqueue_frontend_styles(); ?>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js" crossorigin="anonymous"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         ::-webkit-scrollbar { display: none; }
         body { font-family: 'Inter', sans-serif; }
         .gradient-bg {
-            background: linear-gradient(135deg, <?php echo $primary_color; ?> 0%, <?php echo $accent_color; ?> 100%);
+            background: linear-gradient(135deg, #0066cc 0%, #ff6600 100%);
         }
         .password-strength {
             height: 4px;
@@ -128,17 +125,6 @@ if (empty($reset_key) || empty($user_login)) {
         .strength-strong { width: 100%; background: #10b981; }
     </style>
     <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        primary: '<?php echo $primary_color; ?>',
-                        accent: '<?php echo $accent_color; ?>',
-                    }
-                }
-            }
-        }
-    </script>
     <?php wp_head(); ?>
 </head>
 <body class="bg-gray-50">
@@ -182,7 +168,7 @@ if (empty($reset_key) || empty($user_login)) {
                             minlength="8"
                             class="w-full px-4 py-3 pl-12 pr-12 border border-gray-300 rounded-xl focus:ring-2 focus:border-transparent transition-all text-base"
                             placeholder="Минимум 8 символов"
-                            style="outline: none; --tw-ring-color: <?php echo $primary_color; ?>;"
+                            style="outline: none; --tw-ring-color: #0066cc;"
                         >
                         <i class="fas fa-lock absolute left-4 top-4 text-gray-400"></i>
                         <i class="fas fa-eye cursor-pointer absolute right-4 top-4 text-gray-400 hover:text-gray-600" id="toggle-new-password"></i>
@@ -207,7 +193,7 @@ if (empty($reset_key) || empty($user_login)) {
                             minlength="8"
                             class="w-full px-4 py-3 pl-12 pr-12 border border-gray-300 rounded-xl focus:ring-2 focus:border-transparent transition-all text-base"
                             placeholder="Повторите пароль"
-                            style="outline: none; --tw-ring-color: <?php echo $primary_color; ?>;"
+                            style="outline: none; --tw-ring-color: #0066cc;"
                         >
                         <i class="fas fa-lock absolute left-4 top-4 text-gray-400"></i>
                         <i class="fas fa-eye cursor-pointer absolute right-4 top-4 text-gray-400 hover:text-gray-600" id="toggle-confirm-password"></i>
@@ -221,7 +207,7 @@ if (empty($reset_key) || empty($user_login)) {
                     name="submit_reset_password"
                     id="submit-button"
                     class="w-full text-white py-4 px-6 rounded-xl font-semibold text-base hover:opacity-90 transition-all shadow-lg"
-                    style="background: linear-gradient(135deg, <?php echo $primary_color; ?> 0%, <?php echo $accent_color; ?> 100%);"
+                    style="background: linear-gradient(135deg, #0066cc 0%, #ff6600 100%);"
                 >
                     <i class="fas fa-check mr-2"></i>
                     Установить новый пароль
@@ -230,7 +216,7 @@ if (empty($reset_key) || empty($user_login)) {
             </form>
             <?php else: ?>
                 <div class="text-center py-6">
-                    <a href="<?php echo home_url('/forgot-password/'); ?>" class="inline-block text-white py-3 px-6 rounded-xl font-semibold hover:opacity-90 transition-all" style="background: linear-gradient(135deg, <?php echo $primary_color; ?> 0%, <?php echo $accent_color; ?> 100%);">
+                    <a href="<?php echo home_url('/forgot-password/'); ?>" class="inline-block text-white py-3 px-6 rounded-xl font-semibold hover:opacity-90 transition-all" style="background: linear-gradient(135deg, #0066cc 0%, #ff6600 100%);">
                         <i class="fas fa-arrow-left mr-2"></i>
                         Запросить новую ссылку
                     </a>

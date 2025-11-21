@@ -26,8 +26,6 @@ $cities = $wpdb->get_col($wpdb->prepare("
 ", 'member_city'));
 
 // Цвета
-$primary_color = '#1e40af'; // admin-blue
-$accent_color = '#ff6600';
 ?>
 
 <!DOCTYPE html>
@@ -36,26 +34,11 @@ $accent_color = '#ff6600';
     <meta charset="<?php bloginfo('charset'); ?>">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Панель управления - <?php bloginfo('name'); ?></title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <?php metoda_enqueue_frontend_styles(); ?>
     <script>window.FontAwesomeConfig = { autoReplaceSvg: 'nest'};</script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <style>::-webkit-scrollbar { display: none;}</style>
     <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        'admin-blue': '#1e40af',
-                        'admin-gray': '#f8fafc',
-                        'status-active': '#10b981',
-                        'status-pending': '#f59e0b',
-                        'status-blocked': '#ef4444',
-                        'status-draft': '#6b7280'
-                    }
-                }
-            }
-        }
-    </script>
     <?php
     // Загружаем скрипты менеджера
     wp_enqueue_style('member-manager', plugin_dir_url(dirname(__FILE__)) . '../assets/css/member-manager.css', array(), '1.0.0');

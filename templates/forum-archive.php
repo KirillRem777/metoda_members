@@ -35,7 +35,6 @@ if (isset($_GET['category']) && !empty($_GET['category'])) {
 
 $query = new WP_Query($args);
 
-$primary_color = get_option('metoda_primary_color', '#0066cc');
 ?>
 
 <!DOCTYPE html>
@@ -44,7 +43,7 @@ $primary_color = get_option('metoda_primary_color', '#0066cc');
     <meta charset="<?php bloginfo('charset'); ?>">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Форум сообщества - <?php bloginfo('name'); ?></title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <?php metoda_enqueue_frontend_styles(); ?>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <?php wp_head(); ?>
     <style>
@@ -65,12 +64,12 @@ $primary_color = get_option('metoda_primary_color', '#0066cc');
                         <i class="fas fa-arrow-left"></i>
                     </a>
                     <h1 class="text-2xl font-bold text-gray-900">
-                        <i class="fas fa-comments mr-2" style="color: <?php echo $primary_color; ?>"></i>
+                        <i class="fas fa-comments mr-2" style="color: #0066cc"></i>
                         Форум сообщества
                     </h1>
                 </div>
                 <?php if (is_user_logged_in()): ?>
-                <a href="<?php echo home_url('/member-dashboard/'); ?>" class="px-4 py-2 rounded-lg text-white font-medium" style="background-color: <?php echo $primary_color; ?>">
+                <a href="<?php echo home_url('/member-dashboard/'); ?>" class="px-4 py-2 rounded-lg text-white font-medium" style="background-color: #0066cc">
                     <i class="fas fa-user mr-2"></i>
                     Личный кабинет
                 </a>
@@ -125,7 +124,7 @@ $primary_color = get_option('metoda_primary_color', '#0066cc');
                 <a href="<?php the_permalink(); ?>" class="forum-topic-row block p-4 transition-colors">
                     <div class="flex items-start gap-4">
                         <div class="flex-shrink-0">
-                            <div class="w-12 h-12 rounded-full flex items-center justify-center text-white font-semibold" style="background-color: <?php echo $primary_color; ?>">
+                            <div class="w-12 h-12 rounded-full flex items-center justify-center text-white font-semibold" style="background-color: #0066cc">
                                 <?php echo strtoupper(substr($author_name, 0, 1)); ?>
                             </div>
                         </div>

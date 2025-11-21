@@ -2150,6 +2150,25 @@ function members_enqueue_scripts() {
 add_action('wp_enqueue_scripts', 'members_enqueue_scripts');
 
 /**
+ * Регистрация Tailwind CSS и общих стилей
+ */
+function metoda_register_tailwind_styles() {
+    wp_register_style('metoda-tailwind', plugin_dir_url(__FILE__) . 'assets/css/tailwind.min.css', array(), '4.0.2');
+    wp_register_style('metoda-fonts', 'https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap', array(), null);
+    wp_register_style('metoda-fontawesome', 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css', array(), '6.4.0');
+}
+add_action('init', 'metoda_register_tailwind_styles');
+
+/**
+ * Подключение frontend стилей (Tailwind + шрифты)
+ */
+function metoda_enqueue_frontend_styles() {
+    wp_enqueue_style('metoda-fonts');
+    wp_enqueue_style('metoda-fontawesome');
+    wp_enqueue_style('metoda-tailwind');
+}
+
+/**
  * AJAX обработчик фильтрации участников
  */
 function ajax_filter_members() {

@@ -40,9 +40,6 @@ if (is_user_logged_in()) {
     exit;
 }
 
-// Цвета Метода
-$primary_color = '#0066cc';
-$accent_color = '#ff6600';
 
 // Получаем города для выпадающего списка
 global $wpdb;
@@ -67,7 +64,7 @@ $roles = get_terms(array(
     <meta charset="<?php bloginfo('charset'); ?>">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Регистрация участника - <?php bloginfo('name'); ?></title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <?php metoda_enqueue_frontend_styles(); ?>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js" crossorigin="anonymous"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -84,21 +81,10 @@ $roles = get_terms(array(
         .step-indicator::before { content: ''; position: absolute; top: 50%; left: 0; right: 0; height: 2px; background: #e5e7eb; z-index: 1; }
         .step-indicator .step-item { position: relative; z-index: 2; background: white; }
         .step-item.completed { color: #059669; }
-        .step-item.active { color: <?php echo $primary_color; ?>; }
+        .step-item.active { color: #0066cc; }
         .step-item.pending { color: #9ca3af; }
     </style>
     <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        primary: '<?php echo $primary_color; ?>',
-                        accent: '<?php echo $accent_color; ?>',
-                    }
-                }
-            }
-        }
-    </script>
     <?php wp_head(); ?>
 </head>
 <body class="bg-gradient-to-br from-gray-50 to-blue-50 min-h-screen">
@@ -108,14 +94,14 @@ $roles = get_terms(array(
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between items-center h-16">
             <div class="flex items-center">
-                <div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background-color: <?php echo $primary_color; ?>">
+                <div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background-color: #0066cc">
                     <i class="fas fa-users text-white text-sm"></i>
                 </div>
                 <span class="ml-3 text-xl font-bold text-gray-900">Ассоциация Метода</span>
             </div>
             <div class="flex items-center space-x-4">
                 <a href="<?php echo wp_login_url(); ?>" class="text-gray-600 hover:text-gray-900 font-medium">Войти</a>
-                <a href="<?php echo home_url(); ?>" class="font-medium" style="color: <?php echo $primary_color; ?>">Помощь</a>
+                <a href="<?php echo home_url(); ?>" class="font-medium" style="color: #0066cc">Помощь</a>
             </div>
         </div>
     </div>
@@ -128,7 +114,7 @@ $roles = get_terms(array(
         <div id="step-indicator" class="mb-12">
             <div class="step-indicator flex justify-between items-center max-w-3xl mx-auto">
                 <div class="step-item active flex flex-col items-center">
-                    <div class="w-10 h-10 rounded-full border-2 flex items-center justify-center mb-2" style="border-color: <?php echo $primary_color; ?>; background-color: <?php echo $primary_color; ?>">
+                    <div class="w-10 h-10 rounded-full border-2 flex items-center justify-center mb-2" style="border-color: #0066cc; background-color: #0066cc">
                         <i class="fas fa-user text-white text-sm"></i>
                     </div>
                     <span class="text-sm font-medium">Данные</span>
@@ -158,7 +144,7 @@ $roles = get_terms(array(
         <div class="bg-white rounded-2xl shadow-xl overflow-hidden">
 
             <!-- Progress Header -->
-            <div id="progress-header" class="px-8 py-8" style="background: linear-gradient(to right, <?php echo $primary_color; ?>, <?php echo $accent_color; ?>)">
+            <div id="progress-header" class="px-8 py-8" style="background: linear-gradient(to right, #0066cc, #ff6600)">
                 <div class="flex items-center justify-between text-white mb-6 flex-col md:flex-row gap-4">
                     <div>
                         <h1 class="text-3xl font-bold mb-2">Присоединяйтесь к нам</h1>
@@ -190,7 +176,7 @@ $roles = get_terms(array(
                                 <div class="lg:col-span-2">
                                     <label class="block text-sm font-semibold text-gray-700 mb-3">Email адрес</label>
                                     <div class="relative">
-                                        <input type="email" id="email" name="email" class="w-full px-4 py-4 border border-gray-300 rounded-xl focus:ring-2 focus:border-transparent transition-all text-lg" placeholder="your.email@example.com" required style="focus:ring-color: <?php echo $primary_color; ?>">
+                                        <input type="email" id="email" name="email" class="w-full px-4 py-4 border border-gray-300 rounded-xl focus:ring-2 focus:border-transparent transition-all text-lg" placeholder="your.email@example.com" required style="focus:ring-color: #0066cc">
                                         <i class="fas fa-envelope absolute right-4 top-5 text-gray-400"></i>
                                     </div>
                                 </div>
@@ -200,7 +186,7 @@ $roles = get_terms(array(
                                         Код доступа <span class="text-gray-500 font-normal">(опционально)</span>
                                     </label>
                                     <div class="relative">
-                                        <input type="text" id="access_code" name="access_code" class="w-full px-4 py-4 border border-gray-300 rounded-xl focus:ring-2 focus:border-transparent transition-all text-lg uppercase" placeholder="METODA-2024-XXXXXX" style="focus:ring-color: <?php echo $primary_color; ?>">
+                                        <input type="text" id="access_code" name="access_code" class="w-full px-4 py-4 border border-gray-300 rounded-xl focus:ring-2 focus:border-transparent transition-all text-lg uppercase" placeholder="METODA-2024-XXXXXX" style="focus:ring-color: #0066cc">
                                         <i class="fas fa-key absolute right-4 top-5 text-gray-400"></i>
                                     </div>
                                     <p class="text-sm text-gray-500 mt-2">
@@ -234,20 +220,20 @@ $roles = get_terms(array(
                                     <label class="block text-sm font-semibold text-gray-700 mb-4">Тип участия</label>
                                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <label class="relative flex items-center p-6 border-2 border-gray-200 rounded-xl cursor-pointer hover:border-blue-300 transition-all hover:shadow-md">
-                                            <input type="radio" name="account_type" value="member" class="focus:ring-blue-500" checked style="color: <?php echo $primary_color; ?>">
+                                            <input type="radio" name="account_type" value="member" class="focus:ring-blue-500" checked style="color: #0066cc">
                                             <div class="ml-4">
                                                 <div class="flex items-center mb-2">
-                                                    <i class="fas fa-user-friends mr-2" style="color: <?php echo $primary_color; ?>"></i>
+                                                    <i class="fas fa-user-friends mr-2" style="color: #0066cc"></i>
                                                     <div class="text-lg font-semibold text-gray-900">Участник</div>
                                                 </div>
                                                 <div class="text-sm text-gray-600">Присоединяйтесь как участник с доступом к ресурсам и нетворкингу</div>
                                             </div>
                                         </label>
                                         <label class="relative flex items-center p-6 border-2 border-gray-200 rounded-xl cursor-pointer hover:border-blue-300 transition-all hover:shadow-md">
-                                            <input type="radio" name="account_type" value="expert" class="focus:ring-blue-500" style="color: <?php echo $primary_color; ?>">
+                                            <input type="radio" name="account_type" value="expert" class="focus:ring-blue-500" style="color: #0066cc">
                                             <div class="ml-4">
                                                 <div class="flex items-center mb-2">
-                                                    <i class="fas fa-graduation-cap mr-2" style="color: <?php echo $primary_color; ?>"></i>
+                                                    <i class="fas fa-graduation-cap mr-2" style="color: #0066cc"></i>
                                                     <div class="text-lg font-semibold text-gray-900">Эксперт</div>
                                                 </div>
                                                 <div class="text-sm text-gray-600">Делитесь знаниями и наставляйте других участников</div>
@@ -264,9 +250,9 @@ $roles = get_terms(array(
                                 <div class="lg:col-span-2">
                                     <div class="bg-gray-50 rounded-xl p-6">
                                         <div class="flex items-start">
-                                            <input type="checkbox" id="terms" name="terms" class="mt-1 rounded" required style="color: <?php echo $primary_color; ?>">
+                                            <input type="checkbox" id="terms" name="terms" class="mt-1 rounded" required style="color: #0066cc">
                                             <label for="terms" class="ml-3 text-sm text-gray-700">
-                                                Я согласен с <a href="#" style="color: <?php echo $primary_color; ?>" class="hover:underline font-medium">Условиями использования</a> и <a href="#" style="color: <?php echo $primary_color; ?>" class="hover:underline font-medium">Политикой конфиденциальности</a>. Я понимаю, что моя информация будет использована для создания профиля участника.
+                                                Я согласен с <a href="#" style="color: #0066cc" class="hover:underline font-medium">Условиями использования</a> и <a href="#" style="color: #0066cc" class="hover:underline font-medium">Политикой конфиденциальности</a>. Я понимаю, что моя информация будет использована для создания профиля участника.
                                             </label>
                                         </div>
                                     </div>
@@ -368,7 +354,7 @@ $roles = get_terms(array(
                                             </div>
                                         </div>
                                     </div>
-                                    <button type="button" onclick="addSpecialization()" class="mt-4 flex items-center hover:underline font-medium transition-colors" style="color: <?php echo $primary_color; ?>">
+                                    <button type="button" onclick="addSpecialization()" class="mt-4 flex items-center hover:underline font-medium transition-colors" style="color: #0066cc">
                                         <i class="fas fa-plus-circle mr-2"></i>Добавить еще специализацию
                                     </button>
                                 </div>
@@ -381,7 +367,7 @@ $roles = get_terms(array(
                                             <input type="text" class="interest-field w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:border-transparent" placeholder="например, Искусственный интеллект, Устойчивые технологии">
                                         </div>
                                     </div>
-                                    <button type="button" onclick="addInterest()" class="mt-4 flex items-center hover:underline font-medium transition-colors" style="color: <?php echo $primary_color; ?>">
+                                    <button type="button" onclick="addInterest()" class="mt-4 flex items-center hover:underline font-medium transition-colors" style="color: #0066cc">
                                         <i class="fas fa-plus-circle mr-2"></i>Добавить еще интерес
                                     </button>
                                 </div>
@@ -425,7 +411,7 @@ $roles = get_terms(array(
                                             <i class="fas fa-lightbulb text-yellow-500 mr-2"></i>
                                             Совет: Укажите конкретные цели, типы сотрудничества и как вы внесете вклад
                                         </div>
-                                        <button type="button" class="hover:underline font-medium transition-colors" style="color: <?php echo $primary_color; ?>">
+                                        <button type="button" class="hover:underline font-medium transition-colors" style="color: #0066cc">
                                             <i class="fas fa-clock mr-2"></i>Заполнить позже
                                         </button>
                                     </div>
@@ -443,7 +429,7 @@ $roles = get_terms(array(
                             <h2 class="text-3xl font-bold text-gray-900 mb-4">Регистрация завершена!</h2>
                             <p class="text-lg text-gray-600 mb-8">Ваш профиль успешно создан и отправлен на модерацию. Вы получите письмо с подтверждением и дальнейшими инструкциями.</p>
                             <div class="space-y-4">
-                                <a href="<?php echo home_url('/member-dashboard/'); ?>" class="block w-full text-white px-8 py-4 rounded-xl font-semibold hover:opacity-90 transition-colors" style="background-color: <?php echo $primary_color; ?>">
+                                <a href="<?php echo home_url('/member-dashboard/'); ?>" class="block w-full text-white px-8 py-4 rounded-xl font-semibold hover:opacity-90 transition-colors" style="background-color: #0066cc">
                                     <i class="fas fa-user-circle mr-2"></i>Перейти в личный кабинет
                                 </a>
                                 <a href="<?php echo home_url(); ?>" class="block w-full bg-gray-100 text-gray-700 px-8 py-4 rounded-xl font-semibold hover:bg-gray-200 transition-colors">
@@ -459,7 +445,7 @@ $roles = get_terms(array(
                             <i class="fas fa-arrow-left mr-2"></i>Назад
                         </button>
                         <div class="flex-1"></div>
-                        <button type="button" id="next-btn" class="text-white px-8 py-4 rounded-xl font-semibold hover:opacity-90 transition-colors shadow-lg" onclick="nextStep()" style="background-color: <?php echo $primary_color; ?>">
+                        <button type="button" id="next-btn" class="text-white px-8 py-4 rounded-xl font-semibold hover:opacity-90 transition-colors shadow-lg" onclick="nextStep()" style="background-color: #0066cc">
                             Продолжить<i class="fas fa-arrow-right ml-2"></i>
                         </button>
                     </div>

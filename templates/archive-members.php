@@ -6,10 +6,6 @@
 
 get_header();
 
-// Фирменные цвета "Метода"
-$primary_color = '#2e466f'; // Темно-синий
-$accent_color = '#ef4e4c';  // Красный
-
 // Получаем параметры фильтрации
 $search = isset($_GET['s']) ? sanitize_text_field($_GET['s']) : '';
 $city_filter = isset($_GET['city']) ? sanitize_text_field($_GET['city']) : '';
@@ -174,14 +170,13 @@ $roles = get_terms(array(
     <meta charset="<?php bloginfo('charset'); ?>">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Участники - <?php bloginfo('name'); ?></title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <?php metoda_enqueue_frontend_styles(); ?>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         * { font-family: 'Montserrat', sans-serif; }
-        .metoda-primary { color: <?php echo $primary_color; ?>; }
-        .metoda-primary-bg { background-color: <?php echo $primary_color; ?>; }
-        .metoda-accent-bg { background-color: <?php echo $accent_color; ?>; }
+        .metoda-primary { color: #2e466f; }
+        .metoda-primary-bg { background-color: #2e466f; }
+        .metoda-accent-bg { background-color: #ef4e4c; }
 
         /* Прописываем все состояния элементов */
         a {
@@ -201,7 +196,7 @@ $roles = get_terms(array(
         button:hover { opacity: 0.9; }
         button:active { transform: scale(0.98); }
         button:focus {
-            outline: 2px solid <?php echo $primary_color; ?> !important;
+            outline: 2px solid #2e466f !important;
             outline-offset: 2px;
             border: none !important;
         }
@@ -212,8 +207,8 @@ $roles = get_terms(array(
         }
         input:focus, select:focus {
             ring: 2px;
-            ring-color: <?php echo $primary_color; ?>;
-            border-color: <?php echo $primary_color; ?> !important;
+            ring-color: #2e466f;
+            border-color: #2e466f !important;
             outline: none !important;
         }
         input:hover, select:hover { border-color: #9ca3af !important; }
@@ -228,7 +223,7 @@ $roles = get_terms(array(
 
         /* Стили для активных кнопок фильтра */
         .filter-radio:checked + div {
-            background-color: <?php echo $primary_color; ?> !important;
+            background-color: #2e466f !important;
             color: white !important;
         }
 
@@ -246,7 +241,7 @@ $roles = get_terms(array(
         /* Loader animation */
         .loader {
             border: 3px solid #f3f4f6;
-            border-top: 3px solid <?php echo $primary_color; ?>;
+            border-top: 3px solid #2e466f;
             border-radius: 50%;
             width: 24px;
             height: 24px;
@@ -274,18 +269,6 @@ $roles = get_terms(array(
             animation: fadeInUp 0.5s ease-out;
         }
     </style>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        primary: '<?php echo $primary_color; ?>',
-                        accent: '<?php echo $accent_color; ?>'
-                    }
-                }
-            }
-        }
-    </script>
     <?php wp_head(); ?>
 </head>
 <body class="bg-gray-50">
@@ -416,7 +399,7 @@ $roles = get_terms(array(
                 <!-- Load More Button -->
                 <?php if ($total_found > count($paged_members)): ?>
                 <div class="mt-8 text-center">
-                    <button id="load-more-btn" data-offset="<?php echo $posts_per_page; ?>" data-total="<?php echo $total_found; ?>" class="metoda-primary-bg text-white px-8 py-3 rounded-lg font-medium transition-all inline-flex items-center gap-2" style="border: none !important; outline: none !important; background-color: <?php echo $primary_color; ?> !important;">
+                    <button id="load-more-btn" data-offset="<?php echo $posts_per_page; ?>" data-total="<?php echo $total_found; ?>" class="metoda-primary-bg text-white px-8 py-3 rounded-lg font-medium transition-all inline-flex items-center gap-2" style="border: none !important; outline: none !important; background-color: #2e466f !important;">
                         <span>Показать еще</span>
                         <i class="fas fa-chevron-down"></i>
                     </button>

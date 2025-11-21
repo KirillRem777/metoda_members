@@ -48,7 +48,7 @@ $total_materials = count($testimonials_data) + count($gratitudes_data) + count($
                     <h2 class="text-2xl font-bold text-gray-900">Портфолио и достижения</h2>
                     <p class="text-sm text-gray-500 mt-1">Управляйте отзывами, благодарностями, видео и публикациями</p>
                 </div>
-                <div class="text-2xl font-bold" style="color: <?php echo $primary_color; ?>;">
+                <div class="text-2xl font-bold" style="color: #0066cc;">
                     <?php echo $total_materials; ?>
                     <span class="text-sm font-normal text-gray-500">материалов</span>
                 </div>
@@ -167,7 +167,7 @@ $total_materials = count($testimonials_data) + count($gratitudes_data) + count($
                                 <textarea name="description" rows="2" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none"></textarea>
                             </div>
 
-                            <button type="submit" class="w-full px-6 py-3 text-white rounded-lg font-medium hover:opacity-90 transition-opacity" style="background-color: <?php echo $primary_color; ?>;">
+                            <button type="submit" class="w-full px-6 py-3 text-white rounded-lg font-medium hover:opacity-90 transition-opacity" style="background-color: #0066cc;">
                                 <i class="fas fa-plus mr-2"></i>
                                 Добавить материал
                             </button>
@@ -269,7 +269,7 @@ $total_materials = count($testimonials_data) + count($gratitudes_data) + count($
                     </div>
 
                     <div class="flex gap-3 pt-4">
-                        <button type="submit" class="flex-1 px-6 py-3 text-white rounded-lg font-medium hover:opacity-90 transition-opacity" style="background-color: <?php echo $primary_color; ?>;">
+                        <button type="submit" class="flex-1 px-6 py-3 text-white rounded-lg font-medium hover:opacity-90 transition-opacity" style="background-color: #0066cc;">
                             <i class="fas fa-save mr-2"></i>
                             Сохранить изменения
                         </button>
@@ -295,7 +295,7 @@ $total_materials = count($testimonials_data) + count($gratitudes_data) + count($
     }
 
     .material-category-tab.active {
-        background: <?php echo $primary_color; ?>;
+        background: #0066cc;
         color: white;
     }
 
@@ -320,7 +320,7 @@ $total_materials = count($testimonials_data) + count($gratitudes_data) + count($
     }
 
     .material-type-btn.active {
-        background: <?php echo $primary_color; ?>;
+        background: #0066cc;
         color: white;
     }
 
@@ -361,7 +361,7 @@ $total_materials = count($testimonials_data) + count($gratitudes_data) + count($
     }
 
     .ql-toolbar button.ql-active {
-        background: <?php echo $primary_color; ?> !important;
+        background: #0066cc !important;
         color: white;
     }
 
@@ -422,7 +422,7 @@ $total_materials = count($testimonials_data) + count($gratitudes_data) + count($
     }
 
     .ql-editor blockquote {
-        border-left: 3px solid <?php echo $primary_color; ?>;
+        border-left: 3px solid #0066cc;
         padding-left: 1em;
         margin-left: 0;
         font-style: italic;
@@ -430,7 +430,7 @@ $total_materials = count($testimonials_data) + count($gratitudes_data) + count($
     }
 
     .ql-editor a {
-        color: <?php echo $primary_color; ?>;
+        color: #0066cc;
         text-decoration: none;
     }
 

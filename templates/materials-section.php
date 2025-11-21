@@ -139,9 +139,9 @@ if ($total_materials > 0):
     }
 
     .material-tab.active {
-        background: <?php echo $primary_color; ?>;
+        background: #0066cc;
         color: white;
-        border-color: <?php echo $primary_color; ?>;
+        border-color: #0066cc;
     }
 
     .material-tab.active span {
@@ -150,7 +150,7 @@ if ($total_materials > 0):
     }
 
     .material-tab:focus {
-        outline: 2px solid <?php echo $primary_color; ?>;
+        outline: 2px solid #0066cc;
         outline-offset: 2px;
     }
 

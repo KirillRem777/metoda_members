@@ -36,9 +36,6 @@ if (!in_array('manager', $current_user->roles) && !in_array('administrator', $cu
     exit;
 }
 
-// Цвета Метода
-$primary_color = '#0066cc';
-$accent_color = '#ff6600';
 
 // Получаем статистику
 global $wpdb;
@@ -96,7 +93,7 @@ $members_query = new WP_Query($args);
     <meta charset="<?php bloginfo('charset'); ?>">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Панель управления - <?php bloginfo('name'); ?></title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <?php metoda_enqueue_frontend_styles(); ?>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js" crossorigin="anonymous"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -104,21 +101,6 @@ $members_query = new WP_Query($args);
         * { font-family: 'Inter', sans-serif; }
     </style>
     <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        'admin-blue': '<?php echo $primary_color; ?>',
-                        'admin-gray': '#f8fafc',
-                        'status-active': '#10b981',
-                        'status-pending': '#f59e0b',
-                        'status-blocked': '#ef4444',
-                        'status-draft': '#6b7280'
-                    }
-                }
-            }
-        }
-    </script>
     <?php wp_head(); ?>
 </head>
 <body class="bg-gray-50">
@@ -127,7 +109,7 @@ $members_query = new WP_Query($args);
 <div id="sidebar" class="fixed left-0 top-0 h-full w-64 bg-white shadow-lg border-r border-gray-200 z-50">
     <div class="p-6 border-b border-gray-200">
         <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-lg flex items-center justify-center" style="background-color: <?php echo $primary_color; ?>">
+            <div class="w-10 h-10 rounded-lg flex items-center justify-center" style="background-color: #0066cc">
                 <i class="fas fa-users text-white text-lg"></i>
             </div>
             <div>

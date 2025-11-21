@@ -71,7 +71,7 @@ $all_members = get_posts(array(
             <!-- Tabs -->
             <div class="bg-white rounded-xl shadow-sm border border-gray-200 mb-6">
                 <div class="flex gap-2 p-4">
-                    <button class="message-tab active px-4 py-2.5 rounded-lg font-medium text-sm transition-all" data-tab="inbox" style="background-color: <?php echo $primary_color; ?>; color: white;">
+                    <button class="message-tab active px-4 py-2.5 rounded-lg font-medium text-sm transition-all" data-tab="inbox" style="background-color: #0066cc; color: white;">
                         📥 Входящие
                         <?php if ($unread_count > 0): ?>
                         <span class="ml-2 px-2 py-0.5 bg-white bg-opacity-30 rounded-full text-xs"><?php echo $unread_count; ?></span>
@@ -208,7 +208,7 @@ $all_members = get_posts(array(
                                 <input type="text" name="website_compose" id="compose_website" tabindex="-1" autocomplete="off">
                             </div>
 
-                            <button type="submit" class="w-full px-6 py-3 text-white rounded-lg font-medium hover:opacity-90 transition-opacity" style="background-color: <?php echo $primary_color; ?>;">
+                            <button type="submit" class="w-full px-6 py-3 text-white rounded-lg font-medium hover:opacity-90 transition-opacity" style="background-color: #0066cc;">
                                 <i class="fas fa-paper-plane mr-2"></i>
                                 Отправить сообщение
                             </button>
@@ -247,7 +247,7 @@ $all_members = get_posts(array(
     background: #e5e7eb;
 }
 .message-tab.active {
-    background: <?php echo $primary_color; ?>;
+    background: #0066cc;
     color: white;
 }
 </style>
@@ -274,7 +274,7 @@ jQuery(document).ready(function($) {
         var tab = $(this).data('tab');
 
         $('.message-tab').removeClass('active').css({'background': '', 'color': ''});
-        $(this).addClass('active').css({'background': '<?php echo $primary_color; ?>', 'color': 'white'});
+        $(this).addClass('active').css({'background': '#0066cc', 'color': 'white'});
 
         $('.message-tab-content').addClass('hidden');
         $('#tab-' + tab).removeClass('hidden');

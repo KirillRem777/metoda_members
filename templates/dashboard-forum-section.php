@@ -41,7 +41,7 @@ $total_my_likes = get_user_meta($current_user_id, 'forum_likes_received', true) 
                     <h2 class="text-2xl font-bold text-gray-900">Мои обсуждения</h2>
                     <p class="text-sm text-gray-500 mt-1">Управляйте темами и участвуйте в дискуссиях</p>
                 </div>
-                <a href="<?php echo home_url('/forum'); ?>" target="_blank" class="px-4 py-2 text-white rounded-lg font-medium hover:opacity-90 transition-opacity" style="background-color: <?php echo $primary_color; ?>;">
+                <a href="<?php echo home_url('/forum'); ?>" target="_blank" class="px-4 py-2 text-white rounded-lg font-medium hover:opacity-90 transition-opacity" style="background-color: #0066cc;">
                     <i class="fas fa-external-link-alt mr-2"></i>
                     Перейти на форум
                 </a>
@@ -56,7 +56,7 @@ $total_my_likes = get_user_meta($current_user_id, 'forum_likes_received', true) 
                 <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
                     <div class="flex items-center gap-4">
                         <div class="w-12 h-12 rounded-lg flex items-center justify-center" style="background-color: rgba(0, 102, 204, 0.1);">
-                            <i class="fas fa-comments text-xl" style="color: <?php echo $primary_color; ?>;"></i>
+                            <i class="fas fa-comments text-xl" style="color: #0066cc;"></i>
                         </div>
                         <div>
                             <p class="text-2xl font-bold text-gray-900"><?php echo $total_my_topics; ?></p>
@@ -208,7 +208,7 @@ $total_my_likes = get_user_meta($current_user_id, 'forum_likes_received', true) 
                             <textarea name="content" required rows="8" placeholder="Расскажите подробнее..." class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none"></textarea>
                         </div>
 
-                        <button type="submit" class="w-full px-6 py-3 text-white rounded-lg font-medium hover:opacity-90 transition-opacity" style="background-color: <?php echo $primary_color; ?>;">
+                        <button type="submit" class="w-full px-6 py-3 text-white rounded-lg font-medium hover:opacity-90 transition-opacity" style="background-color: #0066cc;">
                             <i class="fas fa-plus mr-2"></i>
                             Создать тему
                         </button>
@@ -230,7 +230,7 @@ $total_my_likes = get_user_meta($current_user_id, 'forum_likes_received', true) 
     }
 
     .forum-tab.active {
-        background: <?php echo $primary_color; ?>;
+        background: #0066cc;
         color: white;
     }
 </style>
