@@ -61,6 +61,15 @@ new Member_Access_Codes();
 new Member_OTP();
 
 /**
+ * Activation hook: создаём страницы при активации плагина
+ */
+function metoda_plugin_activation() {
+    // Сбрасываем время последней проверки, чтобы страницы создались сразу
+    delete_option('metoda_pages_check');
+}
+register_activation_hook(__FILE__, 'metoda_plugin_activation');
+
+/**
  * SECURITY v3.7.3: Единая функция проверки прав на редактирование member_id
  *
  * Логика:
@@ -4365,22 +4374,16 @@ function metoda_ensure_important_pages() {
             'description' => 'Личный кабинет участника'
         ),
         array(
-            'slug' => 'custom-login',
-            'title' => 'Вход',
-            'shortcode' => '[custom_login]',
-            'description' => 'Страница входа в систему'
-        ),
-        array(
-            'slug' => 'registration',
-            'title' => 'Регистрация',
-            'shortcode' => '[member_registration]',
-            'description' => 'Страница регистрации участника'
+            'slug' => 'member-login',
+            'title' => 'Вход для участников',
+            'template' => 'templates/member-login.php',
+            'description' => 'Новая страница входа с тремя способами (пароль / код доступа / OTP)'
         ),
         array(
             'slug' => 'member-onboarding',
-            'title' => 'Онбординг',
-            'shortcode' => '[member_onboarding]',
-            'description' => 'Страница онбординга для новых участников'
+            'title' => 'Добро пожаловать',
+            'template' => 'templates/member-onboarding.php',
+            'description' => 'Онбординг в стиле Apple для новых участников'
         ),
         array(
             'slug' => 'manager-panel',
@@ -4403,11 +4406,14 @@ function metoda_ensure_important_pages() {
         $page = get_page_by_path($page_config['slug']);
 
         if (!$page) {
+            // Определяем контент страницы
+            $post_content = isset($page_config['shortcode']) ? $page_config['shortcode'] : '';
+
             // Создаем страницу
             $page_id = wp_insert_post(array(
                 'post_title' => $page_config['title'],
                 'post_name' => $page_config['slug'],
-                'post_content' => $page_config['shortcode'],
+                'post_content' => $post_content,
                 'post_status' => 'publish',
                 'post_type' => 'page',
                 'post_author' => 1,
@@ -4416,6 +4422,11 @@ function metoda_ensure_important_pages() {
             ));
 
             if ($page_id && !is_wp_error($page_id)) {
+                // Если указан template, устанавливаем его
+                if (isset($page_config['template'])) {
+                    update_post_meta($page_id, '_wp_page_template', $page_config['template']);
+                }
+
                 $created_pages[] = $page_config['title'] . ' (/' . $page_config['slug'] . '/)';
                 error_log('Metoda: Создана страница "' . $page_config['title'] . '" (ID: ' . $page_id . ')');
             }
