@@ -20,25 +20,9 @@ if (is_admin()) {
     return;
 }
 
-// Если пользователь уже авторизован, редиректим
-if (is_user_logged_in()) {
-    $user = wp_get_current_user();
-
-    // Администраторы идут в админку
-    if (current_user_can('administrator') || current_user_can('manage_options')) {
-        wp_redirect(admin_url());
-        exit;
-    }
-
-    if (in_array('member', $user->roles) || in_array('expert', $user->roles)) {
-        wp_redirect(home_url('/member-dashboard/'));
-    } elseif (in_array('manager', $user->roles)) {
-        wp_redirect(home_url('/manager-panel/'));
-    } else {
-        wp_redirect(home_url());
-    }
-    exit;
-}
+// Если пользователь уже авторизован, показываем сообщение вместо редиректа
+$is_logged_in = is_user_logged_in();
+$current_user = $is_logged_in ? wp_get_current_user() : null;
 
 ?>
 
@@ -78,24 +62,62 @@ if (is_user_logged_in()) {
         <!-- Login Form Card -->
         <div class="bg-white rounded-2xl shadow-xl border border-gray-200 p-8">
 
-            <?php
-            // Показываем сообщения об ошибках
-            if (isset($_GET['login']) && $_GET['login'] == 'failed'):
-            ?>
-            <div class="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg flex items-start">
-                <i class="fas fa-exclamation-circle mt-0.5 mr-3"></i>
-                <span class="text-sm">Неверный email или пароль. Попробуйте еще раз.</span>
-            </div>
-            <?php endif; ?>
+            <?php if ($is_logged_in): ?>
+                <!-- Сообщение для авторизованных пользователей -->
+                <div class="bg-blue-50 border border-blue-200 rounded-lg p-6">
+                    <div class="flex items-start mb-4">
+                        <i class="fas fa-info-circle text-blue-500 text-xl mr-3 mt-1"></i>
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-900 mb-2">Вы уже авторизованы</h3>
+                            <p class="text-sm text-gray-700 mb-1">Здравствуйте, <strong><?php echo esc_html($current_user->display_name); ?></strong>!</p>
+                            <p class="text-sm text-gray-600">Вы можете перейти в свой профиль или выйти из системы.</p>
+                        </div>
+                    </div>
 
-            <?php if (isset($_GET['registered']) && $_GET['registered'] == 'true'): ?>
-            <div class="mb-6 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg flex items-start">
-                <i class="fas fa-check-circle mt-0.5 mr-3"></i>
-                <span class="text-sm">Регистрация успешна! Войдите с вашими данными.</span>
-            </div>
-            <?php endif; ?>
+                    <div class="flex flex-col gap-3 mt-4">
+                        <?php if (current_user_can('administrator') || current_user_can('manage_options')): ?>
+                            <a href="<?php echo admin_url(); ?>" class="inline-flex items-center justify-center px-4 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl hover:opacity-90 transition-all">
+                                <i class="fas fa-cog mr-2"></i>
+                                Перейти в админку
+                            </a>
+                        <?php elseif (in_array('manager', $current_user->roles)): ?>
+                            <a href="<?php echo home_url('/manager-panel/'); ?>" class="inline-flex items-center justify-center px-4 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl hover:opacity-90 transition-all">
+                                <i class="fas fa-users-cog mr-2"></i>
+                                Панель менеджера
+                            </a>
+                        <?php else: ?>
+                            <a href="<?php echo home_url('/member-dashboard/'); ?>" class="inline-flex items-center justify-center px-4 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl hover:opacity-90 transition-all">
+                                <i class="fas fa-user mr-2"></i>
+                                Личный кабинет
+                            </a>
+                        <?php endif; ?>
 
-            <form id="login-form" method="post" action="<?php echo wp_login_url(); ?>" class="space-y-6">
+                        <a href="<?php echo wp_logout_url(home_url('/custom-login/')); ?>" class="inline-flex items-center justify-center px-4 py-3 border-2 border-red-500 text-red-600 rounded-xl hover:bg-red-50 transition-all">
+                            <i class="fas fa-sign-out-alt mr-2"></i>
+                            Выйти из системы
+                        </a>
+                    </div>
+                </div>
+            <?php else: ?>
+                <!-- Форма входа для неавторизованных пользователей -->
+                <?php
+                // Показываем сообщения об ошибках
+                if (isset($_GET['login']) && $_GET['login'] == 'failed'):
+                ?>
+                <div class="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg flex items-start">
+                    <i class="fas fa-exclamation-circle mt-0.5 mr-3"></i>
+                    <span class="text-sm">Неверный email или пароль. Попробуйте еще раз.</span>
+                </div>
+                <?php endif; ?>
+
+                <?php if (isset($_GET['registered']) && $_GET['registered'] == 'true'): ?>
+                <div class="mb-6 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg flex items-start">
+                    <i class="fas fa-check-circle mt-0.5 mr-3"></i>
+                    <span class="text-sm">Регистрация успешна! Войдите с вашими данными.</span>
+                </div>
+                <?php endif; ?>
+
+                <form id="login-form" method="post" action="<?php echo wp_login_url(); ?>" class="space-y-6">
 
                 <!-- Email Field -->
                 <div>
@@ -183,6 +205,7 @@ if (is_user_logged_in()) {
 
                 <input type="hidden" name="redirect_to" value="<?php echo home_url('/member-dashboard/'); ?>">
             </form>
+            <?php endif; ?>
         </div>
 
         <!-- Additional Links -->
@@ -205,6 +228,7 @@ if (is_user_logged_in()) {
     </div>
 </div>
 
+<?php if (!$is_logged_in): ?>
 <script>
 // Toggle password visibility
 document.getElementById('toggle-password').addEventListener('click', function() {
@@ -229,6 +253,7 @@ document.getElementById('login-form').addEventListener('submit', function(e) {
     button.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Вход...';
 });
 </script>
+<?php endif; ?>
 
 <?php wp_footer(); ?>
 </body>
