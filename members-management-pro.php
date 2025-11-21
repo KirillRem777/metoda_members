@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Metoda Community MGMT
  * Description: Полнофункциональная система управления участниками и экспертами сообщества. Включает: регистрацию с валидацией, систему кодов доступа для импортированных участников, личные кабинеты с онбордингом, управление материалами с WYSIWYG-редактором, форум в стиле Reddit с категориями и лайками, настраиваемые email-шаблоны, CSV-импорт, кроппер фото, систему ролей и прав доступа, поиск и фильтрацию участников.
- * Version: 4.0.2
+ * Version: 4.1.0
  * Author: Kirill Rem
  * Text Domain: metoda-community-mgmt
  * Domain Path: /languages
@@ -2153,7 +2153,7 @@ add_action('wp_enqueue_scripts', 'members_enqueue_scripts');
  * Регистрация Tailwind CSS и общих стилей
  */
 function metoda_register_tailwind_styles() {
-    wp_register_style('metoda-tailwind', plugin_dir_url(__FILE__) . 'assets/css/tailwind.min.css', array(), '4.0.2');
+    wp_register_style('metoda-tailwind', plugin_dir_url(__FILE__) . 'assets/css/tailwind.min.css', array(), '4.1.0');
     wp_register_style('metoda-fonts', 'https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap', array(), null);
     wp_register_style('metoda-fontawesome', 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css', array(), '6.4.0');
 }
