@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Metoda Community MGMT
  * Description: Полнофункциональная система управления участниками и экспертами сообщества. Включает: регистрацию с валидацией, систему кодов доступа для импортированных участников, личные кабинеты с онбордингом, управление материалами с WYSIWYG-редактором, форум в стиле Reddit с категориями и лайками, настраиваемые email-шаблоны, CSV-импорт, кроппер фото, систему ролей и прав доступа, поиск и фильтрацию участников.
- * Version: 4.0.0
+ * Version: 4.0.2
  * Author: Kirill Rem
  * Text Domain: metoda-community-mgmt
  * Domain Path: /languages
@@ -3485,9 +3485,6 @@ add_action('wp_ajax_nopriv_load_more_members', 'load_more_members_ajax');
 function filter_members_ajax() {
     // CSRF protection - публичный nonce
     check_ajax_referer('public_members_nonce', 'nonce');
-
-    // Для отладки - логируем что функция вызвана
-    error_log('filter_members_ajax called');
 
     $search = isset($_POST['search']) ? sanitize_text_field($_POST['search']) : '';
     $city = isset($_POST['city']) ? sanitize_text_field($_POST['city']) : '';

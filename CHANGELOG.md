@@ -7,6 +7,40 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [4.0.2] - 2025-11-21 - Critical Hotfix 🔥
+
+### 🐛 Fixed - Критические исправления
+
+- **КРИТИЧНО:** Фильтр участников не работал из-за несовпадения nonce
+  - Исправлено: `members_ajax_nonce` → `public_members_nonce` в members-management-pro.php:1985
+  - Исправлено: `check_ajax_referer('public_members_nonce')` в ajax_filter_members():2120
+
+- **КРИТИЧНО:** Админ не мог редактировать чужие кабинеты
+  - Удалён дублирующийся handler `member_update_profile_ajax()` без admin bypass (строки 2675-2747)
+  - Теперь используется только класс Member_Dashboard с поддержкой get_editable_member_id()
+
+- **КРИТИЧНО:** Удалены дубли AJAX handlers конфликтующие с классами
+  - Удалён `member_delete_material_ajax()` (строки 3143-3192) → используется Member_File_Manager
+  - Удалён `manager_delete_member_ajax()` (строки 2917-2953) → используется Member_Manager
+
+### 🔧 Refactoring - Рефакторинг
+
+- **Стандартизированы названия nonce** (4 единых на весь плагин)
+  - `member_dashboard_nonce` - для личного кабинета
+  - `public_members_nonce` - для публичного архива
+  - `manager_actions_nonce` - для панели менеджера
+  - `member_registration_nonce` - для регистрации
+
+- **Удалён debug log** из filter_members_ajax() (строка 3490)
+
+### ✅ Verified - Проверено
+
+- Gallery handlers используют get_editable_member_id() ✅
+- Все nonce совпадают между wp_create_nonce() и check_ajax_referer() ✅
+- Нет дублирующихся shortcode/AJAX handlers ✅
+
+---
+
 ## [4.0.0] - 2025-11-21 - PRODUCTION READY 🚀
 
 ### 🎉 Major Release - Production Ready
