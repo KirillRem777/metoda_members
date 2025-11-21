@@ -1806,9 +1806,12 @@ function member_registration_shortcode() {
 }
 add_shortcode('member_registration', 'member_registration_shortcode');
 
+// УДАЛЕНО: Дубль шорткода - используется класс Member_Dashboard (includes/class-member-dashboard.php)
+/*
 /**
  * Шорткод для личного кабинета
  */
+/*
 function member_dashboard_shortcode() {
     if (!is_user_logged_in()) {
         return '<p>Пожалуйста, <a href="' . wp_login_url(get_permalink()) . '">войдите</a>, чтобы получить доступ к личному кабинету.</p>';
@@ -1824,6 +1827,7 @@ function member_dashboard_shortcode() {
     return ob_get_clean();
 }
 add_shortcode('member_dashboard', 'member_dashboard_shortcode');
+*/
 
 /**
  * Шорткод для панели менеджера
@@ -2036,7 +2040,7 @@ function members_enqueue_scripts() {
 
         wp_localize_script('members-archive-ajax', 'membersAjax', array(
             'ajaxurl' => admin_url('admin-ajax.php'),
-            'nonce' => wp_create_nonce('members_ajax_nonce')
+            'nonce' => wp_create_nonce('public_members_nonce')
         ));
     }
 
@@ -2062,7 +2066,7 @@ function members_enqueue_scripts() {
 
             wp_localize_script('member-registration-js', 'memberRegistrationData', array(
                 'ajaxUrl' => admin_url('admin-ajax.php'),
-                'nonce' => wp_create_nonce('member_registration')
+                'nonce' => wp_create_nonce('member_registration_nonce')
             ));
         }
 
@@ -2136,7 +2140,7 @@ function members_enqueue_scripts() {
 
             wp_localize_script('member-dashboard-js', 'memberDashboardData', array(
                 'ajaxUrl' => admin_url('admin-ajax.php'),
-                'nonce' => wp_create_nonce('member_dashboard')
+                'nonce' => wp_create_nonce('member_dashboard_nonce')
             ));
         }
 
@@ -2159,7 +2163,7 @@ function members_enqueue_scripts() {
 
             wp_localize_script('manager-panel-js', 'managerPanelData', array(
                 'ajaxUrl' => admin_url('admin-ajax.php'),
-                'nonce' => wp_create_nonce('manager_actions')
+                'nonce' => wp_create_nonce('manager_actions_nonce')
             ));
         }
     }
@@ -2171,7 +2175,7 @@ add_action('wp_enqueue_scripts', 'members_enqueue_scripts');
  */
 function ajax_filter_members() {
     // Проверка nonce
-    check_ajax_referer('members_ajax_nonce', 'nonce');
+    check_ajax_referer('public_members_nonce', 'nonce');
 
     // Получаем параметры фильтрации
     $search = isset($_POST['search']) ? sanitize_text_field($_POST['search']) : '';
@@ -2596,7 +2600,7 @@ add_action('manage_members_posts_custom_column', 'members_custom_columns_data', 
  * AJAX обработчик регистрации нового участника
  */
 function member_register_ajax() {
-    check_ajax_referer('member_registration', 'nonce');
+    check_ajax_referer('member_registration_nonce', 'nonce');
 
     $email = sanitize_email($_POST['email']);
     $password = $_POST['password'];
@@ -2737,9 +2741,12 @@ function member_register_ajax() {
 }
 add_action('wp_ajax_nopriv_member_register', 'member_register_ajax');
 
+// УДАЛЕНО: Дубль AJAX handler - используется класс Member_Dashboard (includes/class-member-dashboard.php)
+/*
 /**
  * AJAX обработчик обновления профиля участника
  */
+/*
 function member_update_profile_ajax() {
     check_ajax_referer('member_dashboard_nonce', 'nonce');
 
@@ -2806,6 +2813,7 @@ function member_update_profile_ajax() {
     wp_send_json_success(array('message' => 'Профиль успешно обновлен!'));
 }
 add_action('wp_ajax_member_update_profile', 'member_update_profile_ajax');
+*/
 
 /**
  * Редирект после логина - отправляем в соответствующие кабинеты
@@ -2941,7 +2949,7 @@ function block_admin_access_for_members() {
  * AJAX обработчик изменения статуса участника (для менеджеров)
  */
 function manager_change_member_status_ajax() {
-    check_ajax_referer('manager_actions', 'nonce');
+    check_ajax_referer('manager_actions_nonce', 'nonce');
 
     if (!current_user_can('manager') && !current_user_can('administrator')) {
         wp_send_json_error(array('message' => 'Нет прав доступа'));
@@ -2975,11 +2983,14 @@ function manager_change_member_status_ajax() {
 }
 add_action('wp_ajax_manager_change_member_status', 'manager_change_member_status_ajax');
 
+// УДАЛЕНО: Дубль AJAX handler - используется класс Member_Manager (includes/class-member-manager.php)
+/*
 /**
  * AJAX обработчик удаления участника (для менеджеров)
  */
+/*
 function manager_delete_member_ajax() {
-    check_ajax_referer('manager_actions', 'nonce');
+    check_ajax_referer('manager_actions_nonce', 'nonce');
 
     if (!current_user_can('manager') && !current_user_can('administrator')) {
         wp_send_json_error(array('message' => 'Нет прав доступа'));
@@ -3008,12 +3019,13 @@ function manager_delete_member_ajax() {
     ));
 }
 add_action('wp_ajax_manager_delete_member', 'manager_delete_member_ajax');
+*/
 
 /**
  * AJAX обработчик для сохранения галереи
  */
 function member_save_gallery_ajax() {
-    check_ajax_referer('member_dashboard', 'nonce');
+    check_ajax_referer('member_dashboard_nonce', 'nonce');
 
     if (!is_user_logged_in()) {
         wp_send_json_error(array('message' => 'Необходима авторизация'));
@@ -3040,7 +3052,7 @@ add_action('wp_ajax_member_save_gallery', 'member_save_gallery_ajax');
  * AJAX обработчик для загрузки фото в галерею
  */
 function member_upload_gallery_photo_ajax() {
-    check_ajax_referer('member_dashboard', 'nonce');
+    check_ajax_referer('member_dashboard_nonce', 'nonce');
 
     if (!is_user_logged_in()) {
         wp_send_json_error(array('message' => 'Необходима авторизация'));
@@ -3117,7 +3129,7 @@ add_action('wp_ajax_member_upload_gallery_photo', 'member_upload_gallery_photo_a
  * AJAX обработчик для добавления материала (ссылка)
  */
 function member_add_material_link_ajax() {
-    check_ajax_referer('member_dashboard', 'nonce');
+    check_ajax_referer('member_dashboard_nonce', 'nonce');
 
     if (!is_user_logged_in()) {
         wp_send_json_error(array('message' => 'Необходима авторизация'));
@@ -3177,7 +3189,7 @@ add_action('wp_ajax_member_add_material_link', 'member_add_material_link_ajax');
  * AJAX обработчик для добавления материала (файл)
  */
 function member_add_material_file_ajax() {
-    check_ajax_referer('member_dashboard', 'nonce');
+    check_ajax_referer('member_dashboard_nonce', 'nonce');
 
     if (!is_user_logged_in()) {
         wp_send_json_error(array('message' => 'Необходима авторизация'));
@@ -3250,11 +3262,14 @@ function member_add_material_file_ajax() {
 }
 add_action('wp_ajax_member_add_material_file', 'member_add_material_file_ajax');
 
+// УДАЛЕНО: Дубль AJAX handler - используется класс Member_File_Manager (includes/class-member-file-manager.php)
+/*
 /**
  * AJAX обработчик для удаления материала
  */
+/*
 function member_delete_material_ajax() {
-    check_ajax_referer('member_dashboard', 'nonce');
+    check_ajax_referer('member_dashboard_nonce', 'nonce');
 
     if (!is_user_logged_in()) {
         wp_send_json_error(array('message' => 'Необходима авторизация'));
@@ -3308,6 +3323,7 @@ function member_delete_material_ajax() {
     }
 }
 add_action('wp_ajax_member_delete_material', 'member_delete_material_ajax');
+*/
 
 /**
  * AJAX обработчик для загрузки дополнительных участников (Load More)

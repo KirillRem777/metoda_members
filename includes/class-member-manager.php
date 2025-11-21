@@ -83,7 +83,7 @@ class Member_Manager {
 
             wp_localize_script('member-manager', 'memberManager', array(
                 'ajaxUrl' => admin_url('admin-ajax.php'),
-                'nonce' => wp_create_nonce('member_manager_nonce'),
+                'nonce' => wp_create_nonce('manager_actions_nonce'),
             ));
 
             // Enqueue WordPress media library
@@ -112,7 +112,7 @@ class Member_Manager {
      * Get members via AJAX
      */
     public function ajax_get_members() {
-        check_ajax_referer('member_manager_nonce', 'nonce');
+        check_ajax_referer('manager_actions_nonce', 'nonce');
 
         if (!current_user_can('manage_members') && !current_user_can('manage_options')) {
             wp_send_json_error(array('message' => 'Нет прав'));
@@ -207,7 +207,7 @@ class Member_Manager {
      * Get single member via AJAX
      */
     public function ajax_get_member() {
-        check_ajax_referer('member_manager_nonce', 'nonce');
+        check_ajax_referer('manager_actions_nonce', 'nonce');
 
         if (!current_user_can('manage_members') && !current_user_can('manage_options')) {
             wp_send_json_error(array('message' => 'Нет прав'));
@@ -279,7 +279,7 @@ class Member_Manager {
      * Create member via AJAX
      */
     public function ajax_create_member() {
-        check_ajax_referer('member_manager_nonce', 'nonce');
+        check_ajax_referer('manager_actions_nonce', 'nonce');
 
         if (!current_user_can('manage_members') && !current_user_can('manage_options')) {
             wp_send_json_error(array('message' => 'Нет прав'));
@@ -317,7 +317,7 @@ class Member_Manager {
      * Update member via AJAX
      */
     public function ajax_update_member() {
-        check_ajax_referer('member_manager_nonce', 'nonce');
+        check_ajax_referer('manager_actions_nonce', 'nonce');
 
         if (!current_user_can('manage_members') && !current_user_can('manage_options')) {
             wp_send_json_error(array('message' => 'Нет прав'));
@@ -357,7 +357,7 @@ class Member_Manager {
      * Delete member via AJAX
      */
     public function ajax_delete_member() {
-        check_ajax_referer('member_manager_nonce', 'nonce');
+        check_ajax_referer('manager_actions_nonce', 'nonce');
 
         if (!current_user_can('manage_members') && !current_user_can('manage_options')) {
             wp_send_json_error(array('message' => 'Нет прав'));
@@ -382,7 +382,7 @@ class Member_Manager {
      * Upload photo via AJAX
      */
     public function ajax_upload_photo() {
-        check_ajax_referer('member_manager_nonce', 'nonce');
+        check_ajax_referer('manager_actions_nonce', 'nonce');
 
         if (!current_user_can('manage_members') && !current_user_can('manage_options')) {
             wp_send_json_error(array('message' => 'Нет прав'));
