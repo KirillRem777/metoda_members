@@ -246,7 +246,7 @@ class Member_Access_Codes {
      */
     private function render_members_table() {
         $members = get_posts(array(
-            'post_type' => 'member',
+            'post_type' => 'members',
             'posts_per_page' => -1,
             'post_status' => array('publish', 'pending', 'draft'),
             'orderby' => 'title',
@@ -260,7 +260,7 @@ class Member_Access_Codes {
 
         foreach ($members as $member) {
             $access_code = get_post_meta($member->ID, 'member_access_code', true);
-            $linked_user_id = get_post_meta($member->ID, 'member_user_id', true);
+            $linked_user_id = get_post_meta($member->ID, '_linked_user_id', true);
             $email = get_post_meta($member->ID, 'member_email', true);
 
             $status = $linked_user_id ? 'claimed' : 'unclaimed';
@@ -300,7 +300,7 @@ class Member_Access_Codes {
         $mode = isset($_POST['mode']) ? $_POST['mode'] : 'new';
 
         $members = get_posts(array(
-            'post_type' => 'member',
+            'post_type' => 'members',
             'posts_per_page' => -1,
             'post_status' => 'any',
         ));
@@ -368,7 +368,7 @@ class Member_Access_Codes {
         }
 
         $members = get_posts(array(
-            'post_type' => 'member',
+            'post_type' => 'members',
             'posts_per_page' => -1,
             'post_status' => 'any',
             'orderby' => 'title',
@@ -388,7 +388,7 @@ class Member_Access_Codes {
 
         foreach ($members as $member) {
             $access_code = get_post_meta($member->ID, 'member_access_code', true);
-            $linked_user_id = get_post_meta($member->ID, 'member_user_id', true);
+            $linked_user_id = get_post_meta($member->ID, '_linked_user_id', true);
             $email = get_post_meta($member->ID, 'member_email', true);
             $status = $linked_user_id ? 'Активирован' : 'Не активирован';
 
@@ -422,7 +422,7 @@ class Member_Access_Codes {
      */
     public static function find_member_by_code($code) {
         $members = get_posts(array(
-            'post_type' => 'member',
+            'post_type' => 'members',
             'posts_per_page' => 1,
             'post_status' => 'any',
             'meta_query' => array(
@@ -452,7 +452,7 @@ class Member_Access_Codes {
         }
 
         // Check if already claimed
-        $linked_user_id = get_post_meta($member->ID, 'member_user_id', true);
+        $linked_user_id = get_post_meta($member->ID, '_linked_user_id', true);
 
         if ($linked_user_id) {
             return false; // Already claimed
@@ -472,7 +472,7 @@ class Member_Access_Codes {
         }
 
         // Link user to member
-        update_post_meta($member_id, 'member_user_id', $user_id);
+        update_post_meta($member_id, '_linked_user_id', $user_id);
         update_user_meta($user_id, 'member_id', $member_id);
 
         return $member_id;
@@ -480,13 +480,34 @@ class Member_Access_Codes {
 
     /**
      * Validate access code via AJAX
+     * SECURITY: Includes rate limiting and honeypot protection
      */
     public function ajax_validate_code() {
+        // Honeypot check
+        if (!empty($_POST['_website'])) {
+            wp_send_json_error(array('message' => 'Неверный код доступа'));
+        }
+
+        // Rate limiting по IP
+        $ip = $_SERVER['REMOTE_ADDR'];
+        $ip_hash = md5($ip);
+        $transient_key = 'code_attempts_' . $ip_hash;
+        $attempts = get_transient($transient_key);
+
+        if ($attempts && $attempts >= 5) {
+            wp_send_json_error(array('message' => 'Слишком много попыток. Попробуйте через 15 минут.'));
+        }
+
         $code = isset($_POST['code']) ? sanitize_text_field($_POST['code']) : '';
 
         if (empty($code)) {
+            // Увеличиваем счетчик даже для пустых попыток
+            set_transient($transient_key, ($attempts ?: 0) + 1, 15 * MINUTE_IN_SECONDS);
             wp_send_json_error(array('message' => 'Код доступа не указан'));
         }
+
+        // Увеличиваем счетчик попыток
+        set_transient($transient_key, ($attempts ?: 0) + 1, 15 * MINUTE_IN_SECONDS);
 
         $member = self::find_member_by_code($code);
 
@@ -495,11 +516,14 @@ class Member_Access_Codes {
         }
 
         // Check if already claimed
-        $linked_user_id = get_post_meta($member->ID, 'member_user_id', true);
+        $linked_user_id = get_post_meta($member->ID, '_linked_user_id', true);
 
         if ($linked_user_id) {
             wp_send_json_error(array('message' => 'Этот код уже активирован'));
         }
+
+        // Сброс счетчика при успехе
+        delete_transient($transient_key);
 
         // Code is valid and available
         wp_send_json_success(array(

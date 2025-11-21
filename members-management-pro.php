@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Metoda Community MGMT
  * Description: Полнофункциональная система управления участниками и экспертами сообщества. Включает: регистрацию с валидацией, систему кодов доступа для импортированных участников, личные кабинеты с онбордингом, управление материалами с WYSIWYG-редактором, форум в стиле Reddit с категориями и лайками, настраиваемые email-шаблоны, CSV-импорт, кроппер фото, систему ролей и прав доступа, поиск и фильтрацию участников.
- * Version: 3.7.0
+ * Version: 3.7.1
  * Author: Kirill Rem
  * Text Domain: metoda-community-mgmt
  * Domain Path: /languages
@@ -2542,6 +2542,17 @@ function member_register_ajax() {
 
     $email = sanitize_email($_POST['email']);
     $password = $_POST['password'];
+
+    // Валидация пароля
+    if (strlen($password) < 8) {
+        wp_send_json_error(array('message' => 'Пароль должен содержать не менее 8 символов'));
+    }
+
+    // Дополнительная проверка на слабый пароль (опционально)
+    if (preg_match('/^[0-9]+$/', $password)) {
+        wp_send_json_error(array('message' => 'Пароль не должен состоять только из цифр'));
+    }
+
     $fullname = sanitize_text_field($_POST['fullname']);
     $account_type = sanitize_text_field($_POST['account_type']);
     $company = sanitize_text_field($_POST['company']);
@@ -2580,7 +2591,7 @@ function member_register_ajax() {
 
         if ($existing_member) {
             // Проверяем, не занят ли профиль
-            $linked_user = get_post_meta($existing_member->ID, 'member_user_id', true);
+            $linked_user = get_post_meta($existing_member->ID, '_linked_user_id', true);
 
             if ($linked_user) {
                 wp_delete_user($user_id);
@@ -2636,7 +2647,7 @@ function member_register_ajax() {
     update_post_meta($member_id, 'member_expectations', $expectations);
 
     // Связываем пользователя с участником
-    update_post_meta($member_id, 'member_user_id', $user_id);
+    update_post_meta($member_id, '_linked_user_id', $user_id);
     update_user_meta($user_id, 'member_id', $member_id);
 
     // Добавляем роли
@@ -3166,9 +3177,21 @@ function member_delete_material_ajax() {
         wp_send_json_error(array('message' => 'Необходима авторизация'));
     }
 
-    $member_id = Member_User_Link::get_current_user_member_id();
-    if (!$member_id) {
-        wp_send_json_error(array('message' => 'Участник не найден'));
+    // Проверяем, редактирует ли админ чужой профиль
+    $is_admin = current_user_can('administrator');
+    $editing_member_id = isset($_POST['member_id']) ? intval($_POST['member_id']) : null;
+
+    if ($is_admin && $editing_member_id) {
+        $member_post = get_post($editing_member_id);
+        if (!$member_post || $member_post->post_type !== 'members') {
+            wp_send_json_error(array('message' => 'Участник не найден'));
+        }
+        $member_id = $editing_member_id;
+    } else {
+        $member_id = Member_User_Link::get_current_user_member_id();
+        if (!$member_id) {
+            wp_send_json_error(array('message' => 'Участник не найден'));
+        }
     }
 
     $category = sanitize_text_field($_POST['category']);
