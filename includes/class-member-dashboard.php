@@ -53,9 +53,12 @@ class Member_Dashboard {
         $current_post = get_post();
         if (is_page('member-dashboard') || (function_exists('has_shortcode') && $current_post && has_shortcode($current_post->post_content, 'member_dashboard'))) {
             // v3.7.4: Подключаем variables.css первым для всей дизайн-системы
-            wp_enqueue_style('metoda-variables', plugin_dir_url(dirname(__FILE__)) . 'assets/css/variables.css', array(), '1.0.0');
+            wp_enqueue_style('metoda-variables', plugin_dir_url(dirname(__FILE__)) . 'assets/css/variables.css', array(), '1.0.1');
             wp_enqueue_style('member-dashboard', plugin_dir_url(dirname(__FILE__)) . 'assets/css/member-dashboard.css', array('metoda-variables'), '1.0.1');
-            wp_enqueue_script('member-dashboard', plugin_dir_url(dirname(__FILE__)) . 'assets/js/member-dashboard.js', array('jquery'), '1.0.1', true);
+
+            // v3.7.5: Accessibility - Focus trap для модальных окон
+            wp_enqueue_script('modal-focus-trap', plugin_dir_url(dirname(__FILE__)) . 'assets/js/modal-focus-trap.js', array(), '1.0.0', true);
+            wp_enqueue_script('member-dashboard', plugin_dir_url(dirname(__FILE__)) . 'assets/js/member-dashboard.js', array('jquery', 'modal-focus-trap'), '1.0.1', true);
 
             // FIXED: Определяем member_id для JS (критично для админского просмотра)
             $is_admin = current_user_can('administrator');

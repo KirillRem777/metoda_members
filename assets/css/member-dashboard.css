@@ -325,8 +325,10 @@
     position: absolute;
     top: 10px;
     right: 10px;
-    width: 30px;
-    height: 30px;
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    min-height: 44px;
     border-radius: 50%;
     background: rgba(220, 38, 38, 0.9);
     color: white;
@@ -336,6 +338,9 @@
     cursor: pointer;
     opacity: 0;
     transition: opacity 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .gallery-item:hover .remove-gallery-item {
@@ -518,8 +523,10 @@
 }
 
 .delete-material {
-    width: 30px;
-    height: 30px;
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    min-height: 44px;
     border-radius: 50%;
     background: #fee2e2;
     color: #dc2626;
@@ -528,6 +535,9 @@
     line-height: 1;
     cursor: pointer;
     transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .delete-material:hover {
@@ -539,6 +549,11 @@
     margin: 0 0 10px 0;
     font-size: 18px;
     color: #1e293b;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
 }
 
 .material-card p {
@@ -546,6 +561,8 @@
     color: #64748b;
     font-size: 14px;
     line-height: 1.6;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
 }
 
 .material-link {
