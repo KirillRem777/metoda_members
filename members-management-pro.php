@@ -47,6 +47,16 @@ require_once plugin_dir_path(__FILE__) . 'includes/class-member-onboarding.php';
 // Шаблоны (имеют внутреннюю защиту !is_admin())
 require_once plugin_dir_path(__FILE__) . 'includes/class-member-template-loader.php';
 
+// 🚀 ИНИЦИАЛИЗАЦИЯ КЛАССОВ
+// Создаём экземпляры классов для регистрации хуков и шорткодов
+new Member_Dashboard();
+new Member_File_Manager();
+new Member_Manager();
+new Member_Archive();
+new Member_Forum();
+new Member_Onboarding();
+new Member_Template_Loader();
+
 /**
  * SECURITY v3.7.3: Единая функция проверки прав на редактирование member_id
  *
