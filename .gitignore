@@ -1,0 +1,40 @@
+# WordPress Plugin .gitignore
+
+# Old version archives (не должны быть в репозитории!)
+*.zip
+
+# PDF files
+*.pdf
+
+# Photo directories
+Photos/
+Главная - МЕТОДА_files/
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE files
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Node modules (если используются)
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Composer (если используется)
+vendor/
+
+# Temporary files
+*.tmp
+*.log
+*.cache
+
+# Backup files
+*.bak
+*.swp
+*~
