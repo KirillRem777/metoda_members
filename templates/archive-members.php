@@ -518,6 +518,7 @@ $roles = get_terms(array(
 
             const filterData = {
                 action: 'filter_members',
+                nonce: '<?php echo wp_create_nonce('public_members_nonce'); ?>',
                 search: $('#search-input').val(),
                 city: $('#city-filter').val(),
                 role: $('#role-filter').val(),
