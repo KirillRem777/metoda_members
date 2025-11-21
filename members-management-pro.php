@@ -3350,6 +3350,9 @@ add_action('wp_ajax_nopriv_load_more_members', 'load_more_members_ajax');
  * AJAX обработчик для фильтрации участников
  */
 function filter_members_ajax() {
+    // Проверка nonce для безопасности
+    check_ajax_referer('public_members_nonce', 'nonce');
+
     // DEBUG REMOVED v4.0.2
     // error_log('filter_members_ajax called');
 
