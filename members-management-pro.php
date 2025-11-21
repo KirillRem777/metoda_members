@@ -2682,7 +2682,7 @@ add_action('wp_ajax_nopriv_member_register', 'member_register_ajax');
  * @see Member_Dashboard::ajax_update_profile()
  */
 // function member_update_profile_ajax() {
-//     check_ajax_referer('member_dashboard_nonce', 'nonce');
+//     check_ajax_referer('member_dashboard', 'nonce');
 //
 //     if (!is_user_logged_in()) {
 //         wp_send_json_error(array('message' => 'Необходимо авторизоваться'));
@@ -2918,37 +2918,41 @@ add_action('wp_ajax_manager_change_member_status', 'manager_change_member_status
 
 /**
  * AJAX обработчик удаления участника (для менеджеров)
+ *
+ * DEPRECATED v4.0.2: Этот handler перемещён в class-member-manager.php
+ *
+ * @see Member_Manager
  */
-function manager_delete_member_ajax() {
-    check_ajax_referer('manager_actions', 'nonce');
-
-    if (!current_user_can('manager') && !current_user_can('administrator')) {
-        wp_send_json_error(array('message' => 'Нет прав доступа'));
-    }
-
-    $member_id = intval($_POST['member_id']);
-
-    // Получаем связанного пользователя
-    $post = get_post($member_id);
-    if ($post && $post->post_author) {
-        $user_id = $post->post_author;
-        // Удаляем пользователя WordPress
-        require_once(ABSPATH . 'wp-admin/includes/user.php');
-        wp_delete_user($user_id);
-    }
-
-    // Удаляем запись участника
-    $result = wp_delete_post($member_id, true);
-
-    if (!$result) {
-        wp_send_json_error(array('message' => 'Ошибка при удалении участника'));
-    }
-
-    wp_send_json_success(array(
-        'message' => 'Участник успешно удален'
-    ));
-}
-add_action('wp_ajax_manager_delete_member', 'manager_delete_member_ajax');
+// function manager_delete_member_ajax() {
+//     check_ajax_referer('manager_actions', 'nonce');
+//
+//     if (!current_user_can('manager') && !current_user_can('administrator')) {
+//         wp_send_json_error(array('message' => 'Нет прав доступа'));
+//     }
+//
+//     $member_id = intval($_POST['member_id']);
+//
+//     // Получаем связанного пользователя
+//     $post = get_post($member_id);
+//     if ($post && $post->post_author) {
+//         $user_id = $post->post_author;
+//         // Удаляем пользователя WordPress
+//         require_once(ABSPATH . 'wp-admin/includes/user.php');
+//         wp_delete_user($user_id);
+//     }
+//
+//     // Удаляем запись участника
+//     $result = wp_delete_post($member_id, true);
+//
+//     if (!$result) {
+//         wp_send_json_error(array('message' => 'Ошибка при удалении участника'));
+//     }
+//
+//     wp_send_json_success(array(
+//         'message' => 'Участник успешно удален'
+//     ));
+// }
+// add_action('wp_ajax_manager_delete_member', 'manager_delete_member_ajax');
 
 /**
  * AJAX обработчик для сохранения галереи
@@ -3144,50 +3148,54 @@ add_action('wp_ajax_member_add_material_file', 'member_add_material_file_ajax');
 
 /**
  * AJAX обработчик для удаления материала
+ *
+ * DEPRECATED v4.0.2: Этот handler перемещён в class-member-file-manager.php
+ *
+ * @see Member_File_Manager
  */
-function member_delete_material_ajax() {
-    check_ajax_referer('member_dashboard', 'nonce');
-
-    if (!is_user_logged_in()) {
-        wp_send_json_error(array('message' => 'Необходима авторизация'));
-    }
-
-    $member_id = Member_User_Link::get_current_user_member_id();
-    if (!$member_id) {
-        wp_send_json_error(array('message' => 'Участник не найден'));
-    }
-
-    $category = sanitize_text_field($_POST['category']);
-    $index = intval($_POST['index']);
-
-    // Получаем текущие материалы
-    $current_materials = get_post_meta($member_id, 'member_' . $category, true);
-
-    if (empty($current_materials)) {
-        wp_send_json_error(array('message' => 'Материалы не найдены'));
-    }
-
-    // Разбиваем на строки
-    $materials_array = explode("\n", $current_materials);
-
-    // Удаляем элемент по индексу
-    if (isset($materials_array[$index])) {
-        unset($materials_array[$index]);
-
-        // Пересобираем строку
-        $updated_materials = implode("\n", array_values($materials_array));
-
-        update_post_meta($member_id, 'member_' . $category, $updated_materials);
-
-        wp_send_json_success(array(
-            'message' => 'Материал успешно удален!',
-            'reload' => true
-        ));
-    } else {
-        wp_send_json_error(array('message' => 'Материал не найден'));
-    }
-}
-add_action('wp_ajax_member_delete_material', 'member_delete_material_ajax');
+// function member_delete_material_ajax() {
+//     check_ajax_referer('member_dashboard', 'nonce');
+//
+//     if (!is_user_logged_in()) {
+//         wp_send_json_error(array('message' => 'Необходима авторизация'));
+//     }
+//
+//     $member_id = Member_User_Link::get_current_user_member_id();
+//     if (!$member_id) {
+//         wp_send_json_error(array('message' => 'Участник не найден'));
+//     }
+//
+//     $category = sanitize_text_field($_POST['category']);
+//     $index = intval($_POST['index']);
+//
+//     // Получаем текущие материалы
+//     $current_materials = get_post_meta($member_id, 'member_' . $category, true);
+//
+//     if (empty($current_materials)) {
+//         wp_send_json_error(array('message' => 'Материалы не найдены'));
+//     }
+//
+//     // Разбиваем на строки
+//     $materials_array = explode("\n", $current_materials);
+//
+//     // Удаляем элемент по индексу
+//     if (isset($materials_array[$index])) {
+//         unset($materials_array[$index]);
+//
+//         // Пересобираем строку
+//         $updated_materials = implode("\n", array_values($materials_array));
+//
+//         update_post_meta($member_id, 'member_' . $category, $updated_materials);
+//
+//         wp_send_json_success(array(
+//             'message' => 'Материал успешно удален!',
+//             'reload' => true
+//         ));
+//     } else {
+//         wp_send_json_error(array('message' => 'Материал не найден'));
+//     }
+// }
+// add_action('wp_ajax_member_delete_material', 'member_delete_material_ajax');
 
 /**
  * AJAX обработчик для загрузки дополнительных участников (Load More)
@@ -3501,7 +3509,7 @@ add_action('wp_ajax_nopriv_filter_members', 'filter_members_ajax');
  */
 function ajax_add_portfolio_material() {
     // Проверка nonce
-    check_ajax_referer('member_dashboard_nonce', 'nonce');
+    check_ajax_referer('member_dashboard', 'nonce');
 
     $member_id = Member_User_Link::get_current_user_member_id();
     if (!$member_id) {
@@ -3568,7 +3576,7 @@ add_action('wp_ajax_add_portfolio_material', 'ajax_add_portfolio_material');
  */
 function ajax_delete_portfolio_material() {
     // Проверка nonce
-    check_ajax_referer('member_dashboard_nonce', 'nonce');
+    check_ajax_referer('member_dashboard', 'nonce');
 
     $member_id = Member_User_Link::get_current_user_member_id();
     if (!$member_id) {
@@ -3618,7 +3626,7 @@ add_action('wp_ajax_delete_portfolio_material', 'ajax_delete_portfolio_material'
  */
 function ajax_edit_portfolio_material() {
     // Проверка nonce
-    check_ajax_referer('member_dashboard_nonce', 'nonce');
+    check_ajax_referer('member_dashboard', 'nonce');
 
     $member_id = Member_User_Link::get_current_user_member_id();
     if (!$member_id) {
@@ -3680,7 +3688,7 @@ add_action('wp_ajax_edit_portfolio_material', 'ajax_edit_portfolio_material');
  */
 function ajax_create_forum_topic_dashboard() {
     // Проверка nonce
-    check_ajax_referer('member_dashboard_nonce', 'nonce');
+    check_ajax_referer('member_dashboard', 'nonce');
 
     if (!is_user_logged_in()) {
         wp_send_json_error(array('message' => 'Необходимо войти в систему'));
@@ -3934,7 +3942,7 @@ add_action('wp_ajax_nopriv_send_member_message', 'ajax_send_member_message'); //
  * AJAX обработчик для просмотра сообщения
  */
 function ajax_view_member_message() {
-    check_ajax_referer('member_dashboard_nonce', 'nonce');
+    check_ajax_referer('member_dashboard', 'nonce');
 
     if (!is_user_logged_in()) {
         wp_send_json_error(array('message' => 'Необходимо войти в систему'));
