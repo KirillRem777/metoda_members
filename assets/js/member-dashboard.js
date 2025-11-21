@@ -1,6 +1,9 @@
 /**
  * Member Dashboard JavaScript
  * Handles all interactive functionality for the personal cabinet
+ * 
+ * FIXED: Добавлена передача member_id во всех AJAX запросах для корректной работы админского просмотра
+ * Version: 1.0.1
  */
 
 (function($) {
@@ -12,7 +15,20 @@
         initProfileForm();
         initGalleryManager();
         initMaterialsManager();
+        
+        // ADDED: Показываем уведомление если админ просматривает чужой кабинет
+        if (memberDashboard.isAdminView) {
+            console.log('Admin view mode: editing member ID ' + memberDashboard.memberId);
+        }
     });
+
+    /**
+     * ADDED: Helper function to get member_id for AJAX requests
+     * Возвращает ID участника из локализованных данных
+     */
+    function getMemberId() {
+        return memberDashboard.memberId || null;
+    }
 
     /**
      * Initialize sidebar navigation
@@ -53,11 +69,15 @@
             // Get form data
             const formData = $form.serialize();
 
+            // FIXED: Добавляем member_id в запрос
+            const memberId = getMemberId();
+            const memberIdParam = memberId ? '&member_id=' + memberId : '';
+
             // Send AJAX request
             $.ajax({
                 url: memberDashboard.ajaxUrl,
                 type: 'POST',
-                data: formData + '&action=member_update_profile&nonce=' + memberDashboard.nonce,
+                data: formData + '&action=member_update_profile&nonce=' + memberDashboard.nonce + memberIdParam,
                 success: function(response) {
                     if (response.success) {
                         showMessage($message, 'success', response.data.message);
@@ -141,6 +161,9 @@
             $button.prop('disabled', true);
             $message.hide();
 
+            // FIXED: Используем member_id из локализованных данных
+            const memberId = getMemberId();
+
             // Send AJAX request
             $.ajax({
                 url: memberDashboard.ajaxUrl,
@@ -149,7 +172,7 @@
                     action: 'member_update_gallery',
                     nonce: memberDashboard.nonce,
                     gallery_ids: galleryIds,
-                    member_id: $('input[name="member_id"]').val() // Для админов, редактирующих чужие профили
+                    member_id: memberId  // FIXED: всегда передаём member_id
                 },
                 success: function(response) {
                     if (response.success) {
@@ -176,8 +199,9 @@
     function uploadGalleryPhoto(file, blob) {
         const formData = new FormData();
         formData.append('action', 'member_upload_gallery_photo');
-        formData.append('nonce', memberDashboardData.nonce);
+        formData.append('nonce', memberDashboard.nonce);  // FIXED: было memberDashboardData
         formData.append('photo', file, file.name);
+        formData.append('member_id', getMemberId());  // ADDED: member_id
 
         // Show uploading indicator
         const $grid = $('#gallery-grid');
@@ -188,7 +212,7 @@
 
         // Send AJAX request
         $.ajax({
-            url: memberDashboardData.ajaxUrl,
+            url: memberDashboard.ajaxUrl,  // FIXED: было memberDashboardData
             type: 'POST',
             data: formData,
             processData: false,
@@ -276,10 +300,11 @@
             $btnLoader.show();
             $button.prop('disabled', true);
 
-            // Get form data
+            // Get form data - FIXED: добавлен member_id
             const formData = {
                 action: 'member_add_link',
                 nonce: memberDashboard.nonce,
+                member_id: getMemberId(),  // ADDED
                 category: category,
                 title: $form.find('[name="title"]').val(),
                 url: $form.find('[name="url"]').val(),
@@ -328,10 +353,11 @@
             $btnLoader.show();
             $button.prop('disabled', true);
 
-            // Create FormData for file upload
+            // Create FormData for file upload - FIXED: добавлен member_id
             const formData = new FormData();
             formData.append('action', 'member_upload_file');
             formData.append('nonce', memberDashboard.nonce);
+            formData.append('member_id', getMemberId());  // ADDED
             formData.append('category', category);
             formData.append('title', $form.find('[name="title"]').val());
             formData.append('description', $form.find('[name="description"]').val());
@@ -379,13 +405,14 @@
             const category = $pane.data('category');
             const index = $button.data('index');
 
-            // Send AJAX request
+            // Send AJAX request - FIXED: добавлен member_id
             $.ajax({
                 url: memberDashboard.ajaxUrl,
                 type: 'POST',
                 data: {
                     action: 'member_delete_material',
                     nonce: memberDashboard.nonce,
+                    member_id: getMemberId(),  // ADDED
                     category: category,
                     index: index
                 },

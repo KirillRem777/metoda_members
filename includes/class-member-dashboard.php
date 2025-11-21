@@ -4,6 +4,8 @@
  *
  * Handles the personal cabinet functionality for members
  * Allows members to edit their profiles and manage materials
+ * 
+ * FIXED: Добавлена передача member_id в JS для корректной работы админского просмотра
  */
 
 if (!defined('ABSPATH')) {
@@ -50,19 +52,35 @@ class Member_Dashboard {
     public function enqueue_dashboard_assets() {
         $current_post = get_post();
         if (is_page('member-dashboard') || (function_exists('has_shortcode') && $current_post && has_shortcode($current_post->post_content, 'member_dashboard'))) {
-            wp_enqueue_style('member-dashboard', plugin_dir_url(dirname(__FILE__)) . 'assets/css/member-dashboard.css', array(), '1.0.0');
-            wp_enqueue_script('member-dashboard', plugin_dir_url(dirname(__FILE__)) . 'assets/js/member-dashboard.js', array('jquery'), '1.0.0', true);
+            wp_enqueue_style('member-dashboard', plugin_dir_url(dirname(__FILE__)) . 'assets/css/member-dashboard.css', array(), '1.0.1');
+            wp_enqueue_script('member-dashboard', plugin_dir_url(dirname(__FILE__)) . 'assets/js/member-dashboard.js', array('jquery'), '1.0.1', true);
+
+            // FIXED: Определяем member_id для JS (критично для админского просмотра)
+            $is_admin = current_user_can('administrator');
+            $viewing_member_id = isset($_GET['member_id']) ? absint($_GET['member_id']) : null;
+            
+            if ($is_admin && $viewing_member_id) {
+                // Админ смотрит чужой кабинет
+                $member_id_for_js = $viewing_member_id;
+                $is_admin_view = true;
+            } else {
+                // Обычный пользователь или админ без параметра
+                $member_id_for_js = Member_User_Link::get_current_user_member_id();
+                $is_admin_view = false;
+            }
 
             wp_localize_script('member-dashboard', 'memberDashboard', array(
                 'ajaxUrl' => admin_url('admin-ajax.php'),
                 'nonce' => wp_create_nonce('member_dashboard_nonce'),
+                'memberId' => $member_id_for_js,        // ADDED: ID участника для AJAX
+                'isAdminView' => $is_admin_view,        // ADDED: флаг админского просмотра
             ));
 
             // Enqueue WordPress media library
             wp_enqueue_media();
 
-            // Enqueue onboarding for first-time users
-            if (is_user_logged_in()) {
+            // Enqueue onboarding for first-time users (только для своего кабинета)
+            if (is_user_logged_in() && !$is_admin_view) {
                 $user_id = get_current_user_id();
                 $onboarding_seen = get_user_meta($user_id, 'metoda_onboarding_seen', true);
 
@@ -90,7 +108,7 @@ class Member_Dashboard {
 
         // Проверяем, админ ли смотрит чужой кабинет
         $is_admin = current_user_can('administrator');
-        $viewing_member_id = isset($_GET['member_id']) ? intval($_GET['member_id']) : null;
+        $viewing_member_id = isset($_GET['member_id']) ? absint($_GET['member_id']) : null;
 
         // Если админ указал member_id - пропускаем проверку своего member_id
         if ($is_admin && $viewing_member_id) {
@@ -101,8 +119,8 @@ class Member_Dashboard {
             if (!$member_post || $member_post->post_type !== 'members') {
                 return '<div style="padding: 40px; text-align: center; background: #f8d7da; border: 1px solid #f5c6cb; border-radius: 8px; margin: 20px;">
                     <h3 style="color: #721c24;">❌ Участник не найден</h3>
-                    <p style="color: #721c24;">Участник с ID ' . $viewing_member_id . ' не существует.</p>
-                    <p><a href="' . admin_url('admin.php?page=metoda-activity-log') . '" style="color: #0066cc;">Вернуться к логам</a></p>
+                    <p style="color: #721c24;">Участник с ID ' . esc_html($viewing_member_id) . ' не существует.</p>
+                    <p><a href="' . esc_url(admin_url('admin.php?page=metoda-activity-log')) . '" style="color: #0066cc;">Вернуться к логам</a></p>
                 </div>';
             }
 
@@ -111,6 +129,10 @@ class Member_Dashboard {
             $is_viewing_other = true;
 
             ob_start();
+            
+            // ADDED: Админ-панель сверху
+            echo $this->render_admin_view_bar($member_id);
+            
             include plugin_dir_path(dirname(__FILE__)) . 'templates/member-dashboard.php';
             return ob_get_clean();
         }
@@ -125,7 +147,7 @@ class Member_Dashboard {
                     <h3 style="color: #856404; margin-bottom: 10px;">⚠️ Режим администратора</h3>
                     <p style="color: #856404;">Укажите ID участника в URL для просмотра кабинета:</p>
                     <code style="background: #fff; padding: 5px 10px; border-radius: 4px; display: inline-block; margin-top: 10px;">?member_id=XXX</code>
-                    <p style="margin-top: 15px;"><a href="' . admin_url('admin.php?page=metoda-activity-log') . '" style="color: #0066cc;">Перейти к логам активности</a></p>
+                    <p style="margin-top: 15px;"><a href="' . esc_url(admin_url('admin.php?page=metoda-activity-log')) . '" style="color: #0066cc;">Перейти к логам активности</a></p>
                 </div>';
             }
             return $this->render_no_profile_message();
@@ -140,6 +162,76 @@ class Member_Dashboard {
     }
 
     /**
+     * ADDED: Render admin view bar
+     * Панель для администратора при просмотре чужого кабинета
+     */
+    private function render_admin_view_bar($member_id) {
+        $member_name = get_the_title($member_id);
+        $member_email = get_post_meta($member_id, 'member_email', true);
+        $edit_link = get_edit_post_link($member_id);
+        $profile_link = get_permalink($member_id);
+        
+        return '
+        <div id="metoda-admin-view-bar" style="
+            background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%);
+            color: white;
+            padding: 15px 25px;
+            margin-bottom: 25px;
+            border-radius: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+            flex-wrap: wrap;
+            gap: 15px;
+        ">
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <span style="font-size: 24px;">👁</span>
+                <div>
+                    <div style="font-weight: 600; font-size: 16px;">Просмотр кабинета: ' . esc_html($member_name) . '</div>
+                    <div style="opacity: 0.8; font-size: 13px;">ID: ' . esc_html($member_id) . ($member_email ? ' • ' . esc_html($member_email) : '') . '</div>
+                </div>
+            </div>
+            <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                <a href="' . esc_url(admin_url('edit.php?post_type=members')) . '" style="
+                    color: white;
+                    text-decoration: none;
+                    padding: 8px 16px;
+                    background: rgba(255,255,255,0.15);
+                    border-radius: 6px;
+                    font-size: 14px;
+                    transition: background 0.2s;
+                " onmouseover="this.style.background=\'rgba(255,255,255,0.25)\'" onmouseout="this.style.background=\'rgba(255,255,255,0.15)\'">
+                    ← К списку
+                </a>
+                <a href="' . esc_url($profile_link) . '" target="_blank" style="
+                    color: white;
+                    text-decoration: none;
+                    padding: 8px 16px;
+                    background: rgba(255,255,255,0.15);
+                    border-radius: 6px;
+                    font-size: 14px;
+                    transition: background 0.2s;
+                " onmouseover="this.style.background=\'rgba(255,255,255,0.25)\'" onmouseout="this.style.background=\'rgba(255,255,255,0.15)\'">
+                    👤 Публичный профиль
+                </a>
+                <a href="' . esc_url($edit_link) . '" style="
+                    color: #1e3a5f;
+                    text-decoration: none;
+                    padding: 8px 16px;
+                    background: #ffd700;
+                    border-radius: 6px;
+                    font-size: 14px;
+                    font-weight: 600;
+                    transition: background 0.2s;
+                " onmouseover="this.style.background=\'#ffed4a\'" onmouseout="this.style.background=\'#ffd700\'">
+                    ✏️ В админке
+                </a>
+            </div>
+        </div>';
+    }
+
+    /**
      * Render login message
      */
     private function render_login_message() {
@@ -149,7 +241,7 @@ class Member_Dashboard {
             <div class="message-icon">🔒</div>
             <h2>Требуется авторизация</h2>
             <p>Для доступа к личному кабинету необходимо войти в систему.</p>
-            <a href="<?php echo wp_login_url(get_permalink()); ?>" class="btn btn-primary">Войти</a>
+            <a href="<?php echo esc_url(wp_login_url(get_permalink())); ?>" class="btn btn-primary">Войти</a>
         </div>
         <?php
         return ob_get_clean();
@@ -183,7 +275,7 @@ class Member_Dashboard {
 
         // Проверяем, редактирует ли админ чужой профиль
         $is_admin = current_user_can('administrator');
-        $editing_member_id = isset($_POST['member_id']) ? intval($_POST['member_id']) : null;
+        $editing_member_id = isset($_POST['member_id']) ? absint($_POST['member_id']) : null;
 
         if ($is_admin && $editing_member_id) {
             // Админ редактирует чужой профиль - проверяем существование
@@ -246,7 +338,7 @@ class Member_Dashboard {
 
         // Проверяем, редактирует ли админ чужой профиль
         $is_admin = current_user_can('administrator');
-        $editing_member_id = isset($_POST['member_id']) ? intval($_POST['member_id']) : null;
+        $editing_member_id = isset($_POST['member_id']) ? absint($_POST['member_id']) : null;
 
         if ($is_admin && $editing_member_id) {
             // Админ редактирует чужой профиль - проверяем существование
@@ -318,7 +410,7 @@ class Member_Dashboard {
         if ($gallery_ids) {
             $ids = explode(',', $gallery_ids);
             foreach ($ids as $id) {
-                $id = intval($id);
+                $id = absint($id);
                 if ($id) {
                     $gallery_images[] = array(
                         'id' => $id,
