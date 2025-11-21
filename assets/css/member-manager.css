@@ -115,70 +115,53 @@
     border-collapse: collapse;
 }
 
+/* Notion-style clean table */
 .members-table th {
-    background: #2E466F;
-    padding: 15px;
+    background: #f9fafb;
+    padding: 12px 24px;
     text-align: left;
-    font-weight: 600;
-    color: white;
-    border-bottom: 2px solid #2E466F;
+    font-weight: 500;
+    font-size: 12px;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border-bottom: 1px solid #e5e7eb;
 }
 
 .members-table td {
-    padding: 15px;
+    padding: 12px 24px;
     border-bottom: 1px solid #f1f5f9;
+    vertical-align: middle;
 }
 
-/* Column width constraints */
+.members-table tr:hover {
+    background-color: #fafbfc;
+    transition: background-color 0.15s ease;
+}
+
+/* Column widths - 4 columns only */
 .members-table th:nth-child(1),
 .members-table td:nth-child(1) {
-    min-width: 200px;
+    width: 40%;
+    min-width: 280px;
 }
 
 .members-table th:nth-child(2),
 .members-table td:nth-child(2) {
-    min-width: 100px;
+    width: 20%;
+    min-width: 120px;
 }
 
 .members-table th:nth-child(3),
 .members-table td:nth-child(3) {
-    min-width: 250px;
-    max-width: 350px;
+    width: 20%;
+    min-width: 140px;
 }
 
 .members-table th:nth-child(4),
 .members-table td:nth-child(4) {
-    min-width: 120px;
-}
-
-.members-table th:nth-child(5),
-.members-table td:nth-child(5) {
-    min-width: 120px;
-}
-
-.members-table th:nth-child(6),
-.members-table td:nth-child(6) {
-    min-width: 100px;
-}
-
-.members-table th:nth-child(7),
-.members-table td:nth-child(7) {
+    width: 20%;
     min-width: 180px;
-    padding-right: 20px;
-}
-
-/* Text truncation for company column */
-.members-table td:nth-child(3) {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-/* Action buttons spacing */
-.members-table td:nth-child(7) {
-    display: flex;
-    gap: 8px;
-    align-items: center;
 }
 
 .member-photo {

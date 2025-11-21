@@ -44,7 +44,7 @@
                 }
             },
             error: function(xhr, status, error) {
-                $('#members-tbody').html('<tr><td colspan="7" class="px-6 py-12 text-center text-red-600">Ошибка загрузки данных</td></tr>');
+                $('#members-tbody').html('<tr><td colspan="4" class="px-6 py-12 text-center text-red-600">Ошибка загрузки данных</td></tr>');
             }
         });
     }
@@ -55,7 +55,7 @@
         tbody.empty();
 
         if (!members || members.length === 0) {
-            tbody.html('<tr><td colspan="7" class="px-6 py-12 text-center text-gray-500">Участники не найдены</td></tr>');
+            tbody.html('<tr><td colspan="4" class="px-6 py-12 text-center text-gray-500">Участники не найдены</td></tr>');
             return;
         }
 
@@ -84,24 +84,23 @@
             // Дата регистрации
             const date = member.post_date ? member.post_date.split(' ')[0] : '';
 
-            const row = '<tr class="hover:bg-gray-50" data-id="' + member.id + '">' +
-                '<td class="px-6 py-4 whitespace-nowrap">' +
-                    '<div class="flex items-center">' +
+            const row = '<tr class="hover:bg-gray-50 transition-colors" data-id="' + member.id + '">' +
+                '<td class="px-6 py-4">' +
+                    '<div class="flex items-center gap-3">' +
                         photo +
-                        '<div>' +
-                            '<div class="text-sm font-medium text-gray-900">' + member.title + '</div>' +
-                            '<div class="text-sm text-gray-500">' + (member.email || '') + '</div>' +
+                        '<div class="min-w-0">' +
+                            '<div class="text-sm font-medium text-gray-900 truncate">' + member.title + '</div>' +
+                            '<div class="text-sm text-gray-500 truncate">' + (member.email || '') + '</div>' +
                         '</div>' +
                     '</div>' +
                 '</td>' +
                 '<td class="px-6 py-4 whitespace-nowrap">' + typeBadge + '</td>' +
-                '<td class="px-6 py-4 text-sm text-gray-900" title="' + (member.company || '') + '">' + (member.company || '') + '</td>' +
-                '<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">' + (member.city || '') + '</td>' +
-                '<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">' + date + '</td>' +
                 '<td class="px-6 py-4 whitespace-nowrap">' + statusBadge + '</td>' +
-                '<td class="px-6 py-4 whitespace-nowrap text-sm">' +
-                    '<a href="' + member.dashboard_url + '" class="text-admin-blue hover:text-blue-700 font-medium">Edit</a>' +
-                    '<button class="text-red-600 hover:text-red-700 font-medium delete-member" data-id="' + member.id + '" data-name="' + member.title + '">Delete</button>' +
+                '<td class="px-6 py-4 whitespace-nowrap">' +
+                    '<div class="flex items-center gap-4">' +
+                        '<a href="' + member.dashboard_url + '" class="text-sm text-gray-600 hover:text-gray-900 transition-colors">Редактировать</a>' +
+                        '<button class="text-sm text-red-600 hover:text-red-700 transition-colors delete-member" data-id="' + member.id + '" data-name="' + member.title + '">Удалить</button>' +
+                    '</div>' +
                 '</td>' +
             '</tr>';
 

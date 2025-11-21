@@ -144,31 +144,28 @@ $cities = $wpdb->get_col($wpdb->prepare("
             </div>
 
             <!-- Members Table -->
-            <div id="members-table-container" class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden pb-4">
+            <div id="members-table-container" class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
                 <div class="overflow-x-auto">
                     <table class="w-full" id="members-table">
                         <thead class="bg-gray-50 border-b border-gray-200">
                             <tr>
-                                <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="min-width: 200px;">Участник</th>
-                                <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="min-width: 100px;">Тип</th>
-                                <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="min-width: 250px; max-width: 350px;">Компания</th>
-                                <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="min-width: 120px;">Город</th>
-                                <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="min-width: 120px;">Регистрация</th>
-                                <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="min-width: 100px;">Статус</th>
-                                <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="min-width: 180px;">Действия</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Участник</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Тип</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Статус</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Действия</th>
                             </tr>
                         </thead>
-                    <tbody id="members-tbody" class="divide-y divide-gray-200">
-                        <tr>
-                            <td colspan="7" class="px-6 py-12 text-center">
-                                <div class="inline-flex items-center gap-3 text-gray-500">
-                                    <i class="fas fa-circle-notch fa-spin text-2xl"></i>
-                                    <span class="text-lg">Загрузка участников...</span>
-                                </div>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
+                        <tbody id="members-tbody" class="divide-y divide-gray-200">
+                            <tr>
+                                <td colspan="4" class="px-6 py-12 text-center">
+                                    <div class="inline-flex items-center gap-3 text-gray-500">
+                                        <i class="fas fa-circle-notch fa-spin text-2xl"></i>
+                                        <span class="text-lg">Загрузка участников...</span>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
 
