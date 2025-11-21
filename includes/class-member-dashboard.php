@@ -52,7 +52,9 @@ class Member_Dashboard {
     public function enqueue_dashboard_assets() {
         $current_post = get_post();
         if (is_page('member-dashboard') || (function_exists('has_shortcode') && $current_post && has_shortcode($current_post->post_content, 'member_dashboard'))) {
-            wp_enqueue_style('member-dashboard', plugin_dir_url(dirname(__FILE__)) . 'assets/css/member-dashboard.css', array(), '1.0.1');
+            // v3.7.4: Подключаем variables.css первым для всей дизайн-системы
+            wp_enqueue_style('metoda-variables', plugin_dir_url(dirname(__FILE__)) . 'assets/css/variables.css', array(), '1.0.0');
+            wp_enqueue_style('member-dashboard', plugin_dir_url(dirname(__FILE__)) . 'assets/css/member-dashboard.css', array('metoda-variables'), '1.0.1');
             wp_enqueue_script('member-dashboard', plugin_dir_url(dirname(__FILE__)) . 'assets/js/member-dashboard.js', array('jquery'), '1.0.1', true);
 
             // FIXED: Определяем member_id для JS (критично для админского просмотра)
@@ -85,7 +87,7 @@ class Member_Dashboard {
                 $onboarding_seen = get_user_meta($user_id, 'metoda_onboarding_seen', true);
 
                 if (!$onboarding_seen) {
-                    wp_enqueue_style('onboarding', plugin_dir_url(dirname(__FILE__)) . 'assets/css/onboarding.css', array(), '1.0.0');
+                    wp_enqueue_style('onboarding', plugin_dir_url(dirname(__FILE__)) . 'assets/css/onboarding.css', array('metoda-variables'), '1.0.0');
                     wp_enqueue_script('onboarding', plugin_dir_url(dirname(__FILE__)) . 'assets/js/onboarding.js', array('jquery'), '1.0.0', true);
 
                     wp_localize_script('onboarding', 'onboardingData', array(
@@ -117,10 +119,10 @@ class Member_Dashboard {
             // Проверяем существование member post
             $member_post = get_post($viewing_member_id);
             if (!$member_post || $member_post->post_type !== 'members') {
-                return '<div style="padding: 40px; text-align: center; background: #f8d7da; border: 1px solid #f5c6cb; border-radius: 8px; margin: 20px;">
-                    <h3 style="color: #721c24;">❌ Участник не найден</h3>
-                    <p style="color: #721c24;">Участник с ID ' . esc_html($viewing_member_id) . ' не существует.</p>
-                    <p><a href="' . esc_url(admin_url('admin.php?page=metoda-activity-log')) . '" style="color: #0066cc;">Вернуться к логам</a></p>
+                return '<div class="dashboard-alert dashboard-alert--error">
+                    <h3 class="dashboard-alert__title">❌ Участник не найден</h3>
+                    <p class="dashboard-alert__text">Участник с ID ' . esc_html($viewing_member_id) . ' не существует.</p>
+                    <p><a href="' . esc_url(admin_url('admin.php?page=metoda-activity-log')) . '" class="dashboard-alert__link">Вернуться к логам</a></p>
                 </div>';
             }
 
@@ -137,10 +139,10 @@ class Member_Dashboard {
             return ob_get_clean();
         } else if (!$is_admin && $viewing_member_id) {
             // SECURITY FIX v3.7.3: IDOR Protection - блокируем просмотр чужих кабинетов обычными пользователями
-            return '<div style="padding: 40px; text-align: center; background: #f8d7da; border: 1px solid #f5c6cb; border-radius: 8px; margin: 20px;">
-                <h3 style="color: #721c24;">🚫 Доступ запрещён</h3>
-                <p style="color: #721c24;">У вас нет прав для просмотра этого кабинета.</p>
-                <p style="margin-top: 15px;"><a href="' . esc_url(home_url('/member-dashboard/')) . '" style="color: #0066cc; text-decoration: none;">← Вернуться к своему кабинету</a></p>
+            return '<div class="dashboard-alert dashboard-alert--error">
+                <h3 class="dashboard-alert__title">🚫 Доступ запрещён</h3>
+                <p class="dashboard-alert__text">У вас нет прав для просмотра этого кабинета.</p>
+                <p><a href="' . esc_url(home_url('/member-dashboard/')) . '" class="dashboard-alert__link">← Вернуться к своему кабинету</a></p>
             </div>';
         }
 
@@ -150,11 +152,11 @@ class Member_Dashboard {
         if (!$member_id) {
             // Если это админ без своего member_id и без параметра member_id
             if ($is_admin) {
-                return '<div style="padding: 40px; text-align: center; background: #fff3cd; border: 1px solid #ffc107; border-radius: 8px; margin: 20px;">
-                    <h3 style="color: #856404; margin-bottom: 10px;">⚠️ Режим администратора</h3>
-                    <p style="color: #856404;">Укажите ID участника в URL для просмотра кабинета:</p>
-                    <code style="background: #fff; padding: 5px 10px; border-radius: 4px; display: inline-block; margin-top: 10px;">?member_id=XXX</code>
-                    <p style="margin-top: 15px;"><a href="' . esc_url(admin_url('admin.php?page=metoda-activity-log')) . '" style="color: #0066cc;">Перейти к логам активности</a></p>
+                return '<div class="dashboard-alert dashboard-alert--warning">
+                    <h3 class="dashboard-alert__title">⚠️ Режим администратора</h3>
+                    <p class="dashboard-alert__text">Укажите ID участника в URL для просмотра кабинета:</p>
+                    <code class="dashboard-alert__code">?member_id=XXX</code>
+                    <p><a href="' . esc_url(admin_url('admin.php?page=metoda-activity-log')) . '" class="dashboard-alert__link">Перейти к логам активности</a></p>
                 </div>';
             }
             return $this->render_no_profile_message();

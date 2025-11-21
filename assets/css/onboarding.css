@@ -13,7 +13,7 @@
     width: 100%;
     height: 100%;
     background: rgba(0, 0, 0, 0.7);
-    z-index: 100000;
+    z-index: var(--z-overlay, 500); /* v3.7.4: использую переменную из variables.css */
     align-items: center;
     justify-content: center;
     backdrop-filter: blur(4px);
@@ -62,7 +62,7 @@
     align-items: center;
     justify-content: center;
     transition: all 0.2s;
-    z-index: 10;
+    z-index: var(--z-dropdown, 10); /* v3.7.4: относительный z-index для кнопки */
 }
 
 .onboarding-close:hover {

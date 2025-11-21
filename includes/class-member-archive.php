@@ -28,7 +28,9 @@ class Member_Archive {
     public function enqueue_assets() {
         $current_post = get_post();
         if ($current_post && has_shortcode($current_post->post_content, 'members_archive')) {
-            wp_enqueue_style('member-archive', plugin_dir_url(dirname(__FILE__)) . 'assets/css/member-archive.css', array(), '1.0.0');
+            // v3.7.4: Подключаем variables.css первым
+            wp_enqueue_style('metoda-variables', plugin_dir_url(dirname(__FILE__)) . 'assets/css/variables.css', array(), '1.0.0');
+            wp_enqueue_style('member-archive', plugin_dir_url(dirname(__FILE__)) . 'assets/css/member-archive.css', array('metoda-variables'), '1.0.0');
             wp_enqueue_script('member-archive', plugin_dir_url(dirname(__FILE__)) . 'assets/js/member-archive.js', array('jquery'), '1.0.0', true);
 
             wp_localize_script('member-archive', 'memberArchive', array(
