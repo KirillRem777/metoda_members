@@ -96,6 +96,8 @@ class Metoda_Plugin {
             'class-member-file-manager.php',
             'class-member-forum.php',
             'class-member-manager.php',
+            'class-member-otp.php',           // OTP authentication (real logic)
+            'class-member-onboarding.php',    // Onboarding flow (real logic)
             'class-member-page-templates.php',
             'class-member-template-loader.php',
             'class-member-user-link.php',
@@ -185,6 +187,8 @@ class Metoda_Plugin {
         if (class_exists('Member_Template_Loader')) {
             $this->components['template_loader'] = new Member_Template_Loader();
         }
+        // Note: Member_OTP and Member_Onboarding are initialized via their wrappers
+        // (Metoda_Otp and Metoda_Onboarding) in init_components()
     }
 
     /**
