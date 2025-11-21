@@ -129,6 +129,58 @@
     border-bottom: 1px solid #f1f5f9;
 }
 
+/* Column width constraints */
+.members-table th:nth-child(1),
+.members-table td:nth-child(1) {
+    min-width: 200px;
+}
+
+.members-table th:nth-child(2),
+.members-table td:nth-child(2) {
+    min-width: 100px;
+}
+
+.members-table th:nth-child(3),
+.members-table td:nth-child(3) {
+    min-width: 250px;
+    max-width: 350px;
+}
+
+.members-table th:nth-child(4),
+.members-table td:nth-child(4) {
+    min-width: 120px;
+}
+
+.members-table th:nth-child(5),
+.members-table td:nth-child(5) {
+    min-width: 120px;
+}
+
+.members-table th:nth-child(6),
+.members-table td:nth-child(6) {
+    min-width: 100px;
+}
+
+.members-table th:nth-child(7),
+.members-table td:nth-child(7) {
+    min-width: 180px;
+    padding-right: 20px;
+}
+
+/* Text truncation for company column */
+.members-table td:nth-child(3) {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Action buttons spacing */
+.members-table td:nth-child(7) {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
 .member-photo {
     width: 50px;
     height: 50px;
