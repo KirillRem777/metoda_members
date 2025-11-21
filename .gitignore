@@ -2,6 +2,8 @@
 
 # Old version archives (не должны быть в репозитории!)
 *.zip
+# Except production releases
+!releases/*.zip
 
 # PDF files
 *.pdf
