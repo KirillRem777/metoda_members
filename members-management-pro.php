@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Metoda Community MGMT
  * Description: Полнофункциональная система управления участниками и экспертами сообщества. Включает: регистрацию с валидацией, систему кодов доступа для импортированных участников, личные кабинеты с онбордингом, управление материалами с WYSIWYG-редактором, форум в стиле Reddit с категориями и лайками, настраиваемые email-шаблоны, CSV-импорт, кроппер фото, систему ролей и прав доступа, поиск и фильтрацию участников.
- * Version: 3.7.2
+ * Version: 3.7.3
  * Author: Kirill Rem
  * Text Domain: metoda-community-mgmt
  * Domain Path: /languages
@@ -46,6 +46,64 @@ require_once plugin_dir_path(__FILE__) . 'includes/class-member-onboarding.php';
 
 // Шаблоны (имеют внутреннюю защиту !is_admin())
 require_once plugin_dir_path(__FILE__) . 'includes/class-member-template-loader.php';
+
+/**
+ * SECURITY v3.7.3: Единая функция проверки прав на редактирование member_id
+ *
+ * Логика:
+ * - Админ + member_id в запросе → редактирует чужой профиль (admin bypass)
+ * - Обычный юзер → редактирует только свой профиль (игнорируем member_id из запроса)
+ *
+ * @param array $request POST или GET массив с данными
+ * @return int|WP_Error member_id или ошибка
+ */
+function get_editable_member_id($request = null) {
+    // Если не передан массив, используем $_POST по умолчанию
+    if ($request === null) {
+        $request = $_POST;
+    }
+
+    $is_admin = current_user_can('administrator');
+    $requested_member_id = isset($request['member_id']) ? absint($request['member_id']) : null;
+
+    // СЦЕНАРИЙ 1: Админ редактирует чужой профиль
+    if ($is_admin && $requested_member_id) {
+        // Проверяем существование member post
+        $member_post = get_post($requested_member_id);
+
+        if (!$member_post || $member_post->post_type !== 'members') {
+            return new WP_Error(
+                'invalid_member',
+                'Участник не найден или имеет неверный тип',
+                array('member_id' => $requested_member_id)
+            );
+        }
+
+        // Проверяем что участник не в корзине
+        if ($member_post->post_status === 'trash') {
+            return new WP_Error(
+                'member_trashed',
+                'Участник находится в корзине',
+                array('member_id' => $requested_member_id)
+            );
+        }
+
+        return $requested_member_id;
+    }
+
+    // СЦЕНАРИЙ 2: Обычный пользователь (или админ без member_id) → редактирует свой профиль
+    $current_member_id = Member_User_Link::get_current_user_member_id();
+
+    if (!$current_member_id) {
+        return new WP_Error(
+            'no_member_linked',
+            'Ваш аккаунт не привязан к профилю участника',
+            array('user_id' => get_current_user_id())
+        );
+    }
+
+    return $current_member_id;
+}
 
 // Хуки активации/деактивации плагина
 register_activation_hook(__FILE__, 'metoda_members_activate');
@@ -2961,9 +3019,10 @@ function member_save_gallery_ajax() {
         wp_send_json_error(array('message' => 'Необходима авторизация'));
     }
 
-    $member_id = Member_User_Link::get_current_user_member_id();
-    if (!$member_id) {
-        wp_send_json_error(array('message' => 'Участник не найден'));
+    // SECURITY FIX v3.7.3: Используем единую функцию проверки прав (поддержка admin bypass)
+    $member_id = get_editable_member_id();
+    if (is_wp_error($member_id)) {
+        wp_send_json_error(array('message' => $member_id->get_error_message()));
     }
 
     $gallery_ids = sanitize_text_field($_POST['gallery_ids']);
@@ -2987,14 +3046,38 @@ function member_upload_gallery_photo_ajax() {
         wp_send_json_error(array('message' => 'Необходима авторизация'));
     }
 
-    $member_id = Member_User_Link::get_current_user_member_id();
-    if (!$member_id) {
-        wp_send_json_error(array('message' => 'Участник не найден'));
+    // SECURITY FIX v3.7.3: Используем единую функцию проверки прав (поддержка admin bypass)
+    $member_id = get_editable_member_id();
+    if (is_wp_error($member_id)) {
+        wp_send_json_error(array('message' => $member_id->get_error_message()));
     }
 
     // Проверяем, был ли загружен файл
     if (empty($_FILES['photo'])) {
         wp_send_json_error(array('message' => 'Файл не загружен'));
+    }
+
+    // SECURITY FIX v3.7.3: Валидация типа файла и размера
+    $allowed_types = array('image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif');
+    $file_type = $_FILES['photo']['type'];
+
+    if (!in_array($file_type, $allowed_types)) {
+        wp_send_json_error(array('message' => 'Недопустимый тип файла. Разрешены только изображения (JPEG, PNG, WebP, GIF)'));
+    }
+
+    // Проверка размера файла (максимум 5MB)
+    $max_size = 5 * 1024 * 1024; // 5MB в байтах
+    if ($_FILES['photo']['size'] > $max_size) {
+        wp_send_json_error(array('message' => 'Файл слишком большой. Максимальный размер: 5MB'));
+    }
+
+    // Дополнительная проверка на реальный MIME-тип (защита от подмены расширения)
+    $finfo = finfo_open(FILEINFO_MIME_TYPE);
+    $real_mime = finfo_file($finfo, $_FILES['photo']['tmp_name']);
+    finfo_close($finfo);
+
+    if (!in_array($real_mime, $allowed_types)) {
+        wp_send_json_error(array('message' => 'Обнаружена попытка загрузки файла с поддельным типом'));
     }
 
     // Подключаем необходимые файлы WordPress
@@ -3228,8 +3311,12 @@ add_action('wp_ajax_member_delete_material', 'member_delete_material_ajax');
 
 /**
  * AJAX обработчик для загрузки дополнительных участников (Load More)
+ * SECURITY FIX v3.7.3: Добавлен nonce для защиты от CSRF
  */
 function load_more_members_ajax() {
+    // CSRF protection - публичный nonce
+    check_ajax_referer('public_members_nonce', 'nonce');
+
     $offset = isset($_POST['offset']) ? intval($_POST['offset']) : 0;
     $search = isset($_POST['search']) ? sanitize_text_field($_POST['search']) : '';
     $city = isset($_POST['city']) ? sanitize_text_field($_POST['city']) : '';
@@ -3377,8 +3464,12 @@ add_action('wp_ajax_nopriv_load_more_members', 'load_more_members_ajax');
 
 /**
  * AJAX обработчик для фильтрации участников
+ * SECURITY FIX v3.7.3: Добавлен nonce для защиты от CSRF
  */
 function filter_members_ajax() {
+    // CSRF protection - публичный nonce
+    check_ajax_referer('public_members_nonce', 'nonce');
+
     // Для отладки - логируем что функция вызвана
     error_log('filter_members_ajax called');
 
@@ -3627,9 +3718,10 @@ function ajax_delete_portfolio_material() {
     // Проверка nonce
     check_ajax_referer('member_dashboard_nonce', 'nonce');
 
-    $member_id = Member_User_Link::get_current_user_member_id();
-    if (!$member_id) {
-        wp_send_json_error(array('message' => 'Участник не найден'));
+    // SECURITY FIX v3.7.3: Используем единую функцию проверки прав (поддержка admin bypass)
+    $member_id = get_editable_member_id();
+    if (is_wp_error($member_id)) {
+        wp_send_json_error(array('message' => $member_id->get_error_message()));
     }
 
     $category = sanitize_text_field($_POST['category']);
@@ -3677,9 +3769,10 @@ function ajax_edit_portfolio_material() {
     // Проверка nonce
     check_ajax_referer('member_dashboard_nonce', 'nonce');
 
-    $member_id = Member_User_Link::get_current_user_member_id();
-    if (!$member_id) {
-        wp_send_json_error(array('message' => 'Участник не найден'));
+    // SECURITY FIX v3.7.3: Используем единую функцию проверки прав (поддержка admin bypass)
+    $member_id = get_editable_member_id();
+    if (is_wp_error($member_id)) {
+        wp_send_json_error(array('message' => $member_id->get_error_message()));
     }
 
     $category = sanitize_text_field($_POST['category']);

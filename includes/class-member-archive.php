@@ -34,6 +34,7 @@ class Member_Archive {
             wp_localize_script('member-archive', 'memberArchive', array(
                 'ajaxUrl' => admin_url('admin-ajax.php'),
                 'nonce' => wp_create_nonce('member_archive_nonce'),
+                'publicNonce' => wp_create_nonce('public_members_nonce'), // SECURITY FIX v3.7.3: для публичных AJAX
             ));
         }
     }

@@ -93,7 +93,7 @@
 
             const params = {
                 action: 'filter_members',
-                nonce: memberArchive.nonce,
+                nonce: memberArchive.publicNonce, // SECURITY FIX v3.7.3: использую публичный nonce
                 search: $('#member-search').val(),
                 type: $('#filter-type').val(),
                 role: $('#filter-role').val(),

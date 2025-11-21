@@ -135,6 +135,13 @@ class Member_Dashboard {
             
             include plugin_dir_path(dirname(__FILE__)) . 'templates/member-dashboard.php';
             return ob_get_clean();
+        } else if (!$is_admin && $viewing_member_id) {
+            // SECURITY FIX v3.7.3: IDOR Protection - блокируем просмотр чужих кабинетов обычными пользователями
+            return '<div style="padding: 40px; text-align: center; background: #f8d7da; border: 1px solid #f5c6cb; border-radius: 8px; margin: 20px;">
+                <h3 style="color: #721c24;">🚫 Доступ запрещён</h3>
+                <p style="color: #721c24;">У вас нет прав для просмотра этого кабинета.</p>
+                <p style="margin-top: 15px;"><a href="' . esc_url(home_url('/member-dashboard/')) . '" style="color: #0066cc; text-decoration: none;">← Вернуться к своему кабинету</a></p>
+            </div>';
         }
 
         // Для обычных пользователей проверяем наличие своего member_id
