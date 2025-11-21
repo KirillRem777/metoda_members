@@ -271,9 +271,13 @@
         $.ajax({
             url: onboardingData.ajaxUrl,
             type: 'POST',
+            timeout: 10000,
             data: {
                 action: 'mark_onboarding_seen',
                 nonce: onboardingData.nonce
+            },
+            error: function() {
+                // Silent fail for marking as seen
             }
         });
 

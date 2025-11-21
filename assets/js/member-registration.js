@@ -385,6 +385,7 @@
             $.ajax({
                 url: memberRegistrationData.ajaxUrl,
                 type: 'POST',
+                timeout: 10000,
                 data: formData,
                 processData: false,
                 contentType: false,
@@ -460,6 +461,7 @@
                 $.ajax({
                     url: memberRegistrationData.ajaxUrl,
                     type: 'POST',
+                    timeout: 10000,
                     data: {
                         action: 'validate_access_code',
                         code: code,

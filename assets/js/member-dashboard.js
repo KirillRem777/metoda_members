@@ -15,11 +15,6 @@
         initProfileForm();
         initGalleryManager();
         initMaterialsManager();
-        
-        // ADDED: Показываем уведомление если админ просматривает чужой кабинет
-        if (memberDashboard.isAdminView) {
-            console.log('Admin view mode: editing member ID ' + memberDashboard.memberId);
-        }
     });
 
     /**
@@ -77,6 +72,7 @@
             $.ajax({
                 url: memberDashboard.ajaxUrl,
                 type: 'POST',
+                timeout: 10000,
                 data: formData + '&action=member_update_profile&nonce=' + memberDashboard.nonce + memberIdParam,
                 success: function(response) {
                     if (response.success) {
@@ -168,6 +164,7 @@
             $.ajax({
                 url: memberDashboard.ajaxUrl,
                 type: 'POST',
+                timeout: 10000,
                 data: {
                     action: 'member_update_gallery',
                     nonce: memberDashboard.nonce,
@@ -214,6 +211,7 @@
         $.ajax({
             url: memberDashboard.ajaxUrl,  // FIXED: было memberDashboardData
             type: 'POST',
+            timeout: 10000,
             data: formData,
             processData: false,
             contentType: false,
@@ -315,6 +313,7 @@
             $.ajax({
                 url: memberDashboard.ajaxUrl,
                 type: 'POST',
+                timeout: 10000,
                 data: formData,
                 success: function(response) {
                     if (response.success) {
@@ -367,6 +366,7 @@
             $.ajax({
                 url: memberDashboard.ajaxUrl,
                 type: 'POST',
+                timeout: 10000,
                 data: formData,
                 processData: false,
                 contentType: false,
@@ -409,6 +409,7 @@
             $.ajax({
                 url: memberDashboard.ajaxUrl,
                 type: 'POST',
+                timeout: 10000,
                 data: {
                     action: 'member_delete_material',
                     nonce: memberDashboard.nonce,

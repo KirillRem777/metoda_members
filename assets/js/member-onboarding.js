@@ -44,6 +44,7 @@
             $.ajax({
                 url: memberOnboarding.ajaxUrl,
                 type: 'POST',
+                timeout: 10000,
                 data: formData,
                 success: function(response) {
                     if (response.success) {
@@ -186,6 +187,7 @@
             $.ajax({
                 url: memberOnboarding.ajaxUrl,
                 type: 'POST',
+                timeout: 10000,
                 data: {
                     action: 'member_complete_onboarding',
                     nonce: memberOnboarding.nonce

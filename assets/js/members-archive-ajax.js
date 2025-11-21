@@ -74,6 +74,7 @@
             $.ajax({
                 url: membersAjax.ajaxurl,
                 type: 'POST',
+                timeout: 10000,
                 data: data,
                 success: function(response) {
                     if (response.success) {

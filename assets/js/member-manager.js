@@ -12,7 +12,6 @@
     let editingMemberId = null;
 
     $(document).ready(function() {
-        console.log('Member Manager JS loaded');
         loadMembers();
         initFilters();
         initButtons();
@@ -24,11 +23,10 @@
     function loadMembers(page = 1) {
         currentPage = page;
 
-        console.log('Loading members...', currentFilters);
-
         $.ajax({
             url: memberManager.ajaxUrl,
             type: 'GET',
+            timeout: 10000,
             data: {
                 action: 'manager_get_members',
                 nonce: memberManager.nonce,
@@ -39,7 +37,6 @@
                 status: currentFilters.status
             },
             success: function(response) {
-                console.log('Members loaded:', response);
                 if (response.success) {
                     renderMembers(response.data.members);
                     $('#total-count').text(response.data.total || 0);
@@ -47,7 +44,6 @@
                 }
             },
             error: function(xhr, status, error) {
-                console.error('AJAX error:', error);
                 $('#members-tbody').html('<tr><td colspan="7" class="px-6 py-12 text-center text-red-600">Ошибка загрузки данных</td></tr>');
             }
         });
@@ -186,7 +182,6 @@
     function initButtons() {
         // Кнопка добавления участника
         $('#add-member-btn').on('click', function() {
-            console.log('Add member clicked');
             openModal('add');
         });
     }
@@ -197,7 +192,6 @@
         $('.delete-member').off('click').on('click', function() {
             const memberId = $(this).data('id');
             const memberName = $(this).data('name');
-            console.log('Delete member:', memberId);
             openDeleteModal(memberId, memberName);
         });
     }
@@ -225,13 +219,13 @@
         $.ajax({
             url: memberManager.ajaxUrl,
             type: 'GET',
+            timeout: 10000,
             data: {
                 action: 'manager_get_member',
                 nonce: memberManager.nonce,
                 member_id: memberId
             },
             success: function(response) {
-                console.log('Member data loaded:', response);
                 if (response.success) {
                     fillModalForm(response.data);
                     editingMemberId = memberId;
@@ -359,11 +353,11 @@
         $.ajax({
             url: memberManager.ajaxUrl,
             type: 'POST',
+            timeout: 10000,
             data: formData,
             processData: false,
             contentType: false,
             success: function(response) {
-                console.log('Save response:', response);
                 $('.btn-text').text('Сохранить');
                 $('.btn-loader').addClass('hidden');
 
@@ -398,6 +392,7 @@
         $.ajax({
             url: memberManager.ajaxUrl,
             type: 'POST',
+            timeout: 10000,
             data: {
                 action: 'manager_delete_member',
                 nonce: memberManager.nonce,

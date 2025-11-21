@@ -35,6 +35,7 @@
         $.ajax({
             url: forumData.ajaxUrl,
             type: 'POST',
+            timeout: 10000,
             data: {
                 action: 'forum_create_topic',
                 nonce: forumData.nonce,
@@ -70,6 +71,7 @@
         $.ajax({
             url: forumData.ajaxUrl,
             type: 'POST',
+            timeout: 10000,
             data: {
                 action: 'forum_like_topic',
                 nonce: forumData.nonce,
@@ -80,6 +82,9 @@
                     $btn.find('.like-count').text(response.data.likes);
                     $btn.toggleClass('liked', response.data.is_liked);
                 }
+            },
+            error: function() {
+                // Silent fail for likes
             }
         });
     });
@@ -97,6 +102,7 @@
         $.ajax({
             url: forumData.ajaxUrl,
             type: 'POST',
+            timeout: 10000,
             data: {
                 action: 'forum_like_reply',
                 nonce: forumData.nonce,
@@ -107,6 +113,9 @@
                     $btn.find('.like-count').text(response.data.likes);
                     $btn.toggleClass('liked', response.data.is_liked);
                 }
+            },
+            error: function() {
+                // Silent fail for likes
             }
         });
     });
@@ -124,6 +133,7 @@
         $.ajax({
             url: forumData.ajaxUrl,
             type: 'POST',
+            timeout: 10000,
             data: {
                 action: 'forum_subscribe_topic',
                 nonce: forumData.nonce,
@@ -137,6 +147,9 @@
                     $btn.html(`<i class="fas ${icon}"></i> ${text}`);
                     showToast('success', response.data.message);
                 }
+            },
+            error: function() {
+                showToast('error', 'Ошибка соединения с сервером');
             }
         });
     });
@@ -155,6 +168,7 @@
         $.ajax({
             url: forumData.ajaxUrl,
             type: 'POST',
+            timeout: 10000,
             data: {
                 action: 'forum_reply_topic',
                 nonce: forumData.nonce,
@@ -225,6 +239,7 @@
         $.ajax({
             url: forumData.ajaxUrl,
             type: 'POST',
+            timeout: 10000,
             data: {
                 action: 'forum_pin_topic',
                 nonce: forumData.nonce,
@@ -237,6 +252,9 @@
                         location.reload();
                     }, 1000);
                 }
+            },
+            error: function() {
+                showToast('error', 'Ошибка соединения с сервером');
             }
         });
     });

@@ -106,6 +106,7 @@
             $.ajax({
                 url: memberArchive.ajaxUrl,
                 type: 'GET',
+                timeout: 10000,
                 data: params,
                 success: (response) => {
                     if (response.success) {
