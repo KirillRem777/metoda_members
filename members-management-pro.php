@@ -1750,22 +1750,27 @@ add_shortcode('member_registration', 'member_registration_shortcode');
 
 /**
  * Шорткод для личного кабинета
+ *
+ * DEPRECATED v4.0.2: Этот shortcode перемещён в class-member-dashboard.php
+ * с поддержкой admin bypass для просмотра чужих кабинетов.
+ *
+ * @see Member_Dashboard::render_dashboard()
  */
-function member_dashboard_shortcode() {
-    if (!is_user_logged_in()) {
-        return '<p>Пожалуйста, <a href="' . wp_login_url(get_permalink()) . '">войдите</a>, чтобы получить доступ к личному кабинету.</p>';
-    }
-
-    $user = wp_get_current_user();
-    if (!in_array('member', $user->roles) && !in_array('expert', $user->roles)) {
-        return '<p>У вас нет доступа к этой странице.</p>';
-    }
-
-    ob_start();
-    include(plugin_dir_path(__FILE__) . 'templates/member-dashboard.php');
-    return ob_get_clean();
-}
-add_shortcode('member_dashboard', 'member_dashboard_shortcode');
+// function member_dashboard_shortcode() {
+//     if (!is_user_logged_in()) {
+//         return '<p>Пожалуйста, <a href="' . wp_login_url(get_permalink()) . '">войдите</a>, чтобы получить доступ к личному кабинету.</p>';
+//     }
+//
+//     $user = wp_get_current_user();
+//     if (!in_array('member', $user->roles) && !in_array('expert', $user->roles)) {
+//         return '<p>У вас нет доступа к этой странице.</p>';
+//     }
+//
+//     ob_start();
+//     include(plugin_dir_path(__FILE__) . 'templates/member-dashboard.php');
+//     return ob_get_clean();
+// }
+// add_shortcode('member_dashboard', 'member_dashboard_shortcode');
 
 /**
  * Шорткод для панели менеджера
