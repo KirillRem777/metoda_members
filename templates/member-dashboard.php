@@ -128,6 +128,12 @@ $current_user = wp_get_current_user();
                         <span>Сообщения</span>
                     </button>
                 </li>
+                <li>
+                    <button onclick="showSection('notifications')" id="nav-notifications" class="nav-item w-full flex items-center gap-3 px-4 py-3 text-left rounded-lg text-gray-600 hover:bg-gray-50 font-medium transition-all">
+                        <i class="fas fa-bell text-lg"></i>
+                        <span>Уведомления</span>
+                    </button>
+                </li>
             </ul>
         </nav>
 
@@ -367,6 +373,9 @@ $current_user = wp_get_current_user();
 
         <!-- Messages Section -->
         <?php include(plugin_dir_path(__FILE__) . 'dashboard-messages-section.php'); ?>
+
+        <!-- Notifications Section -->
+        <?php include(plugin_dir_path(__FILE__) . 'dashboard-notifications-section.php'); ?>
 
     </main>
 

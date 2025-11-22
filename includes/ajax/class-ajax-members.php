@@ -37,6 +37,12 @@ class Metoda_Ajax_Members {
         add_action('wp_ajax_create_forum_topic_dashboard', array($this, 'create_forum_topic_dashboard'));
         add_action('wp_ajax_view_member_message', array($this, 'view_member_message'));
 
+        // Notification system handlers
+        add_action('wp_ajax_save_notification_settings', array($this, 'save_notification_settings'));
+        add_action('wp_ajax_check_telegram_connection', array($this, 'check_telegram_connection'));
+        add_action('wp_ajax_send_test_notification', array($this, 'send_test_notification'));
+        add_action('wp_ajax_disconnect_telegram', array($this, 'disconnect_telegram'));
+
         // Public AJAX handlers (available to non-logged-in users)
         add_action('wp_ajax_filter_members', array($this, 'filter_members'));
         add_action('wp_ajax_nopriv_filter_members', array($this, 'filter_members'));
@@ -1514,5 +1520,204 @@ class Metoda_Ajax_Members {
             'content' => $message->post_content,
             'meta' => $meta
         ));
+    }
+
+    /**
+     * Save notification settings
+     *
+     * @return void
+     */
+    public function save_notification_settings() {
+        // Проверка nonce
+        check_ajax_referer('member_dashboard_nonce', 'nonce');
+
+        if (!is_user_logged_in()) {
+            wp_send_json_error(array('message' => 'Необходима авторизация'));
+        }
+
+        $user_id = get_current_user_id();
+
+        // Каналы доставки
+        $channel_email = isset($_POST['channel_email']) ? '1' : '0';
+        $channel_telegram = isset($_POST['channel_telegram']) ? '1' : '0';
+
+        update_user_meta($user_id, 'notify_channel_email', $channel_email);
+        update_user_meta($user_id, 'notify_channel_telegram', $channel_telegram);
+
+        // Email настройки
+        if ($channel_email === '1') {
+            $email_destination = sanitize_text_field($_POST['email_destination'] ?? 'account');
+            if ($email_destination === 'custom') {
+                $custom_email = sanitize_email($_POST['custom_email'] ?? '');
+                if (is_email($custom_email)) {
+                    update_user_meta($user_id, 'notify_custom_email', $custom_email);
+                }
+            } else {
+                delete_user_meta($user_id, 'notify_custom_email');
+            }
+        }
+
+        // Типы уведомлений
+        $notify_messages = isset($_POST['notify_messages']) ? '1' : '0';
+        $notify_forum = isset($_POST['notify_forum']) ? '1' : '0';
+
+        update_user_meta($user_id, 'notify_messages', $notify_messages);
+        update_user_meta($user_id, 'notify_forum', $notify_forum);
+
+        // Подтипы уведомлений (если главный тип включен)
+        if ($notify_messages === '1') {
+            $notify_messages_instant = isset($_POST['notify_messages_instant']) ? '1' : '0';
+            update_user_meta($user_id, 'notify_messages_instant', $notify_messages_instant);
+        }
+
+        if ($notify_forum === '1') {
+            $notify_forum_replies = isset($_POST['notify_forum_replies']) ? '1' : '0';
+            $notify_forum_mentions = isset($_POST['notify_forum_mentions']) ? '1' : '0';
+            $notify_forum_watching = isset($_POST['notify_forum_watching']) ? '1' : '0';
+
+            update_user_meta($user_id, 'notify_forum_replies', $notify_forum_replies);
+            update_user_meta($user_id, 'notify_forum_mentions', $notify_forum_mentions);
+            update_user_meta($user_id, 'notify_forum_watching', $notify_forum_watching);
+        }
+
+        // Тихие часы
+        $quiet_hours_enabled = isset($_POST['quiet_hours_enabled']) ? '1' : '0';
+        update_user_meta($user_id, 'quiet_hours_enabled', $quiet_hours_enabled);
+
+        if ($quiet_hours_enabled === '1') {
+            $quiet_hours_start = sanitize_text_field($_POST['quiet_hours_start'] ?? '22:00');
+            $quiet_hours_end = sanitize_text_field($_POST['quiet_hours_end'] ?? '08:00');
+
+            update_user_meta($user_id, 'quiet_hours_start', $quiet_hours_start);
+            update_user_meta($user_id, 'quiet_hours_end', $quiet_hours_end);
+        }
+
+        // OTP настройки
+        $otp_enabled = isset($_POST['otp_enabled']) ? '1' : '0';
+        update_user_meta($user_id, 'otp_enabled', $otp_enabled);
+
+        if ($otp_enabled === '1') {
+            $otp_delivery = sanitize_text_field($_POST['otp_delivery'] ?? 'email');
+            update_user_meta($user_id, 'otp_delivery', $otp_delivery);
+        }
+
+        wp_send_json_success(array('message' => 'Настройки сохранены'));
+    }
+
+    /**
+     * Check if Telegram is connected
+     *
+     * @return void
+     */
+    public function check_telegram_connection() {
+        check_ajax_referer('member_dashboard_nonce', 'nonce');
+
+        if (!is_user_logged_in()) {
+            wp_send_json_error(array('message' => 'Необходима авторизация'));
+        }
+
+        $user_id = get_current_user_id();
+        $telegram_chat_id = get_user_meta($user_id, 'telegram_chat_id', true);
+
+        if (!empty($telegram_chat_id)) {
+            wp_send_json_success(array('connected' => true));
+        } else {
+            wp_send_json_error(array('connected' => false, 'message' => 'Telegram не подключен'));
+        }
+    }
+
+    /**
+     * Send test notification
+     *
+     * @return void
+     */
+    public function send_test_notification() {
+        check_ajax_referer('member_dashboard_nonce', 'nonce');
+
+        if (!is_user_logged_in()) {
+            wp_send_json_error(array('message' => 'Необходима авторизация'));
+        }
+
+        $user_id = get_current_user_id();
+        $channel = sanitize_text_field($_POST['channel'] ?? '');
+
+        if ($channel === 'telegram') {
+            $telegram_chat_id = get_user_meta($user_id, 'telegram_chat_id', true);
+
+            if (empty($telegram_chat_id)) {
+                wp_send_json_error(array('message' => 'Telegram не подключен'));
+            }
+
+            // Отправка тестового сообщения через Telegram API
+            $bot_token = get_option('metoda_telegram_bot_token');
+            if (empty($bot_token)) {
+                wp_send_json_error(array('message' => 'Telegram бот не настроен'));
+            }
+
+            $message = "🔔 Тестовое уведомление\n\nЭто тестовое сообщение из системы уведомлений Metoda Members.";
+
+            $url = "https://api.telegram.org/bot{$bot_token}/sendMessage";
+            $response = wp_remote_post($url, array(
+                'body' => array(
+                    'chat_id' => $telegram_chat_id,
+                    'text' => $message,
+                    'parse_mode' => 'HTML'
+                )
+            ));
+
+            if (is_wp_error($response)) {
+                wp_send_json_error(array('message' => 'Ошибка отправки: ' . $response->get_error_message()));
+            }
+
+            $body = json_decode(wp_remote_retrieve_body($response), true);
+
+            if (isset($body['ok']) && $body['ok']) {
+                wp_send_json_success(array('message' => 'Тестовое сообщение отправлено'));
+            } else {
+                wp_send_json_error(array('message' => 'Ошибка API Telegram'));
+            }
+        } elseif ($channel === 'email') {
+            $user = wp_get_current_user();
+            $custom_email = get_user_meta($user_id, 'notify_custom_email', true);
+            $to = !empty($custom_email) ? $custom_email : $user->user_email;
+
+            $subject = '🔔 Тестовое уведомление - Metoda Members';
+            $message = "Это тестовое письмо из системы уведомлений Metoda Members.\n\n";
+            $message .= "Если вы получили это письмо, значит уведомления по email настроены правильно.\n\n";
+            $message .= "С уважением,\nКоманда Metoda";
+
+            $headers = array('Content-Type: text/plain; charset=UTF-8');
+
+            if (wp_mail($to, $subject, $message, $headers)) {
+                wp_send_json_success(array('message' => 'Тестовое письмо отправлено на ' . $to));
+            } else {
+                wp_send_json_error(array('message' => 'Ошибка отправки email'));
+            }
+        } else {
+            wp_send_json_error(array('message' => 'Неверный канал'));
+        }
+    }
+
+    /**
+     * Disconnect Telegram
+     *
+     * @return void
+     */
+    public function disconnect_telegram() {
+        check_ajax_referer('member_dashboard_nonce', 'nonce');
+
+        if (!is_user_logged_in()) {
+            wp_send_json_error(array('message' => 'Необходима авторизация'));
+        }
+
+        $user_id = get_current_user_id();
+
+        // Удаляем связь с Telegram
+        delete_user_meta($user_id, 'telegram_chat_id');
+
+        // Отключаем канал Telegram
+        update_user_meta($user_id, 'notify_channel_telegram', '0');
+
+        wp_send_json_success(array('message' => 'Telegram отключен'));
     }
 }
