@@ -35,6 +35,17 @@ require_once plugin_dir_path(__FILE__) . 'includes/legacy/hooks.php';
 // ============================================================================
 require_once plugin_dir_path(__FILE__) . 'includes/core/class-post-types.php';
 require_once plugin_dir_path(__FILE__) . 'includes/core/class-taxonomies.php';
+require_once plugin_dir_path(__FILE__) . 'includes/core/class-assets.php';
+
+// ============================================================================
+// 🎯 ADMIN MODULES (New Modular Architecture - Phase 2)
+// ============================================================================
+require_once plugin_dir_path(__FILE__) . 'includes/admin/class-meta-boxes.php';
+
+// ============================================================================
+// 🎯 AUTH MODULES (New Modular Architecture - Phase 2)
+// ============================================================================
+require_once plugin_dir_path(__FILE__) . 'includes/auth/class-security.php';
 
 // ============================================================================
 // 🔧 ЗАГРУЗКА КЛАССОВ (Legacy Architecture)
@@ -67,6 +78,12 @@ require_once plugin_dir_path(__FILE__) . 'includes/class-member-template-loader.
 // ============================================================================
 new Metoda_Post_Types();
 new Metoda_Taxonomies();
+new Metoda_Assets();
+
+// Admin modules (only in admin context)
+if (is_admin()) {
+    new Metoda_Meta_Boxes();
+}
 
 // ============================================================================
 // 🚀 ИНИЦИАЛИЗАЦИЯ LEGACY КЛАССОВ
