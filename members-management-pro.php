@@ -2,8 +2,16 @@
 /**
  * Plugin Name: Members Management Pro
  * Description: Продвинутая система управления участниками и экспертами сообщества
- * Version: 2.0
- * Author: Your Name
+ * Version: 5.1.1
+ * Author: METODA Community
+ * Requires at least: 5.8
+ * Requires PHP: 7.4
+ * Text Domain: metoda-community-mgmt
+ *
+ * Changelog:
+ * 5.1.1 - Added Telegram OTP integration to onboarding flow
+ * 5.1.0 - Telegram integration for instant OTP delivery
+ * 5.0.0 - Modern WordPress architecture upgrade
  */
 
 // Защита от прямого доступа
