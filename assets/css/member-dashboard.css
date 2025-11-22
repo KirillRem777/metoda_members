@@ -11,7 +11,7 @@
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
 }
 
-/* Dashboard Header */
+/* Dashboard Header (Legacy - не используется) */
 .dashboard-header {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     border-radius: 20px;
@@ -19,6 +19,13 @@
     margin-bottom: 30px;
     color: white;
     box-shadow: 0 10px 40px rgba(102, 126, 234, 0.3);
+}
+
+/* Member Cabinet Header (Новый дизайн - светлый градиент) */
+.member-cabinet-header {
+    background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+    border-bottom: 1px solid #e2e8f0;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
 }
 
 .header-content {

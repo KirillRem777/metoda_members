@@ -41,14 +41,14 @@ $total_materials = count($testimonials_data) + count($gratitudes_data) + count($
 
 <!-- Materials Section -->
 <section id="materials-section" class="section-content hidden">
-    <div class="bg-white border-b border-gray-200 px-8 py-6">
+    <div class="member-cabinet-header px-8 py-6">
         <div class="max-w-5xl mx-auto">
             <div class="flex items-center justify-between">
                 <div>
                     <h2 class="text-2xl font-bold text-gray-900">Портфолио и достижения</h2>
                     <p class="text-sm text-gray-500 mt-1">Управляйте отзывами, благодарностями, видео и публикациями</p>
                 </div>
-                <div class="text-2xl font-bold" style="color: #0066cc;">
+                <div class="text-2xl font-bold text-gray-700">
                     <?php echo $total_materials; ?>
                     <span class="text-sm font-normal text-gray-500">материалов</span>
                 </div>

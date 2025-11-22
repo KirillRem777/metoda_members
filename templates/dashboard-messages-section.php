@@ -59,7 +59,7 @@ $all_members = get_posts(array(
 
 <!-- Messages Section -->
 <section id="messages-section" class="section-content hidden">
-    <div class="bg-white border-b border-gray-200 px-8 py-6">
+    <div class="member-cabinet-header px-8 py-6">
         <div class="max-w-5xl mx-auto">
             <h2 class="text-2xl font-bold text-gray-900">Сообщения</h2>
             <p class="text-sm text-gray-500 mt-1">Внутренняя почта Методы</p>

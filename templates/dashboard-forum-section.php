@@ -34,7 +34,7 @@ $total_my_likes = get_user_meta($current_user_id, 'forum_likes_received', true) 
 
 <!-- Forum Section -->
 <section id="forum-section" class="section-content hidden">
-    <div class="bg-white border-b border-gray-200 px-8 py-6">
+    <div class="member-cabinet-header px-8 py-6">
         <div class="max-w-5xl mx-auto">
             <div class="flex items-center justify-between">
                 <div>

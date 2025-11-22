@@ -84,10 +84,10 @@ $current_user = wp_get_current_user();
 
     <!-- Sidebar -->
     <aside id="sidebar" class="w-64 bg-white border-r border-gray-200 flex flex-col">
-        <div class="p-6 border-b border-gray-200">
+        <div class="member-cabinet-header p-6 border-b border-gray-200">
             <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-lg flex items-center justify-center bg-primary">
-                    <i class="fas fa-user text-white text-lg"></i>
+                <div class="w-10 h-10 rounded-lg flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200 border border-gray-300">
+                    <i class="fas fa-user text-gray-600 text-lg"></i>
                 </div>
                 <div>
                     <h1 class="text-lg font-bold text-gray-900">Личный кабинет</h1>
@@ -159,7 +159,7 @@ $current_user = wp_get_current_user();
 
         <!-- Profile Section -->
         <section id="profile-section" class="section-content">
-            <div id="profile-header" class="bg-white border-b border-gray-200 px-8 py-6">
+            <div id="profile-header" class="member-cabinet-header px-8 py-6">
                 <div class="max-w-5xl mx-auto">
                     <h2 class="text-2xl font-bold text-gray-900">Мой профиль</h2>
                     <p class="text-sm text-gray-500 mt-1">Управляйте информацией о себе</p>
@@ -277,8 +277,8 @@ $current_user = wp_get_current_user();
                             <h3 class="text-lg font-semibold text-gray-900 mb-6">Социальные сети и ссылки</h3>
                             <div class="grid grid-cols-2 gap-6">
                                 <div class="form-group">
-                                    <label class="block text-sm font-medium text-gray-700 mb-2">LinkedIn</label>
-                                    <input type="url" id="member_linkedin" name="member_linkedin" value="<?php echo esc_url($member_data['member_linkedin']); ?>" placeholder="https://linkedin.com/in/username" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all">
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Telegram</label>
+                                    <input type="text" id="member_telegram" name="member_telegram" value="<?php echo esc_attr($member_data['member_telegram']); ?>" placeholder="@username или username" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all">
                                 </div>
                                 <div class="form-group">
                                     <label class="block text-sm font-medium text-gray-700 mb-2">Веб-сайт</label>
@@ -307,7 +307,7 @@ $current_user = wp_get_current_user();
 
         <!-- Gallery Section -->
         <section id="gallery-section" class="section-content hidden">
-            <div class="bg-white border-b border-gray-200 px-8 py-6">
+            <div class="member-cabinet-header px-8 py-6">
                 <div class="max-w-5xl mx-auto">
                     <h2 class="text-2xl font-bold text-gray-900">Галерея фотографий</h2>
                     <p class="text-sm text-gray-500 mt-1">Управляйте фотографиями в вашем профиле</p>
