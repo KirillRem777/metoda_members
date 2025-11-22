@@ -308,7 +308,7 @@ $roles = get_terms(array(
                     <div class="mb-6">
                         <label class="block text-sm font-medium text-gray-700 mb-2">Поиск</label>
                         <div class="relative">
-                            <input type="text" id="search-input" value="<?php echo esc_attr($search); ?>" placeholder="Поиск по имени..." class="w-full pl-11 pr-4 py-2.5 border border-gray-300 rounded-lg" style="padding-left: 2.75rem !important;">
+                            <input type="text" id="member-search" value="<?php echo esc_attr($search); ?>" placeholder="Поиск по имени..." class="w-full pl-11 pr-4 py-2.5 border border-gray-300 rounded-lg" style="padding-left: 2.75rem !important;">
                             <i class="fas fa-search absolute left-4 top-3.5 text-gray-400"></i>
                         </div>
                     </div>

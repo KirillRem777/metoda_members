@@ -237,7 +237,7 @@ class Member_Manager {
             'specialization' => get_post_meta($member_id, 'member_specialization', true),
             'experience' => get_post_meta($member_id, 'member_experience', true),
             'interests' => get_post_meta($member_id, 'member_interests', true),
-            'linkedin' => get_post_meta($member_id, 'member_linkedin', true),
+            'telegram' => get_post_meta($member_id, 'member_telegram', true),
             'website' => get_post_meta($member_id, 'member_website', true),
             'expectations' => get_post_meta($member_id, 'member_expectations', true),
             'thumbnail_id' => get_post_thumbnail_id($member_id),
@@ -436,7 +436,7 @@ class Member_Manager {
             'member_specialization',
             'member_experience',
             'member_interests',
-            'member_linkedin',
+            'member_telegram',
             'member_website',
             'member_expectations',
         );

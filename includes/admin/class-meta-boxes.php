@@ -51,7 +51,7 @@ class Metoda_Meta_Boxes {
         // Дополнительные поля
         $email = get_post_meta($post->ID, 'member_email', true);
         $phone = get_post_meta($post->ID, 'member_phone', true);
-        $linkedin = get_post_meta($post->ID, 'member_linkedin', true);
+        $telegram = get_post_meta($post->ID, 'member_telegram', true);
         $website = get_post_meta($post->ID, 'member_website', true);
         $gallery_ids = get_post_meta($post->ID, 'member_gallery', true);
 
@@ -148,8 +148,8 @@ class Metoda_Meta_Boxes {
             <h4>Социальные сети и сайты</h4>
             <table class="form-table">
                 <tr>
-                    <th><label for="member_linkedin">LinkedIn</label></th>
-                    <td><input type="url" id="member_linkedin" name="member_linkedin" value="<?php echo esc_attr($linkedin); ?>" class="regular-text" placeholder="https://linkedin.com/in/username" /></td>
+                    <th><label for="member_telegram">Telegram</label></th>
+                    <td><input type="text" id="member_telegram" name="member_telegram" value="<?php echo esc_attr($telegram); ?>" class="regular-text" placeholder="@username или username" /></td>
                 </tr>
                 <tr>
                     <th><label for="member_website">Вебсайт</label></th>
@@ -591,7 +591,7 @@ class Metoda_Meta_Boxes {
             'member_city',
             'member_email',
             'member_phone',
-            'member_linkedin',
+            'member_telegram',
             'member_website',
             'member_gallery'
         );

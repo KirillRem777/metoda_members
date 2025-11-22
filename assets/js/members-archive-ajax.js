@@ -22,13 +22,24 @@
                 MembersArchive.loadMembers();
             });
 
-            // Фильтр по роли (чекбоксы)
-            $('.role-checkbox').on('change', function() {
+            // Фильтр по роли (select)
+            $('#role-filter').on('change', function() {
+                MembersArchive.loadMembers();
+            });
+
+            // Фильтр по типу участника (радио-кнопки)
+            $('input[name="member_type"]').on('change', function() {
                 MembersArchive.loadMembers();
             });
 
             // Сортировка
             $('#sort-filter').on('change', function() {
+                MembersArchive.loadMembers();
+            });
+
+            // Кнопка "Применить фильтры"
+            $('#apply-filters').on('click', function(e) {
+                e.preventDefault();
                 MembersArchive.loadMembers();
             });
 
@@ -51,11 +62,12 @@
             const $count = $('#members-count');
             const $loader = $('#members-loader');
 
-            // Собираем выбранные роли
-            const roles = [];
-            $('.role-checkbox:checked').each(function() {
-                roles.push($(this).val());
-            });
+            // Собираем значение роли (теперь это select, не checkbox)
+            const role = $('#role-filter').val();
+            const roles = role ? [role] : []; // Преобразуем в массив для совместимости
+
+            // Получаем выбранный тип участника
+            const memberType = $('input[name="member_type"]:checked').val();
 
             const data = {
                 action: 'filter_members',
@@ -63,6 +75,7 @@
                 search: $('#member-search').val(),
                 city: $('#city-filter').val(),
                 roles: roles,
+                member_type: memberType,
                 sort: $('#sort-filter').val(),
                 paged: page
             };
@@ -149,7 +162,7 @@
 
     // Инициализация при загрузке страницы
     $(document).ready(function() {
-        if ($('#members-archive').length) {
+        if ($('#members-grid').length) {
             MembersArchive.init();
         }
     });

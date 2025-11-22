@@ -17,7 +17,7 @@ while (have_posts()) : the_post();
     $city = get_post_meta($member_id, 'member_city', true);
     $email = get_post_meta($member_id, 'member_email', true);
     $phone = get_post_meta($member_id, 'member_phone', true);
-    $linkedin = get_post_meta($member_id, 'member_linkedin', true);
+    $telegram = get_post_meta($member_id, 'member_telegram', true);
     $website = get_post_meta($member_id, 'member_website', true);
 
     // Новые поля
@@ -390,10 +390,10 @@ while (have_posts()) : the_post();
                             </a>
                             <?php endif; ?>
 
-                            <?php if ($linkedin): ?>
-                            <a href="<?php echo esc_url($linkedin); ?>" target="_blank" rel="noopener" class="flex items-center text-gray-600 hover:text-primary transition-colors">
-                                <i class="fa-brands fa-linkedin metoda-primary mr-3"></i>
-                                <span class="text-sm">LinkedIn</span>
+                            <?php if ($telegram): ?>
+                            <a href="https://t.me/<?php echo esc_attr(ltrim($telegram, '@')); ?>" target="_blank" rel="noopener" class="flex items-center text-gray-600 hover:text-primary transition-colors">
+                                <i class="fa-brands fa-telegram metoda-primary mr-3"></i>
+                                <span class="text-sm">Telegram: @<?php echo esc_html(ltrim($telegram, '@')); ?></span>
                             </a>
                             <?php endif; ?>
 

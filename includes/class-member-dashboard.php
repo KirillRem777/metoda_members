@@ -315,7 +315,7 @@ class Member_Dashboard {
             'member_specialization' => 'sanitize_textarea_field',
             'member_experience' => 'sanitize_textarea_field',
             'member_interests' => 'sanitize_textarea_field',
-            'member_linkedin' => 'esc_url_raw',
+            'member_telegram' => 'sanitize_text_field',
             'member_website' => 'esc_url_raw',
             'member_expectations' => 'sanitize_textarea_field',
         );
@@ -405,7 +405,7 @@ class Member_Dashboard {
             'member_specialization',
             'member_experience',
             'member_interests',
-            'member_linkedin',
+            'member_telegram',
             'member_website',
             'member_expectations',
             'member_gallery',

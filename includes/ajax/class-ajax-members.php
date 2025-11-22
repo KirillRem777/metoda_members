@@ -81,6 +81,7 @@ class Metoda_Ajax_Members {
         $search = isset($_POST['search']) ? sanitize_text_field($_POST['search']) : '';
         $city = isset($_POST['city']) ? sanitize_text_field($_POST['city']) : '';
         $roles = isset($_POST['roles']) ? array_map('sanitize_text_field', $_POST['roles']) : array();
+        $member_type = isset($_POST['member_type']) ? sanitize_text_field($_POST['member_type']) : '';
         $sort = isset($_POST['sort']) ? sanitize_text_field($_POST['sort']) : 'title-asc';
         $paged = isset($_POST['paged']) ? absint($_POST['paged']) : 1;
 
@@ -133,6 +134,15 @@ class Metoda_Ajax_Members {
                 'field' => 'slug',
                 'terms' => $roles,
                 'operator' => 'IN'
+            );
+        }
+
+        // Добавляем фильтр по типу участника
+        if (!empty($member_type)) {
+            $args['tax_query'][] = array(
+                'taxonomy' => 'member_type',
+                'field' => 'slug',
+                'terms' => $member_type
             );
         }
 
