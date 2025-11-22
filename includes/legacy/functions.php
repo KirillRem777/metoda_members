@@ -1,11 +1,12 @@
 <?php
 /**
- * Plugin Name: Metoda Community MGMT
- * Description: Полнофункциональная система управления участниками и экспертами сообщества. Включает: регистрацию с валидацией, систему кодов доступа для импортированных участников, личные кабинеты с онбордингом, управление материалами с WYSIWYG-редактором, форум в стиле Reddit с категориями и лайками, настраиваемые email-шаблоны, CSV-импорт, кроппер фото, систему ролей и прав доступа, поиск и фильтрацию участников, OTP-аутентификацию через email.
- * Version: 4.2.0
- * Author: Kirill Rem
- * Text Domain: metoda-community-mgmt
- * Domain Path: /languages
+ * Legacy Functions - все глобальные функции плагина v4.2.0
+ *
+ * Этот файл содержит все функции которые были напрямую в members-management-pro.php
+ * Создан в процессе рефакторинга для модульной архитектуры
+ *
+ * @package Metoda_Community_MGMT
+ * @version 4.2.0-refactored
  */
 
 // Защита от прямого доступа
@@ -13,74 +14,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-// Определяем константу пути к плагину для использования в шаблонах
-if (!defined('METODA_PLUGIN_DIR')) {
-    define('METODA_PLUGIN_DIR', plugin_dir_path(__FILE__));
-}
 
-// 🔴 ЯДЕРНАЯ КНОПКА: Полное отключение плагина
-// Добавь в wp-config.php: define('METODA_DISABLE_PLUGIN', true);
-if (defined('METODA_DISABLE_PLUGIN') && METODA_DISABLE_PLUGIN) {
-    return; // Плагин ПОЛНОСТЬЮ отключен - ничего не загружается!
-}
-
-// 📦 ЗАГРУЗКА LEGACY СЛОЯ (v4.2.0 Refactoring)
-// Глобальные функции и хуки извлечены для модульной архитектуры
-// Этот слой обеспечивает обратную совместимость со старым кодом
-require_once plugin_dir_path(__FILE__) . 'includes/legacy/functions.php';
-require_once plugin_dir_path(__FILE__) . 'includes/legacy/hooks.php';
-
-// 🔧 ЗАГРУЗКА КЛАССОВ
-// Все классы загружаются всегда (в админке и на фронтенде)
-// Защита от редиректов реализована ВНУТРИ классов через is_admin()
-
-// Классы которые нужны в админке (метабоксы, AJAX, админ страницы)
-require_once plugin_dir_path(__FILE__) . 'includes/class-member-user-link.php';
-require_once plugin_dir_path(__FILE__) . 'includes/class-member-page-templates.php';
-require_once plugin_dir_path(__FILE__) . 'includes/class-member-csv-importer.php';
-require_once plugin_dir_path(__FILE__) . 'includes/class-member-email-templates.php';
-require_once plugin_dir_path(__FILE__) . 'includes/class-member-access-codes.php';
-require_once plugin_dir_path(__FILE__) . 'includes/class-member-otp.php';
-require_once plugin_dir_path(__FILE__) . 'includes/class-member-bulk-users.php';
-
-// Классы с AJAX обработчиками (AJAX = admin context)
-require_once plugin_dir_path(__FILE__) . 'includes/class-member-dashboard.php';
-require_once plugin_dir_path(__FILE__) . 'includes/class-member-file-manager.php';
-require_once plugin_dir_path(__FILE__) . 'includes/class-member-manager.php';
-require_once plugin_dir_path(__FILE__) . 'includes/class-member-archive.php';
-require_once plugin_dir_path(__FILE__) . 'includes/class-member-forum.php';
-require_once plugin_dir_path(__FILE__) . 'includes/class-member-onboarding.php';
-
-// Шаблоны (имеют внутреннюю защиту !is_admin())
-require_once plugin_dir_path(__FILE__) . 'includes/class-member-template-loader.php';
-
-// 🚀 ИНИЦИАЛИЗАЦИЯ КЛАССОВ
-// Создаём экземпляры классов для регистрации хуков и шорткодов
-new Member_Dashboard();
-new Member_File_Manager();
-new Member_Manager();
-new Member_Archive();
-new Member_Forum();
-new Member_Onboarding();
-new Member_Template_Loader();
-new Member_Access_Codes();
-new Member_OTP();
-
-// ================================================================
-// LEGACY CODE - MOVED TO includes/legacy/
-// ================================================================
-//
-// This section has been moved to:
-// - includes/legacy/functions.php (62 functions)
-// - includes/legacy/hooks.php (47 hooks)
-//
-// Keeping this code here as reference (disabled via if(false)).
-// Will be removed in Phase 2 of refactoring.
-//
-// Date moved: 2025-11-22
-// ================================================================
-
-if (false) { // LEGACY CODE DISABLED - All functions/hooks loaded from includes/legacy/
 
 /**
  * Activation hook: создаём страницы при активации плагина
@@ -89,7 +23,7 @@ function metoda_plugin_activation() {
     // Сбрасываем время последней проверки, чтобы страницы создались сразу
     delete_option('metoda_pages_check');
 }
-register_activation_hook(__FILE__, 'metoda_plugin_activation');
+
 
 /**
  * SECURITY v3.7.3: Единая функция проверки прав на редактирование member_id
@@ -149,9 +83,6 @@ function get_editable_member_id($request = null) {
     return $current_member_id;
 }
 
-// Хуки активации/деактивации плагина
-register_activation_hook(__FILE__, 'metoda_members_activate');
-register_deactivation_hook(__FILE__, 'metoda_members_deactivate');
 
 /**
  * Функция активации плагина
@@ -221,6 +152,7 @@ function metoda_members_activate() {
     }
 }
 
+
 /**
  * Создание кастомных ролей
  */
@@ -260,6 +192,7 @@ function metoda_create_custom_roles() {
         $admin->add_cap('manage_members');
     }
 }
+
 
 /**
  * Создание шаблонных страниц
@@ -335,6 +268,7 @@ function metoda_create_template_pages() {
     }
 }
 
+
 /**
  * Создание страниц после активации (отложенно)
  * Вызывается один раз при первой загрузке админки после активации
@@ -359,7 +293,7 @@ function metoda_create_pages_deferred() {
     // Debug
     update_option('metoda_pages_created_at', current_time('mysql'));
 }
-add_action('admin_init', 'metoda_create_pages_deferred', 1);
+
 
 /**
  * Функция деактивации плагина
@@ -376,6 +310,7 @@ function metoda_members_deactivate() {
     delete_option('metoda_needs_page_creation');
     delete_option('metoda_pages_created_at');
 }
+
 
 // Регистрация Custom Post Type
 function register_members_post_type() {
@@ -416,7 +351,7 @@ function register_members_post_type() {
 
     register_post_type('members', $args);
 }
-add_action('init', 'register_members_post_type');
+
 
 /**
  * Регистрация Custom Post Type для личных сообщений
@@ -456,7 +391,7 @@ function register_member_messages_post_type() {
 
     register_post_type('member_message', $args);
 }
-add_action('init', 'register_member_messages_post_type');
+
 
 // Регистрация специальных размеров изображений для участников
 function register_member_image_sizes() {
@@ -469,7 +404,7 @@ function register_member_image_sizes() {
     // Размер для хедера профиля
     add_image_size('member-profile', 500, 500, true); // hard crop
 }
-add_action('after_setup_theme', 'register_member_image_sizes');
+
 
 // Добавляем подсказку по кропу изображений в медиа-библиотеку
 function add_image_crop_help_notice() {
@@ -543,7 +478,7 @@ function add_image_crop_help_notice() {
     </script>
     <?php
 }
-add_action('admin_notices', 'add_image_crop_help_notice');
+
 
 // AJAX обработчик для скрытия уведомления
 function dismiss_image_crop_notice_ajax() {
@@ -554,7 +489,7 @@ function dismiss_image_crop_notice_ajax() {
 
     wp_send_json_success();
 }
-add_action('wp_ajax_dismiss_image_crop_notice', 'dismiss_image_crop_notice_ajax');
+
 
 // Регистрация таксономии для типов участников (Эксперт/Участник)
 function register_member_type_taxonomy() {
@@ -583,7 +518,7 @@ function register_member_type_taxonomy() {
 
     register_taxonomy('member_type', array('members'), $args);
 }
-add_action('init', 'register_member_type_taxonomy');
+
 
 // Регистрация таксономии для ролей в ассоциации
 function register_member_role_taxonomy() {
@@ -612,7 +547,7 @@ function register_member_role_taxonomy() {
 
     register_taxonomy('member_role', array('members'), $args);
 }
-add_action('init', 'register_member_role_taxonomy');
+
 
 // Регистрация таксономии для локаций
 function register_member_location_taxonomy() {
@@ -641,7 +576,7 @@ function register_member_location_taxonomy() {
 
     register_taxonomy('member_location', array('members'), $args);
 }
-add_action('init', 'register_member_location_taxonomy');
+
 
 // Добавление метабоксов для дополнительных полей
 function add_member_meta_boxes() {
@@ -654,7 +589,7 @@ function add_member_meta_boxes() {
         'high'
     );
 }
-add_action('add_meta_boxes', 'add_member_meta_boxes');
+
 
 // Рендер метабокса
 function render_member_details_meta_box($post) {
@@ -1191,6 +1126,7 @@ function render_member_details_meta_box($post) {
     <?php
 }
 
+
 // Сохранение метаданных
 function save_member_details($post_id) {
     if (!isset($_POST['member_details_meta_box_nonce']) || 
@@ -1288,7 +1224,7 @@ function save_member_details($post_id) {
         }
     }
 }
-add_action('save_post_members', 'save_member_details');
+
 
 // Шорткод для отображения участников с фильтрами
 function members_directory_shortcode($atts) {
@@ -1838,7 +1774,7 @@ function members_directory_shortcode($atts) {
     <?php
     return ob_get_clean();
 }
-add_shortcode('members_directory', 'members_directory_shortcode');
+
 
 /**
  * Шорткод для страницы регистрации
@@ -1848,7 +1784,7 @@ function member_registration_shortcode() {
     include(plugin_dir_path(__FILE__) . 'templates/member-registration.php');
     return ob_get_clean();
 }
-add_shortcode('member_registration', 'member_registration_shortcode');
+
 
 // УДАЛЕНО: member_dashboard_shortcode() + add_shortcode() - дубль класса Member_Dashboard
 
@@ -1869,7 +1805,7 @@ function manager_panel_shortcode() {
     include(plugin_dir_path(__FILE__) . 'templates/manager-panel.php');
     return ob_get_clean();
 }
-add_shortcode('manager_panel', 'manager_panel_shortcode');
+
 
 /**
  * Шорткод для страницы логина
@@ -1913,7 +1849,7 @@ function custom_login_shortcode() {
     include(plugin_dir_path(__FILE__) . 'templates/custom-login.php');
     return ob_get_clean();
 }
-add_shortcode('custom_login', 'custom_login_shortcode');
+
 
 // Создание таблицы для импорта при активации плагина
 // Old activation hook removed - merged into metoda_members_activate() above
@@ -1974,6 +1910,7 @@ function import_members_from_csv($file_path) {
     fclose($handle);
     return true;
 }
+
 
 function members_import_page_callback() {
     ?>
@@ -2039,6 +1976,7 @@ function members_import_page_callback() {
     </div>
     <?php
 }
+
 
 // ==========================================
 // AJAX обработчики для фильтрации участников
@@ -2191,7 +2129,7 @@ function members_enqueue_scripts() {
         }
     }
 }
-add_action('wp_enqueue_scripts', 'members_enqueue_scripts');
+
 
 /**
  * Регистрация Tailwind CSS и общих стилей
@@ -2201,7 +2139,7 @@ function metoda_register_tailwind_styles() {
     wp_register_style('metoda-fonts', 'https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap', array(), null);
     wp_register_style('metoda-fontawesome', 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css', array(), '6.4.0');
 }
-add_action('init', 'metoda_register_tailwind_styles');
+
 
 /**
  * Подключение frontend стилей (Tailwind + шрифты)
@@ -2211,6 +2149,7 @@ function metoda_enqueue_frontend_styles() {
     wp_enqueue_style('metoda-fontawesome');
     wp_enqueue_style('metoda-tailwind');
 }
+
 
 /**
  * AJAX обработчик фильтрации участников
@@ -2389,6 +2328,7 @@ function ajax_filter_members() {
         'max_pages' => $query->max_num_pages
     ));
 }
+
 // Закомментировано - используется filter_members_ajax() вместо этого
 // add_action('wp_ajax_filter_members', 'ajax_filter_members');
 // add_action('wp_ajax_nopriv_filter_members', 'ajax_filter_members');
@@ -2407,7 +2347,7 @@ function members_add_dashboard_widget() {
         'members_render_dashboard_widget'
     );
 }
-add_action('wp_dashboard_setup', 'members_add_dashboard_widget');
+
 
 /**
  * Рендерит виджет статистики
@@ -2579,6 +2519,7 @@ function members_render_dashboard_widget() {
     <?php
 }
 
+
 /**
  * Добавляет кастомные столбцы в список участников
  */
@@ -2593,7 +2534,7 @@ function members_custom_columns($columns) {
     $new_columns['date'] = 'Дата';
     return $new_columns;
 }
-add_filter('manage_members_posts_columns', 'members_custom_columns');
+
 
 /**
  * Заполняет кастомные столбцы данными
@@ -2636,7 +2577,7 @@ function members_custom_columns_data($column, $post_id) {
             break;
     }
 }
-add_action('manage_members_posts_custom_column', 'members_custom_columns_data', 10, 2);
+
 
 /**
  * AJAX обработчик регистрации нового участника
@@ -2781,7 +2722,7 @@ function member_register_ajax() {
         'redirect' => home_url('/member-dashboard/')
     ));
 }
-add_action('wp_ajax_nopriv_member_register', 'member_register_ajax');
+
 
 // УДАЛЕНО: member_update_profile_ajax() + add_action() - дубль класса Member_Dashboard
 
@@ -2818,6 +2759,7 @@ function member_login_redirect($redirect_to, $request, $user) {
     }
     return $redirect_to;
 }
+
 // ВРЕМЕННО ОТКЛЮЧЕНО ДЛЯ РАЗРАБОТКИ: add_filter('login_redirect', 'member_login_redirect', 10, 3);
 
 /**
@@ -2826,6 +2768,7 @@ function member_login_redirect($redirect_to, $request, $user) {
 function member_logout_redirect() {
     return home_url();
 }
+
 // ВРЕМЕННО ОТКЛЮЧЕНО ДЛЯ РАЗРАБОТКИ: add_filter('logout_redirect', 'member_logout_redirect');
 
 /**
@@ -2836,7 +2779,7 @@ function hide_admin_bar_for_members() {
         show_admin_bar(false);
     }
 }
-add_action('after_setup_theme', 'hide_admin_bar_for_members');
+
 
 /**
  * Блокируем доступ к админке для участников
@@ -2912,6 +2855,7 @@ function block_admin_access_for_members() {
         }
     }
 }
+
 // Приоритет 20 - чтобы срабатывать ПОСЛЕ других плагинов (например, Royal Elementor Addons)
 // ВРЕМЕННО ОТКЛЮЧЕНО ДЛЯ РАЗРАБОТКИ: add_action('admin_init', 'block_admin_access_for_members', 20);
 
@@ -2951,7 +2895,7 @@ function manager_change_member_status_ajax() {
         'message' => 'Участник ' . $status_labels[$status]
     ));
 }
-add_action('wp_ajax_manager_change_member_status', 'manager_change_member_status_ajax');
+
 
 // УДАЛЕНО: manager_delete_member_ajax() + add_action() - дубль класса Member_Manager
 
@@ -2980,7 +2924,7 @@ function member_save_gallery_ajax() {
         'message' => 'Галерея успешно сохранена!'
     ));
 }
-add_action('wp_ajax_member_save_gallery', 'member_save_gallery_ajax');
+
 
 /**
  * AJAX обработчик для загрузки фото в галерею
@@ -3057,7 +3001,7 @@ function member_upload_gallery_photo_ajax() {
         'thumbnail_url' => $thumbnail_url
     ));
 }
-add_action('wp_ajax_member_upload_gallery_photo', 'member_upload_gallery_photo_ajax');
+
 
 /**
  * AJAX обработчик для добавления материала (ссылка)
@@ -3117,7 +3061,7 @@ function member_add_material_link_ajax() {
         'reload' => true
     ));
 }
-add_action('wp_ajax_member_add_material_link', 'member_add_material_link_ajax');
+
 
 /**
  * AJAX обработчик для добавления материала (файл)
@@ -3194,7 +3138,7 @@ function member_add_material_file_ajax() {
         'reload' => true
     ));
 }
-add_action('wp_ajax_member_add_material_file', 'member_add_material_file_ajax');
+
 
 // УДАЛЕНО: member_delete_material_ajax() + add_action() - дубль класса Member_File_Manager
 
@@ -3348,8 +3292,7 @@ function load_more_members_ajax() {
         'count' => count($paged_members)
     ));
 }
-add_action('wp_ajax_load_more_members', 'load_more_members_ajax');
-add_action('wp_ajax_nopriv_load_more_members', 'load_more_members_ajax');
+
 
 /**
  * AJAX обработчик для фильтрации участников
@@ -3507,8 +3450,7 @@ function filter_members_ajax() {
 
     exit; // Принудительно завершаем выполнение
 }
-add_action('wp_ajax_filter_members', 'filter_members_ajax');
-add_action('wp_ajax_nopriv_filter_members', 'filter_members_ajax');
+
 
 /**
  * AJAX обработчик для добавления материала в портфолио (новая JSON система)
@@ -3595,7 +3537,7 @@ function ajax_add_portfolio_material() {
         'reload' => true
     ));
 }
-add_action('wp_ajax_add_portfolio_material', 'ajax_add_portfolio_material');
+
 
 /**
  * AJAX обработчик для удаления материала из портфолио (новая JSON система)
@@ -3646,7 +3588,7 @@ function ajax_delete_portfolio_material() {
         'reload' => true
     ));
 }
-add_action('wp_ajax_delete_portfolio_material', 'ajax_delete_portfolio_material');
+
 
 /**
  * AJAX обработчик для редактирования материала портфолио (новая JSON система)
@@ -3709,7 +3651,7 @@ function ajax_edit_portfolio_material() {
         'reload' => true
     ));
 }
-add_action('wp_ajax_edit_portfolio_material', 'ajax_edit_portfolio_material');
+
 
 /**
  * AJAX обработчик для создания темы форума из личного кабинета
@@ -3759,7 +3701,7 @@ function ajax_create_forum_topic_dashboard() {
         'reload' => true
     ));
 }
-add_action('wp_ajax_create_forum_topic_dashboard', 'ajax_create_forum_topic_dashboard');
+
 
 /**
  * AJAX обработчик для отправки личного сообщения
@@ -3963,8 +3905,7 @@ function ajax_send_member_message() {
         'message_id' => $message_id
     ));
 }
-add_action('wp_ajax_send_member_message', 'ajax_send_member_message');
-add_action('wp_ajax_nopriv_send_member_message', 'ajax_send_member_message'); // Для незалогиненных
+
 
 /**
  * AJAX обработчик для просмотра сообщения
@@ -4021,7 +3962,7 @@ function ajax_view_member_message() {
         'meta' => $meta
     ));
 }
-add_action('wp_ajax_view_member_message', 'ajax_view_member_message');
+
 
 /**
  * Добавление страницы логов активности в админку
@@ -4037,7 +3978,7 @@ function metoda_add_activity_log_menu() {
         30
     );
 }
-add_action('admin_menu', 'metoda_add_activity_log_menu');
+
 
 /**
  * Рендер страницы логов активности
@@ -4220,6 +4161,7 @@ function metoda_render_activity_log_page() {
     <?php
 }
 
+
 /**
  * Добавление колонки "Личный кабинет" в список участников
  */
@@ -4227,7 +4169,7 @@ function metoda_add_dashboard_column($columns) {
     $columns['dashboard_access'] = '<span class="dashicons dashicons-admin-home"></span> Личный кабинет';
     return $columns;
 }
-add_filter('manage_members_posts_columns', 'metoda_add_dashboard_column');
+
 
 /**
  * Вывод кнопки доступа к ЛК в колонке
@@ -4240,7 +4182,7 @@ function metoda_render_dashboard_column($column, $post_id) {
         echo '</a>';
     }
 }
-add_action('manage_members_posts_custom_column', 'metoda_render_dashboard_column', 10, 2);
+
 
 /**
  * Ограничение доступа к форуму только для залогиненных пользователей
@@ -4254,7 +4196,7 @@ function metoda_restrict_forum_access() {
         }
     }
 }
-add_action('template_redirect', 'metoda_restrict_forum_access');
+
 
 /**
  * Добавление ссылки на форум в админ-бар
@@ -4276,7 +4218,7 @@ function metoda_add_forum_to_admin_bar($wp_admin_bar) {
         ));
     }
 }
-add_action('admin_bar_menu', 'metoda_add_forum_to_admin_bar', 100);
+
 
 /**
  * Добавление пункта "Форум" в админ меню
@@ -4292,7 +4234,7 @@ function metoda_add_forum_admin_menu() {
         31
     );
 }
-add_action('admin_menu', 'metoda_add_forum_admin_menu');
+
 
 /**
  * Редирект на форум из админки
@@ -4314,6 +4256,7 @@ function metoda_forum_redirect_handler() {
     }
 }
 
+
 /**
  * Добавление колонок в список сообщений в админке
  */
@@ -4328,7 +4271,7 @@ function metoda_add_message_columns($columns) {
     }
     return $new_columns;
 }
-add_filter('manage_member_message_posts_columns', 'metoda_add_message_columns');
+
 
 /**
  * Вывод данных в колонках сообщений
@@ -4367,7 +4310,7 @@ function metoda_render_message_columns($column, $post_id) {
         }
     }
 }
-add_action('manage_member_message_posts_custom_column', 'metoda_render_message_columns', 10, 2);
+
 
 /**
  * Автосоздание всех важных страниц при загрузке админки
@@ -4460,7 +4403,7 @@ function metoda_ensure_important_pages() {
         set_transient('metoda_pages_created_notice', $created_pages, 300);
     }
 }
-add_action('admin_init', 'metoda_ensure_important_pages');
+
 
 /**
  * Показываем уведомление о созданных страницах
@@ -4482,9 +4425,3 @@ function metoda_show_pages_created_notice() {
         delete_transient('metoda_pages_created_notice');
     }
 }
-add_action('admin_notices', 'metoda_show_pages_created_notice');
-
-} // END OF if(false) - LEGACY CODE DISABLED
-// ================================================================
-// END OF LEGACY CODE SECTION
-// ================================================================

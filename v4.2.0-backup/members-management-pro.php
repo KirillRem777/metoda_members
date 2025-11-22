@@ -24,12 +24,6 @@ if (defined('METODA_DISABLE_PLUGIN') && METODA_DISABLE_PLUGIN) {
     return; // Плагин ПОЛНОСТЬЮ отключен - ничего не загружается!
 }
 
-// 📦 ЗАГРУЗКА LEGACY СЛОЯ (v4.2.0 Refactoring)
-// Глобальные функции и хуки извлечены для модульной архитектуры
-// Этот слой обеспечивает обратную совместимость со старым кодом
-require_once plugin_dir_path(__FILE__) . 'includes/legacy/functions.php';
-require_once plugin_dir_path(__FILE__) . 'includes/legacy/hooks.php';
-
 // 🔧 ЗАГРУЗКА КЛАССОВ
 // Все классы загружаются всегда (в админке и на фронтенде)
 // Защита от редиректов реализована ВНУТРИ классов через is_admin()
@@ -65,22 +59,6 @@ new Member_Onboarding();
 new Member_Template_Loader();
 new Member_Access_Codes();
 new Member_OTP();
-
-// ================================================================
-// LEGACY CODE - MOVED TO includes/legacy/
-// ================================================================
-//
-// This section has been moved to:
-// - includes/legacy/functions.php (62 functions)
-// - includes/legacy/hooks.php (47 hooks)
-//
-// Keeping this code here as reference (disabled via if(false)).
-// Will be removed in Phase 2 of refactoring.
-//
-// Date moved: 2025-11-22
-// ================================================================
-
-if (false) { // LEGACY CODE DISABLED - All functions/hooks loaded from includes/legacy/
 
 /**
  * Activation hook: создаём страницы при активации плагина
@@ -4483,8 +4461,3 @@ function metoda_show_pages_created_notice() {
     }
 }
 add_action('admin_notices', 'metoda_show_pages_created_notice');
-
-} // END OF if(false) - LEGACY CODE DISABLED
-// ================================================================
-// END OF LEGACY CODE SECTION
-// ================================================================
