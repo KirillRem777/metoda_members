@@ -31,6 +31,19 @@ class Metoda_Email_Reply_Handler {
      * Constructor
      */
     public function __construct() {
+        // Initialize webhook secret on init hook
+        add_action('init', array($this, 'init_webhook_secret'));
+
+        // Register REST API endpoint
+        add_action('rest_api_init', array($this, 'register_endpoints'));
+    }
+
+    /**
+     * Initialize webhook secret
+     *
+     * @return void
+     */
+    public function init_webhook_secret() {
         $this->webhook_secret = get_option('metoda_email_webhook_secret');
 
         // Generate secret if not exists
@@ -38,9 +51,6 @@ class Metoda_Email_Reply_Handler {
             $this->webhook_secret = wp_generate_password(32, false);
             update_option('metoda_email_webhook_secret', $this->webhook_secret);
         }
-
-        // Register REST API endpoint
-        add_action('rest_api_init', array($this, 'register_endpoints'));
     }
 
     /**
