@@ -1,0 +1,340 @@
+/**
+ * Onboarding Modal Styles
+ * Стили для обучающего экрана при первом входе
+ * Дизайн-система: Метода (Clean UI, Inter Font, #0066cc primary)
+ */
+
+/* Модальное окно onboarding */
+.onboarding-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    z-index: var(--z-overlay, 500); /* v3.7.4: использую переменную из variables.css */
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(4px);
+}
+
+.onboarding-modal.active {
+    display: flex;
+}
+
+/* Контейнер модального окна */
+.onboarding-container {
+    background: white;
+    border-radius: 20px;
+    max-width: 800px;
+    width: 90%;
+    max-height: 90vh;
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    position: relative;
+    animation: slideIn 0.4s ease-out;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Кнопка закрытия */
+.onboarding-close {
+    position: absolute;
+    top: 24px;
+    right: 24px;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: #f3f4f6;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    z-index: var(--z-dropdown, 10); /* v3.7.4: относительный z-index для кнопки */
+}
+
+.onboarding-close:hover {
+    background: #e5e7eb;
+    transform: rotate(90deg);
+}
+
+.onboarding-close i {
+    font-size: 18px;
+    color: #6b7280;
+}
+
+/* Индикатор шагов */
+.onboarding-progress {
+    padding: 24px 32px;
+    background: #f9fafb;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.progress-dots {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    align-items: center;
+}
+
+.progress-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #d1d5db;
+    transition: all 0.3s;
+}
+
+.progress-dot.active {
+    width: 32px;
+    border-radius: 5px;
+    background: #0066cc;
+}
+
+/* Контент слайдов */
+.onboarding-content {
+    padding: 48px 48px 32px;
+    overflow-y: auto;
+    max-height: calc(90vh - 200px);
+}
+
+.onboarding-slide {
+    display: none;
+    text-align: center;
+    animation: fadeIn 0.3s ease-in;
+}
+
+.onboarding-slide.active {
+    display: block;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+/* Иконка слайда */
+.slide-icon {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto 24px;
+    border-radius: 20px;
+    background: linear-gradient(135deg, #0066cc 0%, #ff6600 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 8px 24px rgba(0, 102, 204, 0.3);
+}
+
+.slide-icon i {
+    font-size: 36px;
+    color: white;
+}
+
+/* Заголовок слайда */
+.slide-title {
+    font-size: 28px;
+    font-weight: 700;
+    color: #1f2937;
+    margin: 0 0 16px;
+    line-height: 1.3;
+}
+
+/* Описание слайда */
+.slide-description {
+    font-size: 16px;
+    color: #6b7280;
+    line-height: 1.6;
+    margin: 0 0 32px;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* Список возможностей */
+.features-list {
+    list-style: none;
+    padding: 0;
+    margin: 32px 0;
+    text-align: left;
+    max-width: 500px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.features-list li {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px 0;
+    font-size: 15px;
+    color: #374151;
+}
+
+.features-list li i {
+    color: #0066cc;
+    font-size: 18px;
+    margin-top: 2px;
+    flex-shrink: 0;
+}
+
+/* Кнопки навигации */
+.onboarding-footer {
+    padding: 24px 48px;
+    background: #f9fafb;
+    border-top: 1px solid #e5e7eb;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.onboarding-btn {
+    padding: 12px 28px;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 15px;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-skip {
+    background: transparent;
+    color: #6b7280;
+}
+
+.btn-skip:hover {
+    color: #374151;
+}
+
+.btn-prev {
+    background: #e5e7eb;
+    color: #374151;
+}
+
+.btn-prev:hover {
+    background: #d1d5db;
+}
+
+.btn-prev:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.btn-next,
+.btn-finish {
+    background: linear-gradient(135deg, #0066cc 0%, #ff6600 100%);
+    color: white;
+    box-shadow: 0 4px 12px rgba(0, 102, 204, 0.3);
+}
+
+.btn-next:hover,
+.btn-finish:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0, 102, 204, 0.4);
+}
+
+.btn-finish {
+    padding: 12px 36px;
+}
+
+/* Картинка/скриншот */
+.slide-image {
+    margin: 32px 0;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+}
+
+.slide-image img {
+    width: 100%;
+    display: block;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .onboarding-container {
+        width: 95%;
+        border-radius: 16px;
+    }
+
+    .onboarding-content {
+        padding: 32px 24px 24px;
+    }
+
+    .onboarding-footer {
+        padding: 20px 24px;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .onboarding-footer .btn-skip {
+        order: 3;
+    }
+
+    .onboarding-btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .slide-title {
+        font-size: 24px;
+    }
+
+    .slide-description {
+        font-size: 15px;
+    }
+
+    .slide-icon {
+        width: 70px;
+        height: 70px;
+        margin-bottom: 20px;
+    }
+
+    .slide-icon i {
+        font-size: 32px;
+    }
+
+    .features-list {
+        padding: 0 12px;
+    }
+}
+
+/* Приветственная анимация */
+.welcome-emoji {
+    font-size: 64px;
+    margin-bottom: 24px;
+    display: inline-block;
+    animation: wave 0.6s ease-in-out;
+}
+
+@keyframes wave {
+    0%, 100% {
+        transform: rotate(0deg);
+    }
+    25% {
+        transform: rotate(-10deg);
+    }
+    75% {
+        transform: rotate(10deg);
+    }
+}

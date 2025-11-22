@@ -1,0 +1,380 @@
+/**
+ * Photo Cropper Styles
+ * Кроппер для обрезки фотографий с квадратной областью
+ */
+
+/* Модальное окно кроппера */
+.photo-cropper-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.9);
+    z-index: var(--z-overlay, 500); /* v3.7.4: использую переменную из variables.css */
+    align-items: center;
+    justify-content: center;
+}
+
+.photo-cropper-modal.active {
+    display: flex;
+}
+
+.cropper-container-wrapper {
+    background: white;
+    border-radius: 12px;
+    max-width: 900px;
+    width: 90%;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+/* Хедер */
+.cropper-header {
+    padding: 24px 30px;
+    border-bottom: 1px solid #e5e7eb;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.cropper-header h3 {
+    font-size: 20px;
+    font-weight: 600;
+    color: #1f2937;
+    margin: 0;
+}
+
+.cropper-close {
+    background: none;
+    border: none;
+    font-size: 24px;
+    color: #6b7280;
+    cursor: pointer;
+    padding: 0;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    transition: all 0.2s;
+}
+
+.cropper-close:hover {
+    background: #f3f4f6;
+    color: #1f2937;
+}
+
+/* Область обрезки */
+.cropper-body {
+    padding: 30px;
+    flex: 1;
+    overflow: auto;
+}
+
+.cropper-canvas-container {
+    max-height: 500px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f9fafb;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.cropper-canvas-container img {
+    max-width: 100%;
+    display: block;
+}
+
+/* Панель инструментов */
+.cropper-toolbar {
+    padding: 20px 30px;
+    border-top: 1px solid #e5e7eb;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.cropper-tools {
+    display: flex;
+    gap: 8px;
+    flex: 1;
+}
+
+.cropper-tool-btn {
+    padding: 10px 14px;
+    background: #f3f4f6;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    color: #374151;
+    font-size: 18px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 44px;
+}
+
+.cropper-tool-btn:hover {
+    background: #e5e7eb;
+    border-color: #9ca3af;
+}
+
+.cropper-tool-btn:active {
+    transform: scale(0.95);
+}
+
+/* Кнопки действий */
+.cropper-actions {
+    display: flex;
+    gap: 12px;
+}
+
+.btn-cropper-cancel {
+    padding: 12px 24px;
+    background: white;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    color: #374151;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-cropper-cancel:hover {
+    background: #f3f4f6;
+}
+
+.btn-cropper-save {
+    padding: 12px 24px;
+    background: #0066cc;
+    border: none;
+    border-radius: 8px;
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-cropper-save:hover {
+    background: #0052a3;
+}
+
+.btn-cropper-save:disabled {
+    background: #d1d5db;
+    cursor: not-allowed;
+}
+
+.btn-cropper-save .loader {
+    display: none;
+    animation: spin 1s linear infinite;
+}
+
+.btn-cropper-save.loading .loader {
+    display: inline-block;
+}
+
+.btn-cropper-save.loading .text {
+    display: none;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+/* Подсказка */
+.cropper-hint {
+    padding: 12px 16px;
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    border-radius: 6px;
+    color: #1e40af;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+.cropper-hint i {
+    font-size: 16px;
+}
+
+/* Загрузчик файла */
+.photo-upload-area {
+    border: 2px dashed #d1d5db;
+    border-radius: 8px;
+    padding: 40px 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: #f9fafb;
+}
+
+.photo-upload-area:hover {
+    border-color: #0066cc;
+    background: #eff6ff;
+}
+
+.photo-upload-area.dragover {
+    border-color: #0066cc;
+    background: #eff6ff;
+}
+
+.upload-icon {
+    font-size: 48px;
+    color: #9ca3af;
+    margin-bottom: 16px;
+}
+
+.upload-text {
+    color: #374151;
+    font-size: 16px;
+    font-weight: 500;
+    margin-bottom: 8px;
+}
+
+.upload-hint {
+    color: #6b7280;
+    font-size: 14px;
+}
+
+.upload-input {
+    display: none;
+}
+
+/* Preview загруженных фото */
+.photo-preview-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 16px;
+    margin-top: 20px;
+}
+
+.photo-preview-item {
+    position: relative;
+    aspect-ratio: 1;
+    border-radius: 8px;
+    overflow: hidden;
+    background: #f3f4f6;
+}
+
+.photo-preview-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.photo-preview-remove {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: rgba(239, 68, 68, 0.9);
+    color: white;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    transition: all 0.2s;
+}
+
+.photo-preview-remove:hover {
+    background: #dc2626;
+    transform: scale(1.1);
+}
+
+.photo-preview-edit {
+    position: absolute;
+    bottom: 8px;
+    right: 8px;
+    padding: 6px 12px;
+    background: rgba(0, 102, 204, 0.9);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    transition: all 0.2s;
+}
+
+.photo-preview-edit:hover {
+    background: #0052a3;
+}
+
+/* Пустое состояние */
+.photos-empty {
+    text-align: center;
+    padding: 60px 20px;
+    color: #6b7280;
+}
+
+.photos-empty i {
+    font-size: 64px;
+    margin-bottom: 16px;
+    opacity: 0.3;
+}
+
+.photos-empty p {
+    font-size: 16px;
+    margin: 0;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .cropper-container-wrapper {
+        width: 95%;
+        max-height: 95vh;
+    }
+
+    .cropper-header {
+        padding: 20px;
+    }
+
+    .cropper-body {
+        padding: 20px;
+    }
+
+    .cropper-toolbar {
+        padding: 16px 20px;
+        flex-direction: column;
+    }
+
+    .cropper-tools {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .cropper-actions {
+        width: 100%;
+    }
+
+    .btn-cropper-cancel,
+    .btn-cropper-save {
+        flex: 1;
+    }
+
+    .photo-preview-grid {
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+        gap: 12px;
+    }
+}
