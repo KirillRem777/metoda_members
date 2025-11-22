@@ -48,6 +48,11 @@ require_once plugin_dir_path(__FILE__) . 'includes/admin/class-meta-boxes.php';
 require_once plugin_dir_path(__FILE__) . 'includes/auth/class-security.php';
 
 // ============================================================================
+// 🎯 AJAX MODULES (New Modular Architecture - Phase 2)
+// ============================================================================
+require_once plugin_dir_path(__FILE__) . 'includes/ajax/class-ajax-members.php';
+
+// ============================================================================
 // 🔧 ЗАГРУЗКА КЛАССОВ (Legacy Architecture)
 // ============================================================================
 // Все классы загружаются всегда (в админке и на фронтенде)
@@ -79,6 +84,7 @@ require_once plugin_dir_path(__FILE__) . 'includes/class-member-template-loader.
 new Metoda_Post_Types();
 new Metoda_Taxonomies();
 new Metoda_Assets();
+new Metoda_Ajax_Members();
 
 // Admin modules (only in admin context)
 if (is_admin()) {
