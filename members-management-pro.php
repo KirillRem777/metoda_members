@@ -78,6 +78,13 @@ require_once plugin_dir_path(__FILE__) . 'includes/class-member-onboarding.php';
 // Шаблоны (имеют внутреннюю защиту !is_admin())
 require_once plugin_dir_path(__FILE__) . 'includes/class-member-template-loader.php';
 
+// Notification System (v5.0.0)
+require_once plugin_dir_path(__FILE__) . 'includes/class-member-notification-email.php';
+require_once plugin_dir_path(__FILE__) . 'includes/class-member-notification-telegram.php';
+require_once plugin_dir_path(__FILE__) . 'includes/notifications/class-email-reply-handler.php';
+require_once plugin_dir_path(__FILE__) . 'includes/notifications/class-notification-dispatcher.php';
+require_once plugin_dir_path(__FILE__) . 'includes/auth/class-otp-auth.php';
+
 // ============================================================================
 // 🚀 ИНИЦИАЛИЗАЦИЯ CORE MODULES (New Architecture)
 // ============================================================================
@@ -85,6 +92,11 @@ new Metoda_Post_Types();
 new Metoda_Taxonomies();
 new Metoda_Assets();
 new Metoda_Ajax_Members();
+
+// Notification System (v5.0.0)
+new Metoda_Email_Reply_Handler();
+new Metoda_OTP_Auth();
+new Metoda_Notification_Dispatcher();
 
 // Admin modules (only in admin context)
 if (is_admin()) {
