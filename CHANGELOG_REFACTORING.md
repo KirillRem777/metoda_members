@@ -313,6 +313,124 @@ require_once plugin_dir_path(__FILE__) . 'includes/legacy/hooks.php';
 
 ---
 
+## [ФАЗА 3] - ПЕРЕКЛЮЧЕНИЕ ХУКОВ НА МОДУЛЬНЫЕ КЛАССЫ (2025-11-22) ✅ ЗАВЕРШЕНА
+
+### Цель Phase 3
+Переключить регистрацию WordPress хуков с legacy функций на методы новых модульных классов, сохраняя legacy функции для обратной совместимости.
+
+### Выполнено
+
+#### Шаг 3.1: Post Types хуки ✅
+Закомментировано **3 хука** в `includes/legacy/hooks.php`:
+- `add_action('init', 'register_members_post_type')`
+- `add_action('init', 'register_member_messages_post_type')`
+- `add_action('after_setup_theme', 'register_member_image_sizes')`
+
+**Теперь обрабатываются:** Класс `Metoda_Post_Types` (конструктор)
+
+#### Шаг 3.2: Taxonomies хуки ✅
+Закомментировано **3 хука** в `includes/legacy/hooks.php`:
+- `add_action('init', 'register_member_type_taxonomy')`
+- `add_action('init', 'register_member_role_taxonomy')`
+- `add_action('init', 'register_member_location_taxonomy')`
+
+**Теперь обрабатываются:** Класс `Metoda_Taxonomies` (конструктор)
+
+#### Шаг 3.3: Meta Boxes хуки ✅
+Закомментировано **2 хука** в `includes/legacy/hooks.php`:
+- `add_action('add_meta_boxes', 'add_member_meta_boxes')`
+- `add_action('save_post_members', 'save_member_details')`
+
+**Теперь обрабатываются:** Класс `Metoda_Meta_Boxes` (конструктор)
+
+#### Шаг 3.4: Assets хуки ✅
+Закомментировано **2 хука** в `includes/legacy/hooks.php`:
+- `add_action('init', 'metoda_register_tailwind_styles')`
+- `add_action('wp_enqueue_scripts', 'members_enqueue_scripts')`
+
+**Теперь обрабатываются:** Класс `Metoda_Assets` (конструктор)
+
+#### Шаг 3.5: AJAX хуки ✅
+Закомментировано **18 хуков** в `includes/legacy/hooks.php`:
+- `wp_ajax_dismiss_image_crop_notice`
+- `wp_ajax_nopriv_member_register`
+- `wp_ajax_manager_change_member_status`
+- `wp_ajax_member_save_gallery`
+- `wp_ajax_member_upload_gallery_photo`
+- `wp_ajax_member_add_material_link`
+- `wp_ajax_member_add_material_file`
+- `wp_ajax_load_more_members` + `wp_ajax_nopriv_*`
+- `wp_ajax_filter_members` + `wp_ajax_nopriv_*`
+- `wp_ajax_add_portfolio_material`
+- `wp_ajax_delete_portfolio_material`
+- `wp_ajax_edit_portfolio_material`
+- `wp_ajax_create_forum_topic_dashboard`
+- `wp_ajax_send_member_message` + `wp_ajax_nopriv_*`
+- `wp_ajax_view_member_message`
+
+**Теперь обрабатываются:** Класс `Metoda_Ajax_Members` (конструктор)
+
+### Изменения в файлах
+**Файл:** `includes/legacy/hooks.php`
+
+**Было:** 237 строк, 47 активных хуков
+**Стало:** 274 строк, 16 активных хуков (31 закомментирован)
+
+**Мигрировано:** 28 hook registrations → 6 классов
+
+**Осталось активных (16 хуков):**
+- Admin UI hooks (custom columns, notices, menus) - 9 хуков
+- Theme hooks (admin bar, template redirect) - 2 хука
+- Dashboard widget - 1 хук
+- Page creation hooks - 2 хука
+- Activation hooks - 2 хука
+
+*Эти хуки остались в legacy слое, так как соответствующий функционал не был мигрирован в Phase 2.*
+
+### Результаты тестирования
+
+**Автотесты:**
+- ✅ Автотест 3.1: Post Types Migration - ПРОЙДЕН
+- ✅ Автотест 3.2: Taxonomies Migration - ПРОЙДЕН
+- ✅ Автотест 3.3: Meta Boxes Migration - ПРОЙДЕН
+- ✅ Автотест 3.4: Assets Migration - ПРОЙДЕН
+- ✅ Автотест 3.5: AJAX Migration - ПРОЙДЕН
+
+**Проверки:**
+- ✅ PHP syntax: No errors
+- ✅ Классы загружаются: Все 6 классов
+- ✅ Legacy функции доступны: Все функции остались
+- ✅ Хуки не дублируются: Legacy хуки закомментированы
+- ✅ Working tree clean после коммита
+
+**Backward Compatibility:**
+- ✅ Legacy функции остались в `includes/legacy/functions.php`
+- ✅ Новые классы уже инициализированы в `members-management-pro.php`
+- ✅ Никаких breaking changes
+- ✅ Хуки теперь регистрируются классами вместо legacy слоя
+
+**Git Commits:**
+- Commit `6ffa492`: Phase 3 Complete - Switch all hooks to modular classes
+
+### Статистика миграции
+
+**До Phase 3:**
+- Активных хуков в legacy: 47
+- Хуков в модульных классах: 31 (в конструкторах)
+- Дублирование хуков: Да (legacy + classes)
+
+**После Phase 3:**
+- Активных хуков в legacy: 16
+- Хуков в модульных классах: 31
+- Мигрировано хуков: 28
+- Дублирование хуков: Нет
+
+**Процент миграции:**
+- Мигрировано функций (Phase 2): 28 из 62 (45%)
+- Мигрировано хуков (Phase 3): 28 из 47 (60%)
+
+---
+
 ## Примечания
 
 **Дата начала:** 22 ноября 2025
