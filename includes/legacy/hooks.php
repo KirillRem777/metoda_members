@@ -20,6 +20,9 @@ if (!defined('ABSPATH')) {
 // ============================================
 // ACTIVATION/DEACTIVATION HOOKS
 // ============================================
+// TODO [Future Migration]: Consider moving to class-activator.php
+// Priority: LOW - These hooks work correctly and rarely change
+// Note: Activation/deactivation logic should remain here for plugin lifecycle
 
 /**
  * Activation hook: создаём страницы при активации плагина
@@ -33,7 +36,10 @@ register_deactivation_hook(__FILE__, 'metoda_members_deactivate');
 // ============================================
 // WORDPRESS CORE HOOKS
 // ============================================
+// TODO [Future Migration]: Consider moving to includes/core/class-pages.php or class-theme.php
+// Priority: MEDIUM - Page creation and theme setup functionality
 
+// TODO: Move to Metoda_Pages class
 add_action('admin_init', 'metoda_create_pages_deferred', 1);
 
 // ============================================================================
@@ -71,13 +77,21 @@ add_action('admin_init', 'metoda_create_pages_deferred', 1);
 // MIGRATED TO: Metoda_Assets class (Phase 3, Step 3.4)
 // add_action('init', 'metoda_register_tailwind_styles');
 
+// ============================================
+// THEME / FRONTEND HOOKS
+// ============================================
+// TODO [Future Migration]: Consider moving to includes/core/class-theme.php or class-frontend.php
+// Priority: MEDIUM - Theme customization and access control
+
 /**
  * Скрываем админ-бар для участников
+ * TODO: Move to Metoda_Theme class
  */
 add_action('after_setup_theme', 'hide_admin_bar_for_members');
 
 /**
  * Ограничение доступа к форуму только для залогиненных пользователей
+ * TODO: Move to Metoda_Access_Control or Metoda_Frontend class
  */
 add_action('template_redirect', 'metoda_restrict_forum_access');
 
@@ -96,65 +110,89 @@ add_action('template_redirect', 'metoda_restrict_forum_access');
 // add_action('add_meta_boxes', 'add_member_meta_boxes');
 // add_action('save_post_members', 'save_member_details');
 
+// ============================================
+// ADMIN COLUMNS CUSTOMIZATION
+// ============================================
+// TODO [Future Migration]: Consider moving to includes/admin/class-list-table.php or class-admin-columns.php
+// Priority: MEDIUM - Admin UI customization for post lists
+// Note: These hooks customize the admin post list tables for members and messages
+
 /**
  * Добавляет кастомные столбцы в список участников
+ * TODO: Move to Metoda_Admin_Columns class (method: add_members_columns)
  */
 add_filter('manage_members_posts_columns', 'members_custom_columns');
 
 /**
  * Заполняет кастомные столбцы данными
+ * TODO: Move to Metoda_Admin_Columns class (method: render_members_columns)
  */
 add_action('manage_members_posts_custom_column', 'members_custom_columns_data', 10, 2);
 
 /**
  * Добавление колонки "Личный кабинет" в список участников
+ * TODO: Move to Metoda_Admin_Columns class (method: add_dashboard_column)
  */
 add_filter('manage_members_posts_columns', 'metoda_add_dashboard_column');
 
 /**
  * Вывод кнопки доступа к ЛК в колонке
+ * TODO: Move to Metoda_Admin_Columns class (method: render_dashboard_column)
  */
 add_action('manage_members_posts_custom_column', 'metoda_render_dashboard_column', 10, 2);
 
 /**
  * Добавление колонок в список сообщений в админке
+ * TODO: Move to Metoda_Admin_Columns class (method: add_message_columns)
  */
 add_filter('manage_member_message_posts_columns', 'metoda_add_message_columns');
 
 /**
  * Вывод данных в колонках сообщений
+ * TODO: Move to Metoda_Admin_Columns class (method: render_message_columns)
  */
 add_action('manage_member_message_posts_custom_column', 'metoda_render_message_columns', 10, 2);
 
 // ============================================
 // ADMIN HOOKS
 // ============================================
+// TODO [Future Migration]: Consider grouping into classes by functionality:
+//   - includes/admin/class-admin-notices.php (for notices)
+//   - includes/admin/class-admin-menus.php (for menu items)
+//   - includes/core/class-pages.php (for page creation)
+// Priority: MEDIUM - Admin UI and setup functionality
 
 // Добавляем подсказку по кропу изображений в медиа-библиотеку
+// TODO: Move to Metoda_Admin_Notices class (method: image_crop_help)
 add_action('admin_notices', 'add_image_crop_help_notice');
 
 /**
  * Добавление страницы логов активности в админку
+ * TODO: Move to Metoda_Admin_Menus class (method: add_activity_log_page)
  */
 add_action('admin_menu', 'metoda_add_activity_log_menu');
 
 /**
  * Добавление ссылки на форум в админ-бар
+ * TODO: Move to Metoda_Admin_Menus class (method: add_forum_to_admin_bar)
  */
 add_action('admin_bar_menu', 'metoda_add_forum_to_admin_bar', 100);
 
 /**
  * Добавление пункта "Форум" в админ меню
+ * TODO: Move to Metoda_Admin_Menus class (method: add_forum_menu_item)
  */
 add_action('admin_menu', 'metoda_add_forum_admin_menu');
 
 /**
  * Автосоздание всех важных страниц при загрузке админки
+ * TODO: Move to Metoda_Pages class (method: ensure_important_pages)
  */
 add_action('admin_init', 'metoda_ensure_important_pages');
 
 /**
  * Показываем уведомление о созданных страницах
+ * TODO: Move to Metoda_Admin_Notices class (method: pages_created_notice)
  */
 add_action('admin_notices', 'metoda_show_pages_created_notice');
 
@@ -175,9 +213,12 @@ add_action('admin_notices', 'metoda_show_pages_created_notice');
 // ============================================
 // DASHBOARD HOOKS
 // ============================================
+// TODO [Future Migration]: Consider moving to includes/admin/class-dashboard-widgets.php
+// Priority: LOW - Dashboard widget functionality works well as-is
 
 /**
  * Добавляет виджет статистики участников в админку
+ * TODO: Move to Metoda_Dashboard_Widgets class (method: add_members_stats_widget)
  */
 add_action('wp_dashboard_setup', 'members_add_dashboard_widget');
 
