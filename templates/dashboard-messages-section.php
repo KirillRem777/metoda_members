@@ -111,21 +111,24 @@ $all_members = get_posts(array(
                                     $sender_display = get_the_title($sender_id);
                                 }
                             ?>
-                            <div class="message-item p-4 border rounded-lg hover:border-gray-300 transition-all cursor-pointer <?php echo !$is_read ? 'bg-blue-50 border-blue-200' : 'bg-white border-gray-200'; ?>" data-message-id="<?php echo $message->ID; ?>">
+                            <div class="message-item p-4 border rounded-lg hover:bg-gray-50 hover:border-gray-300 transition-all cursor-pointer <?php echo !$is_read ? 'bg-blue-50 border-blue-200 font-medium' : 'bg-white border-gray-200'; ?>" data-message-id="<?php echo $message->ID; ?>" data-sender-id="<?php echo esc_attr($sender_id); ?>" data-sender-name="<?php echo esc_attr($sender_display); ?>" onclick="openMessage(<?php echo $message->ID; ?>, <?php echo $sender_id ? $sender_id : 0; ?>, '<?php echo esc_js($sender_display); ?>')">
                                 <div class="flex items-start gap-4">
-                                    <div class="flex-1">
+                                    <div class="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center text-gray-600 font-bold text-sm">
+                                        <?php echo strtoupper(mb_substr($sender_display, 0, 1)); ?>
+                                    </div>
+                                    <div class="flex-1 min-w-0">
                                         <div class="flex items-center gap-2 mb-1">
-                                            <span class="font-semibold text-gray-900"><?php echo esc_html($sender_display); ?></span>
+                                            <span class="<?php echo !$is_read ? 'font-bold' : 'font-semibold'; ?> text-gray-900 truncate"><?php echo esc_html($sender_display); ?></span>
                                             <?php if (!$is_read): ?>
-                                            <span class="px-2 py-0.5 bg-blue-500 text-white text-xs rounded-full">Новое</span>
+                                            <span class="flex-shrink-0 w-2 h-2 bg-blue-500 rounded-full"></span>
                                             <?php endif; ?>
                                         </div>
-                                        <p class="text-sm font-medium text-gray-700 mb-1"><?php echo esc_html($message->post_title); ?></p>
-                                        <p class="text-xs text-gray-500"><?php echo human_time_diff(strtotime($message->post_date), current_time('timestamp')) . ' назад'; ?></p>
+                                        <p class="text-sm <?php echo !$is_read ? 'font-semibold' : ''; ?> text-gray-700 truncate"><?php echo esc_html($message->post_title); ?></p>
+                                        <p class="text-xs text-gray-500 mt-1"><?php echo human_time_diff(strtotime($message->post_date), current_time('timestamp')) . ' назад'; ?></p>
                                     </div>
-                                    <button class="view-message-btn text-blue-600 hover:text-blue-700" data-id="<?php echo $message->ID; ?>">
-                                        <i class="fas fa-eye"></i>
-                                    </button>
+                                    <div class="flex-shrink-0 text-gray-400">
+                                        <i class="fas fa-chevron-right text-xs"></i>
+                                    </div>
                                 </div>
                             </div>
                             <?php endforeach; ?>
@@ -149,19 +152,22 @@ $all_members = get_posts(array(
                             <?php foreach ($sent_messages as $message):
                                 $recipient_id = get_post_meta($message->ID, 'recipient_member_id', true);
                             ?>
-                            <div class="message-item p-4 border border-gray-200 rounded-lg hover:border-gray-300 transition-all cursor-pointer bg-white" data-message-id="<?php echo $message->ID; ?>">
+                            <div class="message-item p-4 border border-gray-200 rounded-lg hover:bg-gray-50 hover:border-gray-300 transition-all cursor-pointer bg-white" data-message-id="<?php echo $message->ID; ?>" onclick="openMessage(<?php echo $message->ID; ?>, 0, '')">
                                 <div class="flex items-start gap-4">
-                                    <div class="flex-1">
+                                    <div class="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-blue-200 to-blue-300 flex items-center justify-center text-blue-700 font-bold text-sm">
+                                        <i class="fas fa-paper-plane text-xs"></i>
+                                    </div>
+                                    <div class="flex-1 min-w-0">
                                         <div class="flex items-center gap-2 mb-1">
                                             <span class="text-sm text-gray-500">Кому:</span>
-                                            <span class="font-semibold text-gray-900"><?php echo get_the_title($recipient_id); ?></span>
+                                            <span class="font-semibold text-gray-900 truncate"><?php echo get_the_title($recipient_id); ?></span>
                                         </div>
-                                        <p class="text-sm font-medium text-gray-700 mb-1"><?php echo esc_html($message->post_title); ?></p>
-                                        <p class="text-xs text-gray-500"><?php echo human_time_diff(strtotime($message->post_date), current_time('timestamp')) . ' назад'; ?></p>
+                                        <p class="text-sm text-gray-700 truncate"><?php echo esc_html($message->post_title); ?></p>
+                                        <p class="text-xs text-gray-500 mt-1"><?php echo human_time_diff(strtotime($message->post_date), current_time('timestamp')) . ' назад'; ?></p>
                                     </div>
-                                    <button class="view-message-btn text-blue-600 hover:text-blue-700" data-id="<?php echo $message->ID; ?>">
-                                        <i class="fas fa-eye"></i>
-                                    </button>
+                                    <div class="flex-shrink-0 text-gray-400">
+                                        <i class="fas fa-chevron-right text-xs"></i>
+                                    </div>
                                 </div>
                             </div>
                             <?php endforeach; ?>
@@ -222,18 +228,37 @@ $all_members = get_posts(array(
 
 <!-- View Message Modal -->
 <div id="view-message-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50" style="display: none;">
-    <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-        <div class="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 rounded-t-2xl flex items-center justify-between">
-            <h3 class="text-xl font-bold text-gray-900" id="view_message_title"></h3>
-            <button type="button" onclick="closeViewMessageModal()" class="text-gray-400 hover:text-gray-600 text-2xl leading-none">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-3xl w-full mx-4 max-h-[90vh] flex flex-col">
+        <!-- Modal Header -->
+        <div class="flex-shrink-0 member-cabinet-header px-6 py-4 rounded-t-2xl flex items-center justify-between border-b border-gray-200">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center text-gray-600 font-bold text-sm" id="view_message_avatar">
+                    ?
+                </div>
+                <div>
+                    <h3 class="text-lg font-bold text-gray-900" id="view_message_title"></h3>
+                    <p class="text-xs text-gray-500" id="view_message_meta"></p>
+                </div>
+            </div>
+            <button type="button" onclick="closeViewMessageModal()" class="text-gray-400 hover:text-gray-600 text-2xl leading-none flex-shrink-0 ml-4">
                 <i class="fas fa-times"></i>
             </button>
         </div>
-        <div class="p-6">
-            <div class="mb-4">
-                <p class="text-sm text-gray-500" id="view_message_meta"></p>
-            </div>
-            <div class="prose max-w-none" id="view_message_content"></div>
+
+        <!-- Modal Body -->
+        <div class="flex-1 overflow-y-auto p-6">
+            <div class="prose max-w-none text-gray-700" id="view_message_content"></div>
+        </div>
+
+        <!-- Modal Footer with Reply Button -->
+        <div class="flex-shrink-0 border-t border-gray-200 px-6 py-4 bg-gray-50 rounded-b-2xl flex gap-3" id="view_message_actions">
+            <button type="button" onclick="replyToMessage()" class="px-6 py-2.5 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg font-medium hover:from-blue-600 hover:to-blue-700 transition-all flex items-center gap-2 shadow-sm">
+                <i class="fas fa-reply"></i>
+                <span>Ответить</span>
+            </button>
+            <button type="button" onclick="closeViewMessageModal()" class="px-6 py-2.5 bg-white border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-all">
+                Закрыть
+            </button>
         </div>
     </div>
 </div>
@@ -313,34 +338,95 @@ jQuery(document).ready(function($) {
         });
     });
 
-    // View message
-    $(document).on('click', '.view-message-btn', function(e) {
-        e.stopPropagation();
-        var messageId = $(this).data('id');
-
-        $.ajax({
-            url: memberDashboard.ajaxUrl,
-            type: 'POST',
-            data: {
-                action: 'view_member_message',
-                nonce: memberDashboard.nonce,
-                message_id: messageId
-            },
-            success: function(response) {
-                if (response.success) {
-                    $('#view_message_title').text(response.data.title);
-                    $('#view_message_meta').html(response.data.meta);
-                    $('#view_message_content').html(response.data.content);
-                    $('#view-message-modal').removeClass('hidden').css('display', 'flex');
-                    $('body').css('overflow', 'hidden');
-                }
-            }
-        });
-    });
+    // Global variables for reply functionality
+    window.currentMessageSenderId = null;
+    window.currentMessageSenderName = '';
+    window.currentMessageSubject = '';
 });
+
+// Open message (new email-like function)
+function openMessage(messageId, senderId, senderName) {
+    jQuery.ajax({
+        url: memberDashboard.ajaxUrl,
+        type: 'POST',
+        data: {
+            action: 'view_member_message',
+            nonce: memberDashboard.nonce,
+            message_id: messageId
+        },
+        success: function(response) {
+            if (response.success) {
+                // Update modal content
+                jQuery('#view_message_title').text(response.data.title);
+                jQuery('#view_message_meta').html(response.data.meta);
+                jQuery('#view_message_content').html(response.data.content);
+
+                // Update avatar with first letter
+                if (senderName) {
+                    jQuery('#view_message_avatar').text(senderName.charAt(0).toUpperCase());
+                } else {
+                    jQuery('#view_message_avatar').text('?');
+                }
+
+                // Store sender info for reply
+                window.currentMessageSenderId = senderId;
+                window.currentMessageSenderName = senderName;
+                window.currentMessageSubject = response.data.title;
+
+                // Show/hide reply button based on whether sender exists
+                if (senderId > 0) {
+                    jQuery('#view_message_actions').show();
+                } else {
+                    jQuery('#view_message_actions').hide();
+                }
+
+                // Open modal
+                jQuery('#view-message-modal').removeClass('hidden').css('display', 'flex');
+                jQuery('body').css('overflow', 'hidden');
+            }
+        }
+    });
+}
+
+// Reply to message
+function replyToMessage() {
+    if (!window.currentMessageSenderId || window.currentMessageSenderId == 0) {
+        alert('Невозможно ответить на это сообщение');
+        return;
+    }
+
+    // Close view modal
+    closeViewMessageModal();
+
+    // Switch to compose tab
+    jQuery('.message-tab[data-tab="compose"]').click();
+
+    // Pre-fill recipient
+    jQuery('#compose_recipient').val(window.currentMessageSenderId);
+
+    // Pre-fill subject with "Re: "
+    var reSubject = window.currentMessageSubject;
+    if (!reSubject.startsWith('Re: ')) {
+        reSubject = 'Re: ' + reSubject;
+    }
+    jQuery('#compose_subject').val(reSubject);
+
+    // Focus on editor
+    setTimeout(function() {
+        var composeEditor = jQuery('#compose-editor .ql-editor');
+        if (composeEditor.length) {
+            composeEditor.focus();
+        }
+    }, 300);
+}
 
 function closeViewMessageModal() {
     jQuery('#view-message-modal').addClass('hidden').css('display', 'none');
     jQuery('body').css('overflow', 'auto');
+
+    // Clear stored info
+    window.currentMessageSenderId = null;
+    window.currentMessageSenderName = '';
+    window.currentMessageSubject = '';
 }
 </script>
